@@ -1,0 +1,14 @@
+[workspace]
+members = ['day*']
+resolver = "2"
+
+[workspace.package]
+version = '0.1.0'
+edition = '2021'
+authors = ["Vương Kiến Thanh <thanhstardust@outlook.com>"]
+rust-version = "1.70.0"
+description = "solver for adventofcode.com"
+publish = false
+
+[workspace.dependencies]
+itertools = "0.12.0"

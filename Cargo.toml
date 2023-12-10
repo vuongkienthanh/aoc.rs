@@ -1,0 +1,17 @@
+[workspace]
+members = ['']
+
+
+[package]
+name = 'aoc-gen'
+version = '0.1.0'
+edition = '2021'
+authors = ["Vương Kiến Thanh <thanhstardust@outlook.com>"]
+rust-version = "1.70.0"
+description = "solver for adventofcode.com"
+publish = false
+
+[dependencies]
+dotenvy = "0.15.7"
+reqwest = { version = "0.11.22", features = ["blocking","cookies"] }
+toml_edit = "0.21.0"
