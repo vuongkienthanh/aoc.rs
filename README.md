@@ -17,7 +17,7 @@ cargo run -- gen
 
 Fetch input
 ```sh
-# /aoc/2023/day01/input.txt and so on
+# /aoc/2023/day01/src/input.txt and so on
 cargo run -- fetch 1  # puzzle day
 ```
 
