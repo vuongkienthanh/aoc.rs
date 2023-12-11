@@ -12,24 +12,28 @@ AOC_year=2023
 Generate workspace
 ```sh
 # /aoc/2023/day01 and so on
-cargo run -- gen 
+cargo run --release -- gen 
 ```
 
 Fetch input
 ```sh
 # /aoc/2023/day01/src/input.txt and so on
-cargo run -- fetch 1  # puzzle day
+cargo run --release -- fetch 1 # puzzle day
 ```
 
 ### Solve
-`cd` into `/aoc/2023/day01` for example.
+`cd` into `2023/day01` for example.
 
-Edit corresponding `src/main.rs`
+Edit `src/part1` and `src/part2` correspondingly.
 ```sh
-cargo test
-cargo run
+cargo test --lib
+```
+
+```sh
+cargo run --bin p1
+cargo run --bin p2
 ```
 
 # Recommended crates
 - [nom](https://crates.io/crates/nom) - easy parsing input
-- [itertools](https://crates.io/crates/itertools) - very useful
+- [itertools](https://crates.io/crates/itertools) - very useful to iterate

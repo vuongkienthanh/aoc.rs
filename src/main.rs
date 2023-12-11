@@ -1,13 +1,12 @@
+use cargo_generate::{generate, GenerateArgs, TemplatePath};
 use dotenvy::dotenv;
-use reqwest::blocking::Client;
-use reqwest::cookie::Jar;
-use reqwest::Url;
+use reqwest::{blocking::Client, cookie::Jar, Url};
 use std::boxed::Box;
 use std::env;
 use std::fs;
 use std::path::Path;
 use std::str::FromStr;
-use toml_edit::{value, Document};
+// use toml_edit::{value, Document};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().expect(".env file not found");
@@ -20,33 +19,30 @@ or `cargo run -- fetch DAY` to download input"#
     } else {
         let action = env::args().nth(1).unwrap();
         let year = env::var("AOC_year").expect("edit in .env file");
-        let year_path = Path::new(&year);
+        let year_path = env::current_dir()?.join(year.clone());
         match action.as_str() {
             "gen" => {
                 if !year_path.exists() {
                     // copy cargo.toml
-                    fs::create_dir(year_path)?;
-                    let src = Path::new("template");
-                    fs::copy(src.join("Cargo.toml"), year_path.join("Cargo.toml"))?;
+                    fs::create_dir(year_path.clone())?;
+                    let src = Path::new("year_template");
+                    fs::copy(src.join("Cargo.toml"), year_path.clone().join("Cargo.toml"))?;
 
+                    let mut day_template = TemplatePath::default();
+                    day_template.path = Some(
+                        env::current_dir()?
+                            .join("year_template")
+                            .join("{{project-name}}")
+                            .to_string_lossy()
+                            .into_owned(),
+                    );
                     for i in 1..=25 {
-                        let src = Path::new("template").join("day_template");
-                        let day_string = format!("day{:0>2}", i);
-                        let day_path = year_path.join(&day_string);
-
-                        // day: copy and fix cargo
-                        fs::create_dir(&day_path)?;
-                        let mut doc =
-                            fs::read_to_string(src.join("Cargo.toml"))?.parse::<Document>()?;
-                        doc["package"]["name"] = value(day_string);
-                        fs::write(day_path.join("Cargo.toml"), doc.to_string())?;
-
-                        // day: copy main.rs
-                        fs::create_dir(day_path.join("src"))?;
-                        fs::copy(
-                            src.join("src").join("main.rs"),
-                            day_path.join("src").join("main.rs"),
-                        )?;
+                        let mut gen_arg = GenerateArgs::default();
+                        gen_arg.name = Some(format!("day{:0>2}", i));
+                        gen_arg.template_path = day_template.clone();
+                        gen_arg.destination = Some(year_path.clone());
+                        generate(gen_arg)?;
+                        // dbg!(&gen_arg);
                     }
                     Ok(())
                 } else {
