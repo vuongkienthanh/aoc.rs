@@ -1,58 +1,58 @@
 use std::collections::VecDeque;
 use std::ops::Range;
 
+struct OverlapResult<Idx> {
+    origin: Vec<Range<Idx>>,
+    modified: Option<Range<Idx>>,
+}
 /// return (origin, modified)
-fn overlap(
-    lhs: &Range<isize>,
-    rhs: &Range<isize>,
-    diff: isize,
-) -> (Vec<Range<isize>>, Vec<Range<isize>>) {
+fn overlap(lhs: &Range<isize>, rhs: &Range<isize>, diff: isize) -> OverlapResult<isize> {
     // rhs contains whole lhs
     if rhs.start <= lhs.start && rhs.end >= lhs.end {
-        (
-            vec![],
-            vec![Range {
-                start: lhs.start + diff,
-                end: lhs.end + diff,
-            }],
-        )
+        OverlapResult{
+            origin : vec![],
+            modified: Some(Range {
+                            start: lhs.start + diff,
+                            end: lhs.end + diff,
+                        }),
+        }
     // rhs doesn't overlap lhs
     } else if rhs.end <= lhs.start || rhs.start >= lhs.end {
-        (
-            vec![Range {
+        OverlapResult{
+            origin: vec![Range {
                 start: lhs.start,
                 end: lhs.end,
             }],
-            vec![],
-        )
+            modified: None,
+        }
     // small rhs on the left; same/longer start
     } else if rhs.start <= lhs.start && rhs.end < lhs.end {
-        (
-            vec![Range {
+        OverlapResult{
+            origin :vec![Range {
                 start: rhs.end,
                 end: lhs.end,
             }],
-            vec![Range {
+            modified: Some(Range {
                 start: lhs.start + diff,
                 end: rhs.end + diff,
-            }],
-        )
+            }),
+        }
     // small rhs on the right; same/longer end
     } else if rhs.start > lhs.start && rhs.end >= lhs.end {
-        (
-            vec![Range {
+        OverlapResult{
+            origin : vec![Range {
                 start: lhs.start,
                 end: rhs.start,
             }],
-            vec![Range {
+            modified: Some(Range {
                 start: rhs.start + diff,
                 end: lhs.end + diff,
-            }],
-        )
+            }),
+        }
     // small rhs in the middle
     } else if rhs.start > lhs.start && rhs.end < lhs.end {
-        (
-            vec![
+        OverlapResult{
+            origin: vec![
                 Range {
                     start: lhs.start,
                     end: rhs.start,
@@ -62,11 +62,11 @@ fn overlap(
                     end: lhs.end,
                 },
             ],
-            vec![Range {
+            modified: Some(Range {
                 start: rhs.start + diff,
                 end: rhs.end + diff,
-            }],
-        )
+            }),
+        }
     } else {
         unreachable!()
     }
