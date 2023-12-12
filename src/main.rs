@@ -6,7 +6,6 @@ use std::env;
 use std::fs;
 use std::path::Path;
 use std::str::FromStr;
-// use toml_edit::{value, Document};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().expect(".env file not found");
