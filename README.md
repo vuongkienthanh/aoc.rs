@@ -57,4 +57,5 @@ cargo run --bin p2
 
 # Recommended crates
 - [nom](https://crates.io/crates/nom) - easy parsing input
-- [itertools](https://crates.io/crates/itertools) - very useful to iterate
+- [itertools](https://crates.io/crates/itertools) - versatile iterator
+- [rayon](https://crates.io/crates/rayon) - parallel processing
