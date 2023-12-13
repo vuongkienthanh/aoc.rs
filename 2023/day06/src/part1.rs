@@ -6,7 +6,8 @@ mod tests {
     use super::*;
     #[test]
     fn test_process() {
-        let input = r#""#;
-        assert_eq!(process(input), 0);
+        let input = r#"Time:      7  15   30
+Distance:  9  40  200"#;
+        assert_eq!(process(input), 288);
     }
 }

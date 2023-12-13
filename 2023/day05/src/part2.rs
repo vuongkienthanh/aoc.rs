@@ -1,25 +1,29 @@
 use std::collections::VecDeque;
+use std::ops::Add;
 use std::ops::Range;
 
 struct OverlapResult<Idx> {
-    origin: Vec<Range<Idx>>,
+    new_origins: Vec<Range<Idx>>,
     modified: Option<Range<Idx>>,
 }
-/// return (origin, modified)
-fn overlap(lhs: &Range<isize>, rhs: &Range<isize>, diff: isize) -> OverlapResult<isize> {
+
+fn overlap<Idx>(lhs: &Range<Idx>, rhs: &Range<Idx>, diff: &Idx) -> OverlapResult<Idx>
+where
+    Idx: Ord + PartialOrd + Eq + PartialEq + Add<Output = Idx> + Copy + Clone,
+{
     // rhs contains whole lhs
     if rhs.start <= lhs.start && rhs.end >= lhs.end {
-        OverlapResult{
-            origin : vec![],
+        OverlapResult {
+            new_origins: vec![],
             modified: Some(Range {
-                            start: lhs.start + diff,
-                            end: lhs.end + diff,
-                        }),
+                start: lhs.start + *diff,
+                end: lhs.end + *diff,
+            }),
         }
     // rhs doesn't overlap lhs
     } else if rhs.end <= lhs.start || rhs.start >= lhs.end {
-        OverlapResult{
-            origin: vec![Range {
+        OverlapResult {
+            new_origins: vec![Range {
                 start: lhs.start,
                 end: lhs.end,
             }],
@@ -27,32 +31,32 @@ fn overlap(lhs: &Range<isize>, rhs: &Range<isize>, diff: isize) -> OverlapResult
         }
     // small rhs on the left; same/longer start
     } else if rhs.start <= lhs.start && rhs.end < lhs.end {
-        OverlapResult{
-            origin :vec![Range {
+        OverlapResult {
+            new_origins: vec![Range {
                 start: rhs.end,
                 end: lhs.end,
             }],
             modified: Some(Range {
-                start: lhs.start + diff,
-                end: rhs.end + diff,
+                start: lhs.start + *diff,
+                end: rhs.end + *diff,
             }),
         }
     // small rhs on the right; same/longer end
     } else if rhs.start > lhs.start && rhs.end >= lhs.end {
-        OverlapResult{
-            origin : vec![Range {
+        OverlapResult {
+            new_origins: vec![Range {
                 start: lhs.start,
                 end: rhs.start,
             }],
             modified: Some(Range {
-                start: rhs.start + diff,
-                end: lhs.end + diff,
+                start: rhs.start + *diff,
+                end: lhs.end + *diff,
             }),
         }
     // small rhs in the middle
     } else if rhs.start > lhs.start && rhs.end < lhs.end {
-        OverlapResult{
-            origin: vec![
+        OverlapResult {
+            new_origins: vec![
                 Range {
                     start: lhs.start,
                     end: rhs.start,
@@ -63,8 +67,8 @@ fn overlap(lhs: &Range<isize>, rhs: &Range<isize>, diff: isize) -> OverlapResult
                 },
             ],
             modified: Some(Range {
-                start: rhs.start + diff,
-                end: rhs.end + diff,
+                start: rhs.start + *diff,
+                end: rhs.end + *diff,
             }),
         }
     } else {
@@ -113,15 +117,43 @@ pub fn process(_input: &str) -> isize {
         .collect::<Vec<_>>();
 
     for group in parsed_groups.iter() {
-        // dbg!("new group");
+        // use len() to keep track of seed_map range count at the start of each group
+        // because seed_map could be extended with a modified range at the end of each line
         for _ in 0..seed_map.len() {
             let seed_range = seed_map.pop_front().unwrap();
-            // dbg!(&seed_range);
-            //
+
+            let mut origin_ranges: Vec<Range<isize>> = vec![seed_range];
+
+            // for each line
+            for (rhs, diff) in group {
+                // placeholder to replace origin
+                let mut new_origin_ranges: Vec<Range<isize>> = vec![];
+                // origin_ranges may have 1 or many
+                while let Some(lhs) = origin_ranges.pop() {
+                    // overlap() gives new origin ranges and Option<modified>
+                    // overlap() may give back origin because no src at all -> stay the same
+                    let result = overlap(&lhs, rhs, diff);
+
+                    new_origin_ranges.extend(result.new_origins.into_iter());
+
+                    // extend seed_map with modified
+                    if let Some(modified) = result.modified {
+                        seed_map.push_back(modified);
+                    }
+                }
+                // at the end of line
+                // origin is replaced by new origin
+                // prepared to overlap() next line
+                origin_ranges = new_origin_ranges;
+            }
+            // after all lines ( a group )
+            // there should be zero or some new origin ranges that is no src
+            // they shoule be merged back into seed_map
+            seed_map.extend(origin_ranges.into_iter());
+        // next seed_range, but never longer than seed_map length at the beginning of group
         }
     }
-    seed_map.iter().map(|x| x.start).min().unwrap();
-    0
+    seed_map.iter().map(|x| x.start).min().unwrap()
 }
 #[cfg(test)]
 mod tests {
