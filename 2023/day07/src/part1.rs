@@ -1,7 +1,24 @@
-pub use crate::{Card, Hand, HandType};
 use std::cmp::Ordering;
 
 const CHARSMAP: &str = "AKQJT98765432";
+
+#[derive(Ord, Eq, PartialEq, PartialOrd, Clone, Copy)]
+pub struct Card(usize);
+
+#[derive(PartialEq, Eq, Ord, Clone, Copy)]
+pub struct Hand([Card; 5]);
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[repr(u8)]
+pub enum HandType {
+    HighCard,
+    OnePair,
+    TwoPair,
+    ThreeOfAKind,
+    FullHouse,
+    FourOfAKind,
+    FiveOfAKind,
+}
 
 impl From<char> for Card {
     fn from(value: char) -> Self {
