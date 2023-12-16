@@ -1,30 +1,40 @@
 use crate::parse_input;
 
+fn gcd(a: usize, b: usize) -> usize {
+    if b == 0 {
+        return a;
+    }
+    gcd(b, a % b)
+}
+fn lcm(nums: &[usize]) -> usize {
+    if nums.len() == 1 {
+        return nums[0];
+    }
+    let a = nums[0];
+    let b = lcm(&nums[1..]);
+    a * b / gcd(a, b)
+}
 pub fn process(_input: &str) -> usize {
     let (instruction, pair_map) = parse_input(_input);
-    let mut dst = pair_map
+    lcm(&pair_map
         .keys()
-        .filter_map(|k| k.ends_with('A').then_some(*k))
-        .collect::<Vec<&str>>();
-    instruction
-        .cycle()
-        .take_while(|i| {
-            dst = match i {
-                'L' => dst
-                    .iter()
-                    .map(|loc| pair_map.get(loc).unwrap().left)
-                    .collect::<Vec<_>>(),
-                'R' => dst
-                    .iter()
-                    .map(|loc| pair_map.get(loc).unwrap().right)
-                    .collect::<Vec<_>>(),
-                _ => unreachable!(),
-            };
-            dbg!(&dst);
-            !dst.iter().all(|loc| loc.ends_with('Z'))
+        .filter(|k| k.ends_with('A'))
+        .map(|k| {
+            let mut dst = *k;
+            instruction
+                .cycle()
+                .take_while(|i| {
+                    dst = match i {
+                        &'L' => pair_map.get(&dst).unwrap().left,
+                        &'R' => pair_map.get(&dst).unwrap().right,
+                        _ => unreachable!(),
+                    };
+                    !dst.ends_with('Z')
+                })
+                .count()
+                + 1
         })
-        .count()
-        + 1
+        .collect::<Vec<usize>>())
 }
 
 #[cfg(test)]
