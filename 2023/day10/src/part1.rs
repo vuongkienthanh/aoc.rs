@@ -1,7 +1,5 @@
 use crate::PipeMaze;
 pub fn process(_input: &str) -> usize {
-    // dbg!( PipeMaze::new(_input).collect::<Vec<_>>());
-    // dbg!( PipeMaze::new(_input).count());
      PipeMaze::new(_input).count() / 2
 }
 #[cfg(test)]

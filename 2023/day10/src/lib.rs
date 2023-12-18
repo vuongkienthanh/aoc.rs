@@ -54,13 +54,12 @@ impl Pipe {
 }
 
 type Coord = (usize, usize);
-type Node = (Coord, Pipe);
 struct PipeMaze<'a> {
     map: &'a str,
-    start_pipe: Pipe,
-    // stop_coord: Coord,
-    cur: Node,
-    nxt: Option<Node>,
+    start_coord: Coord,
+    start_pipe: char,
+    cur: Coord,
+    nxt: Option<Coord>,
 }
 
 impl<'a> PipeMaze<'a> {
@@ -69,8 +68,6 @@ impl<'a> PipeMaze<'a> {
         let cols_max = map.lines().next().unwrap().len();
 
         let mut opt_cur_coord: Option<Coord> = None;
-        let cur_pipe: Pipe;
-        let nxt: Node;
 
         let mut up: Option<Coord> = None;
         let mut down: Option<Coord> = None;
@@ -104,6 +101,8 @@ impl<'a> PipeMaze<'a> {
         }
         assert!(opt_cur_coord.is_some());
         let cur_coord = opt_cur_coord.unwrap();
+        let cur_pipe: char;
+        let nxt_coord: Coord;
 
         let pipe_up = up.and_then(|x| {
             (Pipe::try_from(map.lines().nth(x.0).unwrap().chars().nth(x.1).unwrap())).ok()
@@ -123,101 +122,92 @@ impl<'a> PipeMaze<'a> {
                 if [Pipe::Vertical, Pipe::SouthWest, Pipe::SouthEast].contains(&u)
                     && [Pipe::Vertical, Pipe::NorthWest, Pipe::NorthEast].contains(&d) =>
             {
-                cur_pipe = Pipe::Vertical;
-                nxt = (down.unwrap(), d);
+                cur_pipe = '|';
+                nxt_coord = down.unwrap();
             }
             (Some(u), _, Some(l), _)
                 if [Pipe::Vertical, Pipe::SouthWest, Pipe::SouthEast].contains(&u)
                     && [Pipe::Horizontal, Pipe::SouthEast, Pipe::NorthEast].contains(&l) =>
             {
-                cur_pipe = Pipe::NorthWest;
-                nxt = (left.unwrap(), l);
+                cur_pipe = 'J';
+                nxt_coord = left.unwrap();
             }
             (Some(u), _, _, Some(r))
                 if [Pipe::Vertical, Pipe::SouthWest, Pipe::SouthEast].contains(&u)
                     && [Pipe::Horizontal, Pipe::SouthWest, Pipe::NorthWest].contains(&r) =>
             {
-                cur_pipe = Pipe::NorthEast;
-                nxt = (right.unwrap(), r);
+                cur_pipe = 'L';
+                nxt_coord = right.unwrap();
             }
             (_, Some(d), Some(l), _)
                 if [Pipe::Vertical, Pipe::NorthWest, Pipe::NorthEast].contains(&d)
                     && [Pipe::Horizontal, Pipe::SouthEast, Pipe::NorthEast].contains(&l) =>
             {
-                cur_pipe = Pipe::SouthWest;
-                nxt = (left.unwrap(), l);
+                cur_pipe = '7';
+                nxt_coord = left.unwrap();
             }
             (_, Some(d), _, Some(r))
                 if [Pipe::Vertical, Pipe::NorthWest, Pipe::NorthEast].contains(&d)
                     && [Pipe::Horizontal, Pipe::SouthWest, Pipe::NorthWest].contains(&r) =>
             {
-                cur_pipe = Pipe::SouthEast;
-                nxt = (right.unwrap(), r);
+                cur_pipe = 'F';
+                nxt_coord = right.unwrap();
             }
             (_, _, Some(l), Some(r))
                 if [Pipe::Horizontal, Pipe::NorthEast, Pipe::SouthEast].contains(&l)
                     && [Pipe::Horizontal, Pipe::SouthWest, Pipe::NorthWest].contains(&r) =>
             {
-                cur_pipe = Pipe::Horizontal;
-                nxt = (right.unwrap(), r);
+                cur_pipe = '-';
+                nxt_coord = right.unwrap();
             }
             _ => unreachable!("Start doesnt have two connections"),
         };
 
         PipeMaze {
             map,
+            start_coord: cur_coord,
             start_pipe: cur_pipe,
-            // stop_coord: nxt.0,
-            cur: (cur_coord, cur_pipe),
-            nxt: Some(nxt),
+            cur: cur_coord,
+            nxt: Some(nxt_coord),
         }
     }
 }
 
 impl<'a> Iterator for PipeMaze<'a> {
-    type Item = Node;
+    type Item = Coord;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let curr_node = self.cur.clone();
-        if let Some(nxt_node) = self.nxt {
-            if nxt_node.1 == Pipe::Start {
-                self.cur = self.nxt.unwrap();
-                self.nxt = None;
-                Some(curr_node)
-            } else {
-                let nxt_coord = nxt_node.0;
-                let nxt_pipe = nxt_node.1;
-                let new_nxt_coord = nxt_pipe
-                    .connections()
-                    .iter()
-                    .find_map(|direction| {
-                        let new_coord = match direction {
-                            Direction::North => (nxt_coord.0 - 1, nxt_coord.1),
-                            Direction::South => (nxt_coord.0 + 1, nxt_coord.1),
-                            Direction::East => (nxt_coord.0, nxt_coord.1 + 1),
-                            Direction::West => (nxt_coord.0, nxt_coord.1 - 1),
-                        };
-                        if new_coord != self.cur.0 {
-                            Some(new_coord)
-                        } else {
-                            None
-                        }
-                    })
-                    .unwrap();
-                let new_nxt_pipe = Pipe::try_from(
+        let cur_coord = self.cur.clone();
+        if let Some(nxt_coord) = self.nxt {
+            self.cur = self.nxt.take().unwrap();
+            if nxt_coord != self.start_coord {
+                self.nxt = Pipe::try_from(
                     self.map
                         .lines()
-                        .nth(new_nxt_coord.0)
+                        .nth(nxt_coord.0)
                         .unwrap()
                         .chars()
-                        .nth(new_nxt_coord.1)
+                        .nth(nxt_coord.1)
                         .unwrap(),
                 )
-                .unwrap();
-                self.cur = self.nxt.unwrap();
-                self.nxt = Some((new_nxt_coord, new_nxt_pipe));
-                Some(curr_node)
+                .unwrap()
+                .connections()
+                .iter()
+                .find_map(|direction| {
+                    let new_coord = match direction {
+                        Direction::North => (nxt_coord.0 - 1, nxt_coord.1),
+                        Direction::South => (nxt_coord.0 + 1, nxt_coord.1),
+                        Direction::East => (nxt_coord.0, nxt_coord.1 + 1),
+                        Direction::West => (nxt_coord.0, nxt_coord.1 - 1),
+                    };
+                    if new_coord != cur_coord {
+                        Some(new_coord)
+                    } else {
+                        None
+                    }
+                });
             }
+            Some(cur_coord)
         } else {
             None
         }
