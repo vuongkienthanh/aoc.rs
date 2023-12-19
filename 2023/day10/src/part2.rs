@@ -29,8 +29,11 @@ pub fn process(_input: &str) -> usize {
         .map(|(x, y)| {
             let left_pipes = maze_coords
                 .iter()
+                // get left pipes
                 .filter(move |(i, j)| *i == x && *j < y)
+                // convert to char
                 .map(|(i, j)| *maze_map.get(*i).unwrap().get(*j).unwrap())
+                // get only those significant
                 .filter(|c| ['|', 'F', '7'].contains(c))
                 .collect::<Vec<char>>();
 
@@ -38,8 +41,13 @@ pub fn process(_input: &str) -> usize {
             let count_f = left_pipes.iter().filter(|c| **c == 'F').count();
             let count_7 = left_pipes.iter().filter(|c| **c == '7').count();
 
+            // each vertical bar is a line
+            // after F7 ~ LJ removed, then only F or 7 count which is larger,
+            // use abs_diff as shortcut
+
             bars + count_f.abs_diff(count_7)
         })
+        // odd left lines
         .filter(|left_lines| left_lines % 2 != 0)
         .count()
 }
