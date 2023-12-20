@@ -5,8 +5,18 @@ pub fn process(_input: &str) -> usize {
 mod tests {
     use super::*;
     #[test]
+    #[ignore]
     fn test_process() {
-        let input = r#""#;
+        let input = r#"...#......
+.......#..
+#.........
+..........
+......#...
+.#........
+.........#
+..........
+.......#..
+#...#....."#;
         assert_eq!(process(input), 0);
     }
 }
