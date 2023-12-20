@@ -8,3 +8,4 @@ description.workspace = true
 publish.workspace = true
 
 [dependencies]
+itertools = { workspace = true }
