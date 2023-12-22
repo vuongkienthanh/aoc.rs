@@ -12,13 +12,19 @@ AOC_year=2023
 Generate workspace
 ```sh
 # generate /aoc.rs/2023/day01 and so on
-cargo run -- gen 
+cargo run --release -- gen 
 ```
 
 Fetch input
 ```sh
 # download into /aoc/2023/day01/src/input.txt and so on
-cargo run -- fetch 1 # puzzle day
+cargo run --release -- fetch 1 # puzzle day
+```
+
+Shortcuts
+```sh
+cargo build --release
+chmod +x ./fetch
 ```
 
 ### Solve

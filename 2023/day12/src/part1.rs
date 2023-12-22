@@ -1,44 +1,12 @@
-use itertools::Itertools;
-use crate::compact;
-
 pub fn process(_input: &str) -> usize {
-    let mut ret = 0;
-    for line in _input.lines() {
-        let mut linesplit = line.split_ascii_whitespace();
-        let left = linesplit.next().unwrap().chars().collect::<Vec<char>>();
-        let right = linesplit
-            .next()
-            .unwrap()
-            .split(',')
-            .map(|n| n.parse::<usize>().unwrap())
-            .collect::<Vec<_>>();
-
-        let unknowns = left
-            .iter()
-            .enumerate()
-            .filter_map(|(i, c)| if *c == '?' { Some(i) } else { None })
-            .collect::<Vec<usize>>();
-
-        let damaged_spring_needed =
-            right.iter().sum::<usize>() - left.iter().filter(|x| **x == '#').count();
-
-        for each_comb in unknowns.iter()
-            .combinations(damaged_spring_needed)
-        {
-            let mut left_clone = left.clone();
-            for idx in each_comb {
-                *left_clone.get_mut(*idx).unwrap() = '#';
-            }
-            if compact(left_clone) == right {
-                ret += 1;
-            }
-        }
-    }
-    ret
+    todo!();
 }
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HotSprings;
+    use crate::Validness;
+    use rstest::rstest;
 
     #[test]
     fn test_process() {
@@ -49,5 +17,58 @@ mod tests {
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1"#;
         assert_eq!(process(input), 21);
+    }
+
+    #[rstest]
+    #[case("???.### 1,1,3", HotSprings { springs: vec!['?','?','?','.','#','#','#'], records: vec![1,1,3] })]
+    #[case(".??..??...?##. 1,1,3", HotSprings { springs: vec!['.','?','?','.','?','?','.','?','#','#','.'], records: vec![1,1,3] })]
+    #[case("????.######..#####. 1,6,5", HotSprings { springs: vec!['?','?','?','?','.','#','#','#','#','#','#','.','#','#','#','#','#','.'], records: vec![1,6,5] })]
+    fn test_hot_springs_new(#[case] input: &str, #[case] expect: HotSprings) {
+        assert_eq!(HotSprings::new(input,1), expect)
+    }
+
+    #[rstest]
+    #[case("???.### 1,1,3", [vec!['.','?','?','.','#','#','#'],vec!['#','?','?','.','#','#','#']])]
+    #[case(".??..??...?##. 1,1,3",[vec!['.','.','?','.','?','?','.','?','#','#','.'],vec!['.','#','?','.','?','?','.','?','#','#','.']])]
+    #[case("????.######..#####. 1,6,5",[vec!['.','?','?','?','.','#','#','#','#','#','#','.','#','#','#','#','#','.'], vec!['#','?','?','?','.','#','#','#','#','#','#','.','#','#','#','#','#','.']])]
+    fn test_hot_springs_replace(#[case] input: &str, #[case] expect: [Vec<char>; 2]) {
+        assert_eq!(
+            HotSprings::new(input,1).replace_once().map(|s| s.springs),
+            expect
+        )
+    }
+
+    #[rstest]
+    #[case("#??.?.### 2,1,3", Validness::LessAndMayValid { last_idx: 0, count: 0 })]
+    #[case("#.#??.?.### 1,2,1,3", Validness::LessAndMayValid { last_idx: 1, count: 1 })]
+    #[case(".??.### 1,1,3", Validness::EqualAndMayValid { last_idx: 0, count: 0 })]
+    #[case("#??.### 1,1,3", Validness::EqualAndMayValid { last_idx: 0, count: 0 } )]
+    #[case(".?.### 1,1,3", Validness::EqualAndMayValid { last_idx: 0, count: 0 })]
+    #[case(".#?.### 1,1,3", Validness::EqualAndMayValid { last_idx: 0, count: 0 })]
+    #[case("#.?.### 1,1,3", Validness::EqualAndMayValid { last_idx: 1, count: 1 } )]
+    #[case("##?.### 1,1,3", Validness::NotValid)]
+    #[case(".### 1,1,3", Validness::NotValid)]
+    #[case(".#.### 1,1,3", Validness::NotValid)]
+    #[case(".#.### 1,1,3", Validness::NotValid)]
+    #[case(".##.### 1,1,3", Validness::NotValid)]
+    #[case("#.### 1,1,3", Validness::NotValid)]
+    #[case("#.#.### 1,1,3", Validness::EqualAndMayValid { last_idx: 3, count: 2 } )]
+    fn test_hot_springs_valid(#[case] input: &str, #[case] expect: Validness) {
+        assert_eq!(HotSprings::new(input,1).is_valid(), expect,)
+    }
+
+    #[rstest]
+    #[case("#.#??.?.### 1,2,1,3", 1,1, vec!['#','?','?','.','?','.','#','#','#'])]
+    #[case("#.?.### 1,1,3", 1,1, vec!['?','.','#','#','#'])]
+    #[case("#.#.### 1,1,3",3,2, vec!['#','#','#'])]
+    fn test_hot_springs_trim(
+        #[case] input: &str,
+        #[case] last_idx: usize,
+        #[case] count: usize,
+        #[case] expect: Vec<char>,
+    ) {
+        let mut hs = HotSprings::new(input,1);
+        hs.trim_when_valid(last_idx, count);
+        assert_eq!(hs.springs, expect)
     }
 }
