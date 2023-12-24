@@ -1,54 +1,46 @@
 pub mod part1;
 pub mod part2;
-
-// A line in input
-#[derive(Clone, PartialEq, Eq, Debug)]
-struct HotSprings {
-    springs: Vec<char>,
-    records: Vec<usize>,
-}
-
-impl HotSprings {
-    fn new(input: &str, expand: usize) -> Self {
-        let (left, right) = input.split_once(' ').unwrap();
-        // shorten continuous dots
-        let mut springs = vec![];
-        let mut leftpeek = left.chars().peekable();
-        for _ in 0..left.len() {
-            let cur = leftpeek.next().unwrap();
-            if let Some(nxt) = leftpeek.peek() {
-                if cur == '.' && nxt == &'.' {
-                    continue;
-                }
-            }
-            springs.push(cur);
-        }
-        let mut records = right
-            .split(',')
-            .map(|c| c.parse::<usize>().unwrap())
-            .collect::<Vec<usize>>();
-
-        if expand != 1 {
-            let springs_len = springs.len();
-            springs = springs
-                .into_iter()
-                .chain(std::iter::once('?'))
-                .cycle()
-                .take(springs_len * 5 + 4)
-                .collect();
-            let records_len = records.len();
-            records = records
-                .into_iter()
-                .cycle()
-                .take(records_len * 5)
-                .collect();
-        }
-
-
-        HotSprings { springs, records }
+use std::collections::HashMap;
+fn recurse(
+    lava: &str,
+    springs: &[usize],
+    cache: &mut HashMap<(String, Vec<usize>), usize>,
+) -> usize {
+    // get from cache
+    if let Some(ret) = cache.get(&(lava.to_string(), springs.to_vec())) {
+        return *ret;
     }
 
+    // base case
+    if springs.is_empty() {
+        let ret = !lava.contains('#') as usize;
+        cache.insert((lava.to_string(), springs.to_vec()), ret);
+        return ret;
+    }
 
+    // recur case
+    let mut ret = 0;
+    let current = *springs.get(0).unwrap();
+    let new_springs = springs.get(1..).unwrap();
+
+    for i in 0..(lava.len() - new_springs.iter().sum::<usize>() - new_springs.len() - current + 1) {
+        if lava[..i].contains('#') {
+            break;
+        }
+        let nxt = i + current;
+        if nxt <= lava.len() {
+            if !lava[i..nxt].contains('.') {
+                if lava.chars().nth(nxt) != Some('#') {
+                    if let Some(nxt_lava) = lava.get((nxt + 1)..) {
+                        ret += recurse(&nxt_lava, new_springs, cache);
+                    } else {
+                        ret += recurse("", new_springs, cache);
+                    }
+                }
+            }
+        }
+    }
+
+    cache.insert((lava.to_string(), springs.to_vec()), ret);
+    ret
 }
-
-

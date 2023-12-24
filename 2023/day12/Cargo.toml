@@ -9,5 +9,3 @@ publish.workspace = true
 
 [dependencies]
 itertools = { workspace = true }
-[dev-dependencies]
-rstest = { workspace = true }
