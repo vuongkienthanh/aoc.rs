@@ -1,12 +1,12 @@
-fn check_columns(input: &str) -> Option<usize> {
-    let col_len = input.lines().next().unwrap().len();
+fn check_columns(block: &str) -> Option<usize> {
+    let col_len = block.lines().next().unwrap().len();
 
     'outer: for col in 1..col_len {
-        let left = input
+        let left = block
             .lines()
             .map(|line| line.chars().nth(col - 1).unwrap())
             .collect::<Vec<char>>();
-        let right = input
+        let right = block
             .lines()
             .map(|line| line.chars().nth(col).unwrap())
             .collect::<Vec<char>>();
@@ -18,11 +18,11 @@ fn check_columns(input: &str) -> Option<usize> {
 
             // todo!("if any not equal -> continue outer loop");
             for i in 0..compare_size {
-                let temp_left = input
+                let temp_left = block
                     .lines()
                     .map(|line| line.chars().nth(col - 2 - i).unwrap())
                     .collect::<Vec<char>>();
-                let temp_right = input
+                let temp_right = block
                     .lines()
                     .map(|line| line.chars().nth(col + 1 + i).unwrap())
                     .collect::<Vec<char>>();
@@ -37,12 +37,12 @@ fn check_columns(input: &str) -> Option<usize> {
     }
     return None;
 }
-fn check_rows(input: &str) -> Option<usize> {
-    let row_len = input.lines().count();
+fn check_rows(block: &str) -> Option<usize> {
+    let row_len = block.lines().count();
 
     'outer: for row in 1..row_len {
-        let above = input.lines().nth(row - 1).unwrap();
-        let below = input.lines().nth(row).unwrap();
+        let above = block.lines().nth(row - 1).unwrap();
+        let below = block.lines().nth(row).unwrap();
 
         if above == below {
             let number_of_above_rows = row - 1;
@@ -51,8 +51,8 @@ fn check_rows(input: &str) -> Option<usize> {
 
             // todo!("if any not equal -> continue outer loop");
             for i in 0..compare_size {
-                let temp_above = input.lines().nth(row - 2 - i).unwrap();
-                let temp_below = input.lines().nth(row + 1 + i).unwrap();
+                let temp_above = block.lines().nth(row - 2 - i).unwrap();
+                let temp_below = block.lines().nth(row + 1 + i).unwrap();
                 if temp_above != temp_below {
                     continue 'outer;
                 }

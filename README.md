@@ -25,6 +25,7 @@ Shortcuts
 ```sh
 cargo build --release
 chmod +x ./fetch
+./fetch 1
 ```
 
 ### Solve
