@@ -118,20 +118,25 @@ fn tilt_east(platform: &mut Platform) {
     }
 }
 
-fn platform_cycle_once(platform: &mut Platform, cache: &mut HashMap<Platform, Platform>) -> bool {
+fn cycle_once(platform: &mut Platform) {
+    tilt_north(platform);
+    tilt_west(platform);
+    tilt_south(platform);
+    tilt_east(platform);
+}
+
+fn cycle_once_with_cache(
+    platform: &mut Platform,
+    cache: &mut HashMap<Platform, usize>,
+    cycle: usize,
+) -> Option<usize> {
     if cache.contains_key(platform) {
-        *platform = cache.get(platform).cloned().unwrap();
-        true
+        cache.get(platform).copied()
     } else {
         let origin = platform.clone();
-
-        tilt_north(platform);
-        tilt_west(platform);
-        tilt_south(platform);
-        tilt_east(platform);
-
-        cache.insert(origin, platform.clone());
-        false
+        cycle_once(platform);
+        cache.insert(origin, cycle);
+        None
     }
 }
 
@@ -142,43 +147,24 @@ pub fn process(_input: &str) -> usize {
         .collect::<Vec<_>>();
     let rows = platform.first().unwrap().len();
     let mut cache = HashMap::new();
-    let mut from_start_to_loop = 0;
-    let mut loop_platform :Option<Platform> = None;
+    let mut distance_at_start_loop = 0;
     let mut loop_len = 0;
 
     for i in 0..1_000_000_000 {
-        let meet_loop = platform_cycle_once(&mut platform, &mut cache);
-        if meet_loop {
-            if from_start_to_loop == 0 {
-                    from_start_to_loop = i;
-            } 
-            if loop_platform.is_none() {
-                loop_platform = Some(platform.clone());
-            } else if platform == loop_platform.unwrap() {
-                loop_len = i -
-            }
-            match from_start_to_loop {
-                0 => {
-                    println!("start_loop={start_loop}")
-                }
-                sl => {
-                    loop_len = i - sl;
-                    println!("loop_len={loop_len}");
-                }
-            }
-        }
-        if loop_len != 0 {
-            let so_far = from_start_to_loop + loop_len - 1;
-            let rest = 1_000_000_000 - so_far;
-            let remain = rest.rem(loop_len);
-            for _ in 0..remain {
-                platform_cycle_once(&mut platform, &mut cache);
-            }
+        if let Some(idx) = cycle_once_with_cache(&mut platform, &mut cache, i) {
+            distance_at_start_loop = idx;
+            loop_len = i - idx;
             break;
         }
     }
-    // println!("platform at loop = {}", platform.iter().map(|line| line.iter().collect::<String>()).collect::<Vec<_>>().join("\n"));
-    // println!("platform at next loop = {}", platform.iter().map(|line| line.iter().collect::<String>()).collect::<Vec<_>>().join("\n"));
+
+    let so_far = distance_at_start_loop + loop_len;
+    let rest = 1_000_000_000 - so_far;
+    let after_modulo = rest.rem(loop_len);
+
+    for _ in 0..after_modulo {
+        cycle_once(&mut platform);
+    }
 
     (0..rows)
         .map(|i| {
@@ -192,7 +178,6 @@ pub fn process(_input: &str) -> usize {
                 * score
         })
         .sum()
-    // 0
 }
 #[cfg(test)]
 mod tests {
