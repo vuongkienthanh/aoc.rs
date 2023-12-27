@@ -1,3 +1,5 @@
+use std::collections::{HashMap, HashSet, VecDeque};
+
 pub mod part1;
 pub mod part2;
 
@@ -27,7 +29,7 @@ impl Beam {
     fn down(&self) -> Self { Beam { loc: self.loc, direction: Direction::Down } }
 
     fn encounter(&self, point: char, max_rows: usize, max_cols: usize) -> Vec<Beam> {
-        let mut collected = match point {
+        match point {
             '.' => vec![self.next_beam(max_rows, max_cols)],
             '|' => match self.direction {
                 Direction::Left | Direction::Right => vec![
@@ -56,33 +58,74 @@ impl Beam {
                 Direction::Right => vec![self.down().next_beam(max_rows, max_cols)],
             },
             _ => panic!("cant parse point"),
-        };
-        collected.into_iter().filter_map(|beam| beam).collect()
+        }
+        .into_iter()
+        .filter_map(|beam| beam)
+        .collect()
     }
 
     #[rustfmt::skip]
     fn next_beam(&self, max_rows:usize, max_cols:usize) -> Option<Self> {
         match self.direction {
-            Direction::Up => {
-                if self.loc.0 == 0 { None } else {
-                    Some(Beam { loc: (self.loc.0 - 1, self.loc.1), direction: Direction::Up })
-                }
-            }
-            Direction::Down => {
-                if self.loc.0 + 1 == max_rows { None } else {
-                    Some(Beam { loc: (self.loc.0 + 1, self.loc.1), direction: Direction::Down })
-                }
-            }
-            Direction::Left => {
-                if self.loc.1 == 0 { None } else {
-                    Some(Beam { loc: (self.loc.0, self.loc.1 - 1), direction: Direction::Left })
-                }
-            }
-            Direction::Right => {
-                if self.loc.1 + 1 == max_cols { None } else {
-                    Some(Beam { loc: (self.loc.0, self.loc.1 + 1), direction: Direction::Right })
-                }
-            }
+            Direction::Up => if self.loc.0 == 0 { None } else { Some(Beam { loc: (self.loc.0 - 1, self.loc.1), direction: Direction::Up }) }
+            Direction::Down => if self.loc.0 + 1 == max_rows { None } else { Some(Beam { loc: (self.loc.0 + 1, self.loc.1), direction: Direction::Down }) }
+            Direction::Left => if self.loc.1 == 0 { None } else { Some(Beam { loc: (self.loc.0, self.loc.1 - 1), direction: Direction::Left }) }
+            Direction::Right => if self.loc.1 + 1 == max_cols { None } else { Some(Beam { loc: (self.loc.0, self.loc.1 + 1), direction: Direction::Right }) }
         }
+    }
+}
+
+struct Puzzle<'a> {
+    input: &'a str,
+    cache: HashMap<Beam, (HashSet<Beam>, HashSet<Coord>)>,
+    max_rows: usize,
+    max_cols: usize,
+}
+
+impl<'a> Puzzle<'a> {
+    fn new(input: &'a str) -> Self {
+        Self {
+            input,
+            cache: HashMap::new(),
+            max_rows: input.lines().count(),
+            max_cols: input.lines().next().unwrap().len(),
+        }
+    }
+    fn char_at(&self, loc: Coord) -> char {
+        self.input
+            .lines()
+            .nth(loc.0)
+            .unwrap()
+            .chars()
+            .nth(loc.1)
+            .unwrap()
+    }
+    fn forward_beam(&mut self, src: &Beam) -> (HashSet<Beam>, HashSet<Coord>) {
+        if let Some(res) = self.cache.get(src) {
+            return res.clone();
+        } else {
+            let mut dst = HashSet::new();
+            let mut tiles = HashSet::new();
+            let mut beams =
+                VecDeque::from(src.encounter(self.char_at(src.loc), self.max_rows, self.max_cols));
+            while let Some(beam) = beams.pop_front() {
+                tiles.insert(beam.loc);
+                if self.char_at(beam.loc) == '.' {
+                    if let Some(nxt_beam) = beam.next_beam(self.max_rows, self.max_cols) {
+                        beams.push_back(nxt_beam);
+                    }
+                } else {
+                    dst.insert(beam);
+                }
+            }
+            self.cache.insert(src.clone(), (dst.clone(), tiles.clone()));
+            (dst, tiles)
+        }
+    }
+    fn run(&mut self, start: Beam) -> usize {
+        let mut energized = HashSet::from([start.loc]);
+
+
+        energized.len()
     }
 }
