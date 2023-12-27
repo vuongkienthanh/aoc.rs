@@ -18,6 +18,7 @@ struct Beam {
     loc: Coord,
     direction: Direction,
 }
+
 impl Beam {
     #[rustfmt::skip]
     fn right(&self) -> Self { Beam { loc: self.loc, direction: Direction::Right } }
@@ -91,17 +92,15 @@ impl<'a> Puzzle<'a> {
             max_cols: input.lines().next().unwrap().len(),
         }
     }
+
+    #[rustfmt::skip]
     fn char_at(&self, loc: Coord) -> char {
-        self.input
-            .lines()
-            .nth(loc.0)
-            .unwrap()
-            .chars()
-            .nth(loc.1)
-            .unwrap()
+        self.input.lines().nth(loc.0).unwrap().chars().nth(loc.1).unwrap()
     }
-    fn forward_beam(&mut self, src: &Beam) -> (HashSet<Beam>, HashSet<Coord>) {
-        if let Some(res) = self.cache.get(src) {
+
+    // return set of beams at dst symbols, and energized tiles excluding src & dst
+    fn forward_symbol_to_symbols(&mut self, src: Beam) -> (HashSet<Beam>, HashSet<Coord>) {
+        if let Some(res) = self.cache.get(&src) {
             return res.clone();
         } else {
             let mut dst = HashSet::new();
@@ -109,8 +108,8 @@ impl<'a> Puzzle<'a> {
             let mut beams =
                 VecDeque::from(src.encounter(self.char_at(src.loc), self.max_rows, self.max_cols));
             while let Some(beam) = beams.pop_front() {
-                tiles.insert(beam.loc);
                 if self.char_at(beam.loc) == '.' {
+                    tiles.insert(beam.loc);
                     if let Some(nxt_beam) = beam.next_beam(self.max_rows, self.max_cols) {
                         beams.push_back(nxt_beam);
                     }
@@ -123,8 +122,32 @@ impl<'a> Puzzle<'a> {
         }
     }
     fn run(&mut self, start: Beam) -> usize {
-        let mut energized = HashSet::from([start.loc]);
+        let mut energized = HashSet::new();
+        let mut encounter_mirrors: HashSet<Beam> = HashSet::new();
+        let mut beams = VecDeque::from([start]);
 
+        while let Some(beam) = beams.pop_front() {
+            energized.insert(beam.loc);
+            let point = self.char_at(beam.loc);
+
+            if point == '.' {
+                let after_encounter = beam.encounter(point, self.max_rows, self.max_cols);
+                for nxt_beam in after_encounter {
+                    beams.push_back(nxt_beam);
+                }
+            } else {
+                let (dst, tiles) = self.forward_symbol_to_symbols(beam);
+                for nxt_beam in dst {
+                    if !encounter_mirrors.contains(&nxt_beam) {
+                        encounter_mirrors.insert(nxt_beam.clone());
+                        beams.push_back(nxt_beam);
+                    }
+                }
+                for t in tiles {
+                    energized.insert(t);
+                }
+            }
+        }
 
         energized.len()
     }
