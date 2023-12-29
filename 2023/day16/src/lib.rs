@@ -117,7 +117,7 @@ impl<'a> Puzzle<'a> {
                     dst.insert(beam);
                 }
             }
-            self.cache.insert(src.clone(), (dst.clone(), tiles.clone()));
+            self.cache.insert(src, (dst.clone(), tiles.clone()));
             (dst, tiles)
         }
     }

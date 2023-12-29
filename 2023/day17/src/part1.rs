@@ -10,17 +10,6 @@ enum Direction {
     Right,
 }
 
-impl Direction {
-    fn offset(&self) -> [(isize, isize);3] {
-        match self {
-            Direction::Up => [(-3,0), (-2,0),(-1,0)],
-            Direction::Down => [(1,0), (2,0), (3,0)],
-            Direction::Left => [(0,-3), (0,-2), (0,-1)],
-            Direction::Right => [(0,1),(0,2),(0,3)],
-        }
-    }
-}
-
 struct Astar {
     score: usize,
     loc: Coord,
@@ -47,13 +36,6 @@ impl PartialEq for Astar {
 }
 impl Eq for Astar {}
 
-// impl Astar {
-//     fn next_astar(&self, max_rows, max_cols) -> Vec<Self> {
-//
-//     }
-// }
-//
-
 struct Puzzle<'a> {
     input: &'a str,
     heap: BinaryHeap<Astar>,
@@ -69,53 +51,71 @@ impl<'a> Puzzle<'a> {
             input,
             heap: BinaryHeap::new(),
             max_rows: input.lines().count(),
-            max_cols:  input.lines().next().unwrap().len(),
+            max_cols: input.lines().next().unwrap().len(),
             start_loc,
             end_loc,
         }
     }
-fn num_at(&self, loc: Coord) -> usize {
-    self.input
-        .lines()
-        .nth(loc.0)
-        .unwrap()
-        .chars()
-        .nth(loc.1)
-        .unwrap()
-        .to_digit(10)
-        .unwrap() as usize
-}
+    fn num_at(&self, loc: Coord) -> usize {
+        self.input
+            .lines()
+            .nth(loc.0)
+            .unwrap()
+            .chars()
+            .nth(loc.1)
+            .unwrap()
+            .to_digit(10)
+            .unwrap() as usize
+    }
+    fn new_astar(&self, old: Astar) -> Vec<Astar> {
+        let mut ret = vec![];
+        match old.dir {
+            Direction::Up => {
+                for i in 1..4 {
+                    if let Some(row) = old.loc.0.checked_sub(i) {
+                        let addition_score: usize = (old.loc.0 - 1..=row)
+                            .map(|j| self.num_at((j, old.loc.1)))
+                            .sum();
+                        for dir in [Direction::Left, Direction::Right] {
+                            ret.push(Astar {
+                                score: old.score + addition_score,
+                                loc: (row, old.loc.1),
+                                dir,
+                            });
+                        }
+                    }
+                }
+            }
+            Direction::Down => {
+                if old.loc.0 < self.max_rows - 1 {
+                    for row in (old.loc.0 + 1)..=((old.loc.0 + 3).min(self.max_rows - 1)) {
+                        let addition_score: usize = ((old.loc.0 + 1)..=row)
+                            .map(|j| self.num_at((j, old.loc.1)))
+                            .sum();
+                        for dir in [Direction::Left, Direction::Right] {
+                            ret.push(Astar {
+                                score: old.score + addition_score,
+                                loc: (row, old.loc.1),
+                                dir,
+                            });
+                        }
+                    }
+                }
+            }
+            Direction::Left => todo!(),
+            Direction::Right => todo!(),
+        }
+        ret
+    }
 }
 
 pub fn process(input: &str) -> usize {
-    let start_score = num_at(input, 0, 0);
     let max_rows = input.lines().count();
     let max_cols = input.lines().next().unwrap().len();
+    let start_loc = (0, 0);
     let end_loc = (max_rows - 1, max_cols - 1);
 
-    let mut heap: BinaryHeap<Astar> = BinaryHeap::new();
-
-    for i in 1..4 {
-    heap.push(Astar {
-        score: num_at(input, 0, i),
-        loc: start_loc,
-        dir: Direction::Down,
-    });
-    heap.push(Astar {
-        score: start_score,
-        loc: start_loc,
-        dir: Direction::Right,
-    });
-
-    }
-
-    while let Some(route) = heap.pop() {
-        if route.loc == end_loc {
-            return route.score
-        }
-        for 
-
-    }
+    0
 }
 #[cfg(test)]
 mod tests {
