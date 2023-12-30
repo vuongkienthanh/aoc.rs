@@ -3,6 +3,7 @@ use std::collections::BinaryHeap;
 
 type Coord = (usize, usize);
 
+#[derive(Debug)]
 enum Direction {
     Up,
     Down,
@@ -10,112 +11,191 @@ enum Direction {
     Right,
 }
 
-struct Astar {
-    score: usize,
-    loc: Coord,
-    dir: Direction,
+#[derive(Debug)]
+struct Route {
+    heat_loss: u32,
+    nodes: Vec<Coord>,
+    last_dir: Direction,
 }
 
-impl PartialOrd for Astar {
+impl PartialOrd for Route {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        other.score.partial_cmp(&self.score)
+        Some(other.heat_loss.cmp(&self.heat_loss))
     }
 }
-impl Ord for Astar {
+impl Ord for Route {
     fn cmp(&self, other: &Self) -> Ordering {
-        other.score.cmp(&self.score)
+        other.heat_loss.cmp(&self.heat_loss)
     }
 }
-impl PartialEq for Astar {
+impl PartialEq for Route {
     fn eq(&self, other: &Self) -> bool {
-        self.score.eq(&other.score)
-    }
-    fn ne(&self, other: &Self) -> bool {
-        self.score.ne(&other.score)
+        self.heat_loss.eq(&other.heat_loss)
     }
 }
-impl Eq for Astar {}
+impl Eq for Route {}
 
-struct Puzzle<'a> {
-    input: &'a str,
-    heap: BinaryHeap<Astar>,
+#[derive(Debug)]
+struct Puzzle {
+    input: Vec<Vec<u32>>,
+    heap: BinaryHeap<Route>,
     max_rows: usize,
     max_cols: usize,
-    start_loc: Coord,
-    end_loc: Coord,
 }
 
-impl<'a> Puzzle<'a> {
-    fn new(input: &'a str, start_loc: Coord, end_loc: Coord) -> Self {
+impl Puzzle {
+    fn new(input: &str) -> Self {
         Self {
-            input,
+            input: input
+                .lines()
+                .map(|line| {
+                    line.chars()
+                        .map(|c| c.to_digit(10).unwrap())
+                        .collect::<Vec<_>>()
+                })
+                .collect::<Vec<_>>(),
             heap: BinaryHeap::new(),
             max_rows: input.lines().count(),
             max_cols: input.lines().next().unwrap().len(),
-            start_loc,
-            end_loc,
         }
     }
-    fn num_at(&self, loc: Coord) -> usize {
-        self.input
-            .lines()
-            .nth(loc.0)
-            .unwrap()
-            .chars()
-            .nth(loc.1)
-            .unwrap()
-            .to_digit(10)
-            .unwrap() as usize
+    fn num_at(&self, loc: Coord) -> u32 {
+        *self.input.get(loc.0).unwrap().get(loc.1).unwrap()
     }
-    fn new_astar(&self, old: Astar) -> Vec<Astar> {
+    fn new_astar(&self, old: &Route) -> Vec<Route> {
         let mut ret = vec![];
-        match old.dir {
+        let old_row = old.nodes.last().unwrap().0;
+        let old_col = old.nodes.last().unwrap().1;
+        let mut addition_heat_loss = 0;
+        let mut new_nodes = old.nodes.clone();
+
+        match old.last_dir {
             Direction::Up => {
-                for i in 1..4 {
-                    if let Some(row) = old.loc.0.checked_sub(i) {
-                        let addition_score: usize = (old.loc.0 - 1..=row)
-                            .map(|j| self.num_at((j, old.loc.1)))
-                            .sum();
-                        for dir in [Direction::Left, Direction::Right] {
-                            ret.push(Astar {
-                                score: old.score + addition_score,
-                                loc: (row, old.loc.1),
-                                dir,
-                            });
+                for i in 1..=3 {
+                    if let Some(row) = old_row.checked_sub(i) {
+                        let new_coord = (row, old_col);
+                        if old.nodes.contains(&new_coord) {
+                            break;
+                        } else {
+                            new_nodes.push(new_coord);
+                            addition_heat_loss += self.num_at(new_coord);
+                            for dir in [Direction::Left, Direction::Right] {
+                                ret.push(Route {
+                                    heat_loss: old.heat_loss + addition_heat_loss.clone(),
+                                    nodes: new_nodes.clone(),
+                                    last_dir: dir,
+                                });
+                            }
                         }
+                    } else {
+                        break;
                     }
                 }
             }
             Direction::Down => {
-                if old.loc.0 < self.max_rows - 1 {
-                    for row in (old.loc.0 + 1)..=((old.loc.0 + 3).min(self.max_rows - 1)) {
-                        let addition_score: usize = ((old.loc.0 + 1)..=row)
-                            .map(|j| self.num_at((j, old.loc.1)))
-                            .sum();
+                let row_start = (old_row + 1).min(self.max_rows - 1);
+                let row_end = (old_row + 3).min(self.max_rows - 1);
+                for row in row_start..=row_end {
+                    let new_coord = (row, old_col);
+                    if old.nodes.contains(&new_coord) {
+                        break;
+                    } else {
+                        new_nodes.push(new_coord);
+                        addition_heat_loss += self.num_at(new_coord);
                         for dir in [Direction::Left, Direction::Right] {
-                            ret.push(Astar {
-                                score: old.score + addition_score,
-                                loc: (row, old.loc.1),
-                                dir,
+                            ret.push(Route {
+                                heat_loss: old.heat_loss + addition_heat_loss.clone(),
+                                nodes: new_nodes.clone(),
+                                last_dir: dir,
                             });
                         }
                     }
                 }
             }
-            Direction::Left => todo!(),
-            Direction::Right => todo!(),
+            Direction::Left => {
+                for i in 1..=3 {
+                    if let Some(col) = old_col.checked_sub(i) {
+                        let new_coord = (old_row, col);
+                        if old.nodes.contains(&new_coord) {
+                            break;
+                        } else {
+                            new_nodes.push(new_coord);
+                            addition_heat_loss += self.num_at(new_coord);
+                            for dir in [Direction::Up, Direction::Down] {
+                                ret.push(Route {
+                                    heat_loss: old.heat_loss + addition_heat_loss.clone(),
+                                    nodes: new_nodes.clone(),
+                                    last_dir: dir,
+                                });
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
+            Direction::Right => {
+                let col_start = (old_col + 1).min(self.max_cols - 1);
+                let col_end = (old_col + 3).min(self.max_cols - 1);
+                for col in col_start..=col_end {
+                    let new_coord = (old_row, col);
+                    if old.nodes.contains(&new_coord) {
+                        break;
+                    } else {
+                        new_nodes.push(new_coord);
+                        addition_heat_loss += self.num_at(new_coord);
+                        for dir in [Direction::Up, Direction::Down] {
+                            ret.push(Route {
+                                heat_loss: old.heat_loss + addition_heat_loss.clone(),
+                                nodes: new_nodes.clone(),
+                                last_dir: dir,
+                            });
+                        }
+                    }
+                }
+            }
         }
         ret
+    }
+
+    fn run(&mut self, start: Coord, end: Coord) -> usize {
+        for dir in [
+            Direction::Up,
+            Direction::Down,
+            Direction::Left,
+            Direction::Right,
+        ] {
+            self.heap.push(Route {
+                heat_loss: 0,
+                nodes: vec![start],
+                last_dir: dir,
+            });
+        }
+        let mut i = 0;
+        while let Some(astar) = self.heap.pop() {
+            if astar.nodes.last().unwrap() == &end {
+                return astar.heat_loss as usize;
+            } else {
+                for new_astar in self.new_astar(&astar) {
+                    // dbg!(&new_astar);
+                    self.heap.push(new_astar);
+                }
+            }
+            dbg!(&self.heap);
+            i += 1;
+            if i == 10 {
+                break;
+            }
+        }
+
+        panic!("cant find end coord")
     }
 }
 
 pub fn process(input: &str) -> usize {
     let max_rows = input.lines().count();
     let max_cols = input.lines().next().unwrap().len();
-    let start_loc = (0, 0);
-    let end_loc = (max_rows - 1, max_cols - 1);
-
-    0
+    Puzzle::new(input).run((0, 0), (max_rows - 1, max_cols - 1))
 }
 #[cfg(test)]
 mod tests {
@@ -138,3 +218,4 @@ mod tests {
         assert_eq!(process(input), 102);
     }
 }
+
