@@ -8,3 +8,5 @@ description.workspace = true
 publish.workspace = true
 
 [dependencies]
+grid = "0.13.0"
+pathfinding = "4.8.0"
