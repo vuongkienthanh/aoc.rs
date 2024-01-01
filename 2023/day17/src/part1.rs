@@ -1,68 +1,20 @@
+use crate::{Direction, Point};
 use grid::Grid;
 use pathfinding::prelude::astar;
 
-#[derive(Debug, Hash, Clone, PartialEq, Eq)]
-struct Point {
-    x: usize,
-    y: usize,
-    step: u8,
-    direction: Direction,
-}
-// impl PartialEq for Point {
-//     fn eq(&self, other: &Self) -> bool {
-//         self.x == other.x && self.y == other.y
-//     }
-// }
-// impl Eq for Point {}
-
 impl Point {
-    fn new(x: usize, y: usize, step: u8, direction: Direction) -> Self {
-        Self {
-            x,
-            y,
-            step,
-            direction,
-        }
+    fn left1(&self, grid: &Grid<usize>) -> Option<Point> {
+        self.left(grid)
     }
-
-    #[rustfmt::skip]
-    fn left(&self, grid: &Grid<u32>) -> Option<Point> {
-        match self.direction {
-            Direction::Up => { if self.y == 0 { None } else { Some(Point::new(self.x, self.y - 1, 0, Direction::Left)) } }
-            Direction::Down => { if self.y == grid.cols() - 1 { None } else { Some(Point::new(self.x, self.y + 1, 0, Direction::Right)) } }
-            Direction::Left => { if self.x == grid.rows() - 1 { None } else { Some(Point::new(self.x + 1, self.y, 0, Direction::Down)) } }
-            Direction::Right => { if self.x == 0 { None } else { Some(Point::new(self.x - 1, self.y, 0, Direction::Up)) } }
-        }
+    fn right1(&self, grid: &Grid<usize>) -> Option<Point> {
+        self.right(grid)
     }
-    #[rustfmt::skip]
-    fn right(&self, grid: &Grid<u32>) -> Option<Point> {
-        match self.direction {
-            Direction::Up => { if self.y == grid.cols() - 1 { None } else { Some(Point::new(self.x, self.y + 1, 0, Direction::Right)) } }
-            Direction::Down => { if self.y == 0 { None } else { Some(Point::new(self.x, self.y - 1, 0, Direction::Left)) } }
-            Direction::Left => { if self.x == 0 { None } else { Some(Point::new(self.x - 1, self.y, 0, Direction::Up)) } }
-            Direction::Right => { if self.x == grid.rows() - 1 { None } else { Some(Point::new(self.x + 1, self.y, 0, Direction::Down)) } }
-        }
-    }
-    #[rustfmt::skip]
-    fn straight(&self, grid: &Grid<u32>) -> Option<Point> {
+    fn straight1(&self, grid: &Grid<usize>) -> Option<Point> {
         if self.step == 3 {
-            return None
+            return None;
         }
-        match self.direction {
-            Direction::Up => { if self.x == 0 { None } else { Some(Point::new(self.x - 1, self.y, self.step + 1, self.direction.clone())) } }
-            Direction::Down => { if self.x == grid.rows() - 1 { None } else { Some(Point::new(self.x + 1, self.y, self.step + 1, self.direction.clone())) } }
-            Direction::Left => { if self.y == 0 { None } else { Some(Point::new(self.x, self.y - 1, self.step + 1, self.direction.clone())) } }
-            Direction::Right => { if self.y == grid.cols() - 1 { None } else { Some(Point::new(self.x, self.y + 1, self.step + 1, self.direction.clone())) } }
-        }
+        self.straight(grid)
     }
-}
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
 }
 
 pub fn process(input: &str) -> usize {
@@ -71,26 +23,32 @@ pub fn process(input: &str) -> usize {
             .lines()
             .map(|line| {
                 line.chars()
-                    .map(|c| c.to_digit(10).unwrap())
+                    .map(|c| c.to_digit(10).unwrap() as usize)
                     .collect::<Vec<_>>()
             })
             .collect::<Vec<_>>(),
     );
     let start = Point::new(0, 0, 0, Direction::Right);
+    let end_x = grid.rows() - 1;
+    let end_y = grid.cols() - 1;
 
-    dbg!(astar(
+    astar(
         &start,
         |point| {
-            [point.straight(&grid), point.left(&grid), point.right(&grid)]
-                .into_iter()
-                .filter_map(|somepoint| somepoint)
-                .map(|p| (p.clone(), *grid.get(p.x, p.y).unwrap()))
+            [
+                point.straight1(&grid),
+                point.left1(&grid),
+                point.right1(&grid),
+            ]
+            .into_iter()
+            .filter_map(|somepoint| somepoint)
+            .map(|p| (p.clone(), *grid.get(p.x, p.y).unwrap()))
         },
-        |point| ((grid.rows() - 1).abs_diff(point.x) + (grid.cols() - 1).abs_diff(point.y)) as u32,
-        |point| point.x == grid.rows() - 1 && point.y == grid.cols() - 1,
+        |point| (end_x.abs_diff(point.x) + end_y.abs_diff(point.y)),
+        |point| point.x == end_x && point.y == end_y,
     )
-    .unwrap());
-        0
+    .unwrap()
+    .1
 }
 
 #[cfg(test)]
