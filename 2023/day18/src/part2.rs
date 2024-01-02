@@ -1,45 +1,33 @@
-use std::usize;
-#[derive(Debug)]
-enum Direction {
-    Right,
-    Left,
-    Up,
-    Down,
-}
+type Coord = (isize, isize);
 
-fn parse_input(input: &str) -> Vec<(Direction, isize)> {
-    input
-        .lines()
-        .map(|line| {
-            let third = line.split_ascii_whitespace().skip(2).next().unwrap();
-            let dir = match third.chars().nth(7).unwrap() {
-                '0' => Direction::Right,
-                '1' => Direction::Down,
-                '2' => Direction::Left,
-                '3' => Direction::Up,
-                _ => panic!("only 0123"),
-            };
-            let range = usize::from_str_radix(third.get(2..7).unwrap(), 16).unwrap() as isize;
-            (dir, range)
-        })
-        .collect::<Vec<_>>()
+fn parse_input(input: &str) -> Vec<Coord> {
+    let mut cur = (0, 0);
+    let mut ret = vec![];
+    for line in input.lines() {
+        let third = line.split_ascii_whitespace().skip(2).next().unwrap();
+        let range = usize::from_str_radix(third.get(2..7).unwrap(), 16).unwrap() as isize;
+        match third.chars().nth(7).unwrap() {
+            '0' => cur = (cur.0, cur.1 + range),
+            '1' => cur = (cur.0 + range, cur.1),
+            '2' => cur = (cur.0, cur.1 - range),
+            '3' => cur = (cur.0 - range, cur.1),
+            _ => panic!("only 0123"),
+        };
+        ret.push(cur);
+    }
+    ret
+}
+fn cross_minus(a: &Coord, b: &Coord) -> isize {
+    a.0 * b.1 - a.1*b.0
 }
 pub fn process(input: &str) -> usize {
     let parsed = parse_input(input);
-    let mut cur: (isize, isize) = (0, 0);
-    let (mut min_x, mut max_x, mut min_y, mut max_y) = (0isize, 0isize, 0isize, 0isize);
-    for (dir, range) in parsed.iter() {
-        match dir {
-            Direction::Right => cur = (cur.0, cur.1 + *range),
-            Direction::Left => cur = (cur.0, cur.1 - *range),
-            Direction::Up => cur = (cur.0 - *range, cur.1),
-            Direction::Down => cur = (cur.0 + *range, cur.1),
-        }
-        min_x = min_x.min(cur.0);
-        max_x = max_x.min(cur.0);
-        min_y = min_y.min(cur.1);
-        max_y = max_y.min(cur.1);
+    parsed.windows(2).map(|coords| {
+        let a = coords.get(0).unwrap();
+        let b = coords.get(1).unwrap();
     }
+        );
+    dbg!(parsed);
     todo!("part2")
 }
 #[cfg(test)]
