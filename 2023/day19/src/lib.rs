@@ -1,7 +1,7 @@
 pub mod part1;
 pub mod part2;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq,Clone)]
 enum PredicationResult {
     Accept,
     Reject,
@@ -16,7 +16,7 @@ impl PredicationResult {
         }
     }
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum MachinePartAttribute {
     X,
     M,
@@ -35,7 +35,7 @@ impl MachinePartAttribute {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum CompareSign {
     G,
     L,

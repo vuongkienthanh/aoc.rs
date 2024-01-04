@@ -1,8 +1,7 @@
 use crate::{CompareSign, MachinePartAttribute, PredicationResult};
 use std::collections::HashMap;
-use std::ops::Range;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Predicate {
     attr: MachinePartAttribute,
     sign: CompareSign,
@@ -58,19 +57,105 @@ fn parse_input(input: &str) -> HashMap<String, Vec<Workflow>> {
         .collect()
 }
 
+#[derive(Debug, Clone)]
+struct Range {
+    start: usize,
+    end: usize,
+}
+impl Range {
+    fn new(start: usize, end: usize) -> Self {
+        Self { start, end }
+    }
+}
+
+#[derive(Debug, Clone)]
 struct State {
-    x: Range<usize>,
-    m: Range<usize>,
-    a: Range<usize>,
-    s: Range<usize>,
-    dst: PredicationResult,
+    x: Range,
+    m: Range,
+    a: Range,
+    s: Range,
+    dst: Option<PredicationResult>,
 }
 
 impl State {
-    fn go_through(&self, workflows: &[Workflow]) -> Vec<State> {
-        let mut ret = vec![];
-        for wf in workflows {
+    #[rustfmt::skip]
+    fn replace_x(mut self, x:Range) -> Self { self.x = x; self }
+    #[rustfmt::skip]
+    fn replace_m(mut self, m:Range) -> Self { self.m = m; self }
+    #[rustfmt::skip]
+    fn replace_a(mut self, a:Range) -> Self { self.a = a; self }
+    #[rustfmt::skip]
+    fn replace_s(mut self, s:Range) -> Self { self.s = s; self }
+    #[rustfmt::skip]
+    fn replace_dst(mut self, dst:Option<PredicationResult>) -> Self { self.dst = dst; self }
 
+    fn go_through_once(self, workflows: &[Workflow]) -> Vec<State> {
+        let mut ret = vec![self];
+        for wf in workflows {
+            if let Some(preication) = wf.predication.clone() {
+                todo!()
+            } else {
+                todo!()
+            }
+        }
+        ret
+    }
+
+    // Return (Accept, Reject)
+    fn divide_by_workflow(&self, workflow: &Workflow) -> (Option<State>, Option<State>) {
+        let predicationresult = workflow.result;
+
+        if let Some(predication) = workflow.predication.clone() {
+            match predication.attr {
+                MachinePartAttribute::X => {
+                    let range = self.x.clone();
+                    match predication.sign {
+                        CompareSign::G => {
+                            if predication.value < range.start {
+                                return (Some(self.replace_dst(Some(predicationresult))), None);
+                            } else if predication.value == range.start {
+                                vec![Range::new(range.start + 1, range.end)]
+                            } else if predication.value < range.end {
+                                vec![
+                                    Range::new(range.start, predication.value),
+                                    Range::new(predication.value + 1, range.end),
+                                ]
+                            } else {
+                                vec![]
+                            }
+                        }
+                        CompareSign::L => todo!(),
+                    }
+                }
+                MachinePartAttribute::M => self.m.clone(),
+                MachinePartAttribute::A => self.a.clone(),
+                MachinePartAttribute::S => self.s.clone(),
+            };
+            let new_range = match predication.sign {
+                CompareSign::G => {}
+                CompareSign::L => {
+                    if predication.value <= range.start {
+                        vec![]
+                    } else if predication.value < range.end {
+                        vec![
+                            Range::new(range.start, predication.value - 1),
+                            Range::new(predication.value, range.end),
+                        ]
+                    } else if predication.value == range.end {
+                        vec![Range::new(range.start, range.end - 1)]
+                    } else {
+                        vec![]
+                    }
+                }
+            };
+        } else {
+            ret.push(State {
+                x: self.x.clone(),
+                m: self.m.clone(),
+                a: self.a.clone(),
+                s: self.s.clone(),
+                dst: Some(workflow.result.clone()),
+            })
         }
         ret
     }
@@ -78,7 +163,13 @@ impl State {
 
 pub fn process(input: &str) -> usize {
     let system = parse_input(input);
-    dbg!(system);
+    let start = State {
+        x: Range::new(1, 4000),
+        m: Range::new(1, 4000),
+        a: Range::new(1, 4000),
+        s: Range::new(1, 4000),
+        dst: Some(PredicationResult::Refer("in".to_string())),
+    };
     0
 }
 #[cfg(test)]
