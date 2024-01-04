@@ -1,36 +1,28 @@
+use crate::{MachinePartAttribute, PredicationResult};
 use predicates::prelude::*;
 use std::collections::HashMap;
-use crate::{PredicationResult, MachinePartAttribute};
 
 #[derive(Debug)]
-struct Workflow {
-    predications: Vec<Predication>,
+struct Condition {
+    attr: MachinePartAttribute,
+    predication: predicates::BoxPredicate<usize>,
 }
-impl Workflow {
-    fn eval(&self, mp: &MachinePart) -> &PredicationResult {
-        for p in self.predications.iter() {
-            let attr = match p.attr {
-                Some(MachinePartAttribute::X) => mp.x,
-                Some(MachinePartAttribute::M) => mp.m,
-                Some(MachinePartAttribute::A) => mp.a,
-                Some(MachinePartAttribute::S) => mp.s,
-                _ => 0,
-            };
-            if p.predication.eval(&attr) {
-                return &p.result;
-            }
+impl Condition {
+    fn eval(&self, machinepart: &MachinePart) -> bool {
+        match self.attr {
+            MachinePartAttribute::X => self.predication.eval(&machinepart.x),
+            MachinePartAttribute::M => self.predication.eval(&machinepart.m),
+            MachinePartAttribute::A => self.predication.eval(&machinepart.a),
+            MachinePartAttribute::S => self.predication.eval(&machinepart.s),
         }
-        panic!("should always return")
     }
 }
-
 #[derive(Debug)]
-struct Predication {
-    attr: Option<MachinePartAttribute>,
-    predication: predicates::BoxPredicate<usize>,
+struct Rule {
+    condition: Option<Condition>,
     result: PredicationResult,
 }
-
+type Workflow = Vec<Rule>;
 
 #[derive(Debug)]
 struct MachinePart {
@@ -40,10 +32,22 @@ struct MachinePart {
     s: usize,
 }
 impl MachinePart {
-    fn go_through<'a>(&self, system: &'a HashMap<String, Workflow>) -> &'a PredicationResult {
+    fn go_through<'a>(&'a self, system: &'a HashMap<String, Workflow>) -> &'a PredicationResult {
         let mut workflow = system.get("in").unwrap();
         loop {
-            match workflow.eval(self) {
+            let mut result = None;
+            for rule in workflow {
+                if let Some(condition) = &rule.condition {
+                    if condition.eval(self) {
+                        result = Some(&rule.result);
+                        break;
+                    }
+                } else {
+                    result = Some(&rule.result);
+                    break;
+                }
+            }
+            match result.unwrap() {
                 PredicationResult::Refer(name) => workflow = system.get(name).unwrap(),
                 other => return other,
             }
@@ -60,7 +64,7 @@ fn parse_input(input: &str) -> (HashMap<String, Workflow>, Vec<MachinePart>) {
     let mut system = HashMap::new();
     for line in workflows.lines() {
         let name = line.chars().take_while(|c| *c != '{').collect::<String>();
-        let predications = line
+        let workflows = line
             .chars()
             .skip_while(|c| *c != '{')
             .skip(1)
@@ -69,7 +73,7 @@ fn parse_input(input: &str) -> (HashMap<String, Workflow>, Vec<MachinePart>) {
             .split(',')
             .map(|p| {
                 if p.contains(':') {
-                    let attr = Some(MachinePartAttribute::new(p.chars().take(1).next().unwrap()));
+                    let attr = MachinePartAttribute::new(p.chars().take(1).next().unwrap());
                     let sign = p.chars().skip(1).take(1).next().unwrap();
                     let (compare_value, result) = &p[2..].split_once(':').unwrap();
                     let compare_value = compare_value.parse::<usize>().unwrap();
@@ -79,24 +83,20 @@ fn parse_input(input: &str) -> (HashMap<String, Workflow>, Vec<MachinePart>) {
                         _ => panic!("not < or >"),
                     };
                     let result = PredicationResult::new(result);
-                    Predication {
-                        attr,
-                        predication,
+                    Rule {
+                        condition: Some(Condition { attr, predication }),
                         result,
                     }
                 } else {
-                    let attr = None;
-                    let predication = predicate::always().boxed();
                     let result = PredicationResult::new(p);
-                    Predication {
-                        attr,
-                        predication,
+                    Rule {
+                        condition: None,
                         result,
                     }
                 }
             })
             .collect::<Vec<_>>();
-        system.insert(name, Workflow { predications });
+        system.insert(name, workflows);
     }
 
     let machineparts = parts

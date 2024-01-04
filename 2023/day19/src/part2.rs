@@ -2,19 +2,113 @@ use crate::{CompareSign, MachinePartAttribute, PredicationResult};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
-struct Predicate {
+struct Range {
+    start: usize,
+    end: usize,
+}
+impl Range {
+    fn try_new(start: usize, end: usize) -> Option<Self> {
+        if end >= start {
+            Some(Self { start, end })
+        } else {
+            None
+        }
+    }
+    fn len(&self) -> usize {
+        self.end - self.start + 1
+    }
+}
+
+#[derive(Debug, Clone)]
+struct RangeXMAS {
+    x: Range,
+    m: Range,
+    a: Range,
+    s: Range,
+}
+impl RangeXMAS {
+    #[rustfmt::skip]
+    fn replace_x(mut self, x:Range) -> Self { self.x = x; self }
+    #[rustfmt::skip]
+    fn replace_m(mut self, m:Range) -> Self { self.m = m; self }
+    #[rustfmt::skip]
+    fn replace_a(mut self, a:Range) -> Self { self.a = a; self }
+    #[rustfmt::skip]
+    fn replace_s(mut self, s:Range) -> Self { self.s = s; self }
+    fn combinations(&self) -> usize {
+        self.x.len() * self.m.len() * self.a.len() * self.s.len()
+    }
+}
+
+#[derive(Debug, Clone)]
+struct Condition {
     attr: MachinePartAttribute,
     sign: CompareSign,
     value: usize,
 }
 
-#[derive(Debug)]
-struct Workflow {
-    predication: Option<Predicate>,
-    result: PredicationResult,
+impl Condition {
+    // return ( accept, reject )
+    fn eval(&self, rangexmas: &RangeXMAS) -> (Option<RangeXMAS>, Option<RangeXMAS>) {
+        let range = match self.attr {
+            MachinePartAttribute::X => &rangexmas.x,
+            MachinePartAttribute::M => &rangexmas.m,
+            MachinePartAttribute::A => &rangexmas.a,
+            MachinePartAttribute::S => &rangexmas.s,
+        };
+        let mut accept = None;
+        let mut reject = None;
+        match self.sign {
+            CompareSign::G => {
+                if self.value < range.start {
+                    accept = Range::try_new(range.start, range.end);
+                } else if self.value < range.end {
+                    accept = Range::try_new(self.value + 1, range.end);
+                    reject = Range::try_new(range.start, self.value);
+                } else {
+                    reject = Range::try_new(range.start, range.end);
+                }
+            }
+            CompareSign::L => {
+                if self.value > range.end {
+                    accept = Range::try_new(range.start, range.end);
+                } else if self.value > range.start {
+                    accept = Range::try_new(range.start, self.value - 1);
+                    reject = Range::try_new(self.value, range.end);
+                } else {
+                    reject = Range::try_new(range.start, range.end);
+                }
+            }
+        }
+        match self.attr {
+            MachinePartAttribute::X => (
+                accept.map(|range| rangexmas.clone().replace_x(range)),
+                reject.map(|range| rangexmas.clone().replace_x(range)),
+            ),
+            MachinePartAttribute::M => (
+                accept.map(|range| rangexmas.clone().replace_m(range)),
+                reject.map(|range| rangexmas.clone().replace_m(range)),
+            ),
+            MachinePartAttribute::A => (
+                accept.map(|range| rangexmas.clone().replace_a(range)),
+                reject.map(|range| rangexmas.clone().replace_a(range)),
+            ),
+            MachinePartAttribute::S => (
+                accept.map(|range| rangexmas.clone().replace_s(range)),
+                reject.map(|range| rangexmas.clone().replace_s(range)),
+            ),
+        }
+    }
 }
 
-fn parse_input(input: &str) -> HashMap<String, Vec<Workflow>> {
+#[derive(Debug)]
+struct Rule {
+    condition: Option<Condition>,
+    result: PredicationResult,
+}
+type Workflow = Vec<Rule>;
+
+fn parse_input(input: &str) -> HashMap<String, Workflow> {
     input
         .split_once("\n\n")
         .unwrap()
@@ -22,7 +116,6 @@ fn parse_input(input: &str) -> HashMap<String, Vec<Workflow>> {
         .lines()
         .map(|line| {
             let name = line.chars().take_while(|c| *c != '{').collect::<String>();
-
             let workflows = line
                 .chars()
                 .skip_while(|c| *c != '{')
@@ -36,141 +129,90 @@ fn parse_input(input: &str) -> HashMap<String, Vec<Workflow>> {
                         let sign = CompareSign::new(p.chars().skip(1).take(1).next().unwrap());
                         let (compare_value, result) = &p[2..].split_once(':').unwrap();
                         let value = compare_value.parse::<usize>().unwrap();
-                        let predication = Some(Predicate { attr, sign, value });
+                        let condition = Some(Condition { attr, sign, value });
                         let result = PredicationResult::new(result);
-                        Workflow {
-                            predication,
-                            result,
-                        }
+                        Rule { condition, result }
                     } else {
                         let result = PredicationResult::new(p);
-                        Workflow {
-                            predication: None,
-                            result,
-                        }
+                        let condition = None;
+                        Rule { condition, result }
                     }
                 })
                 .collect::<Vec<_>>();
-
             (name, workflows)
         })
         .collect()
 }
-
-#[derive(Debug, Clone)]
-struct Range {
-    start: usize,
-    end: usize,
-}
-impl Range {
-    fn new(start: usize, end: usize) -> Self {
-        Self { start, end }
-    }
-}
-
-#[derive(Debug, Clone)]
+//
+#[derive(Debug)]
 struct State {
-    x: Range,
-    m: Range,
-    a: Range,
-    s: Range,
-    dst: Option<PredicationResult>,
+    rangexmas: RangeXMAS,
+    result: PredicationResult,
 }
 
 impl State {
-    #[rustfmt::skip]
-    fn replace_x(mut self, x:Range) -> Self { self.x = x; self }
-    #[rustfmt::skip]
-    fn replace_m(mut self, m:Range) -> Self { self.m = m; self }
-    #[rustfmt::skip]
-    fn replace_a(mut self, a:Range) -> Self { self.a = a; self }
-    #[rustfmt::skip]
-    fn replace_s(mut self, s:Range) -> Self { self.s = s; self }
-    #[rustfmt::skip]
-    fn replace_dst(mut self, dst:Option<PredicationResult>) -> Self { self.dst = dst; self }
+    fn go_into_workflow(&self, system: &HashMap<String, Workflow>) -> Vec<State> {
+        if let PredicationResult::Refer(name) = &self.result {
+            let workflow = system.get(name).unwrap();
+            let mut ret = vec![];
+            let mut range = self.rangexmas.clone();
 
-    fn go_through_once(self, workflows: &[Workflow]) -> Vec<State> {
-        let mut ret = vec![self];
-        for wf in workflows {
-            if let Some(preication) = wf.predication.clone() {
-                todo!()
-            } else {
-                todo!()
+            for rule in workflow {
+                if let Some(condition) = &rule.condition {
+                    let (accept, reject) = condition.eval(&range);
+                    if let Some(accept_range) = accept {
+                        ret.push(State {
+                            rangexmas: accept_range,
+                            result: rule.result.clone(),
+                        })
+                    };
+                    if let Some(reject_range) = reject {
+                        range = reject_range
+                    };
+                } else {
+                    ret.push(State {
+                        rangexmas: range.clone(),
+                        result: rule.result.clone(),
+                    })
+                }
             }
-        }
-        ret
-    }
 
-    // Return (Accept, Reject)
-    fn divide_by_workflow(&self, workflow: &Workflow) -> (Option<State>, Option<State>) {
-        let predicationresult = workflow.result;
-
-        if let Some(predication) = workflow.predication.clone() {
-            match predication.attr {
-                MachinePartAttribute::X => {
-                    let range = self.x.clone();
-                    match predication.sign {
-                        CompareSign::G => {
-                            if predication.value < range.start {
-                                return (Some(self.replace_dst(Some(predicationresult))), None);
-                            } else if predication.value == range.start {
-                                vec![Range::new(range.start + 1, range.end)]
-                            } else if predication.value < range.end {
-                                vec![
-                                    Range::new(range.start, predication.value),
-                                    Range::new(predication.value + 1, range.end),
-                                ]
-                            } else {
-                                vec![]
-                            }
-                        }
-                        CompareSign::L => todo!(),
-                    }
-                }
-                MachinePartAttribute::M => self.m.clone(),
-                MachinePartAttribute::A => self.a.clone(),
-                MachinePartAttribute::S => self.s.clone(),
-            };
-            let new_range = match predication.sign {
-                CompareSign::G => {}
-                CompareSign::L => {
-                    if predication.value <= range.start {
-                        vec![]
-                    } else if predication.value < range.end {
-                        vec![
-                            Range::new(range.start, predication.value - 1),
-                            Range::new(predication.value, range.end),
-                        ]
-                    } else if predication.value == range.end {
-                        vec![Range::new(range.start, range.end - 1)]
-                    } else {
-                        vec![]
-                    }
-                }
-            };
+            ret
         } else {
-            ret.push(State {
-                x: self.x.clone(),
-                m: self.m.clone(),
-                a: self.a.clone(),
-                s: self.s.clone(),
-                dst: Some(workflow.result.clone()),
-            })
+            panic!("should not call go_into_workflow on an accepted ")
         }
-        ret
     }
 }
 
 pub fn process(input: &str) -> usize {
     let system = parse_input(input);
     let start = State {
-        x: Range::new(1, 4000),
-        m: Range::new(1, 4000),
-        a: Range::new(1, 4000),
-        s: Range::new(1, 4000),
-        dst: Some(PredicationResult::Refer("in".to_string())),
+        rangexmas: RangeXMAS {
+            x: Range::try_new(1, 4000).unwrap(),
+            m: Range::try_new(1, 4000).unwrap(),
+            a: Range::try_new(1, 4000).unwrap(),
+            s: Range::try_new(1, 4000).unwrap(),
+        },
+        result: PredicationResult::Refer("in".to_string()),
     };
-    0
+    let mut states = std::collections::VecDeque::new();
+    states.push_back(start);
+    let mut parsed_states: Vec<State> = vec![];
+
+    while let Some(state) = states.pop_front() {
+        for new_state in state.go_into_workflow(&system) {
+            match new_state.result {
+                PredicationResult::Refer(_) => states.push_back(new_state),
+                ref _other => parsed_states.push(new_state),
+            }
+        }
+    }
+
+    parsed_states
+        .into_iter()
+        .filter(|state| state.result == PredicationResult::Accept)
+        .map(|state| state.rangexmas.combinations())
+        .sum()
 }
 #[cfg(test)]
 mod tests {
