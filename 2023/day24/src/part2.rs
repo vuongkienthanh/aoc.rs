@@ -31,9 +31,6 @@ impl Hailstone2D {
         self.velo = (self.velo.0 - vrx as f64, self.velo.1 - vry as f64);
         self
     }
-    fn is_parallel(&self, other: &Self) -> bool {
-        self.velo.0 / other.velo.0 == self.velo.1 / other.velo.1
-    }
     fn intersect(&self, other: &Self) -> (Numtype, Numtype, Coord2D) {
         let t1 = (other.velo.1 * (other.pos.0 - self.pos.0)
             - other.velo.0 * (other.pos.1 - self.pos.1))
@@ -86,12 +83,20 @@ pub fn process(_input: &str) -> usize {
 
             if intersection_ac == intersection_ab
                 && timea1 >= 0.0
-                && timea2 >= 0.0
+                && timea1 == timea2
                 && timeb >= 0.0
                 && timec >= 0.0
             {
-                println!("vrx: {vrx} __ vry: {vry}");
-                println!("{intersection_ab:?}");
+                for vrz in -1000..=1000 {
+                    let new_hailstone_a_z_axis = hailstone_a.pos.2 + timea1 * (hailstone_a.velo.2 - vrz as f64);
+                    let new_hailstone_b_z_axis = hailstone_b.pos.2 + timeb * (hailstone_b.velo.2 - vrz as f64);
+                    let new_hailstone_c_z_axis = hailstone_c.pos.2 + timec * (hailstone_c.velo.2 - vrz as f64);
+
+                    if new_hailstone_a_z_axis == new_hailstone_b_z_axis 
+                        && new_hailstone_b_z_axis == new_hailstone_c_z_axis {
+                            return (intersection_ab.0 + intersection_ac.1 + new_hailstone_a_z_axis) as usize
+                    }
+                }
             }
         }
     }
