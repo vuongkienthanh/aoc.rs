@@ -74,6 +74,7 @@ or `cargo run -- fetch DAY` to download input"#
                     .get(get_url)
                     .send()?
                     .text()?;
+                println!("{}", &input);
                 fs::write(dst, input)?;
                 Ok(())
             }
