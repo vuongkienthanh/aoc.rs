@@ -1,18 +1,18 @@
 use crate::{parse_input, Pulse};
 use std::collections::VecDeque;
 pub fn process(input: &'static str) -> usize {
-    let mut parsed = parse_input(input);
+    let mut module_map = parse_input(input);
     let mut loop_len = 0;
     let mut low_pulses = 0;
     let mut high_pulses = 0;
-    for i in 0..1000 {
+    for button_push in 0..1000 {
         let mut stack: VecDeque<(String, Pulse, String)> =
             VecDeque::from([("button".to_string(), Pulse::Low, "broadcaster".to_string())]);
         low_pulses += 1;
         while let Some((src, pulse, dst)) = stack.pop_front() {
             // dbg!((&src, &pulse, &dst));
-            if let Some(module) = parsed.get_mut(dst.as_str()) {
-                if let Some((new_pulse, new_dsts)) = module.send(&src, &pulse) {
+            if let Some(module) = module_map.get_mut(dst.as_str()) {
+                if let Some((new_pulse, new_dsts)) = module.inner_mut().send(&src, &pulse) {
                     for new_dst in new_dsts.into_iter() {
                         stack.push_back((dst.clone(), new_pulse.clone(), new_dst));
                         match new_pulse {
@@ -23,8 +23,8 @@ pub fn process(input: &'static str) -> usize {
                 }
             }
         }
-        if parsed.values().all(|m| m.is_backed_to_origin()) {
-            loop_len = i + 1;
+        if module_map.values().all(|m| m.inner().is_backed_to_origin()) {
+            loop_len = button_push + 1;
             break;
         }
     }
@@ -44,8 +44,8 @@ pub fn process(input: &'static str) -> usize {
         low_pulses += 1;
         while let Some((src, pulse, dst)) = stack.pop_front() {
             // dbg!((&src, &pulse, &dst));
-            if let Some(module) = parsed.get_mut(dst.as_str()) {
-                if let Some((new_pulse, new_dsts)) = module.send(&src, &pulse) {
+            if let Some(module) = module_map.get_mut(dst.as_str()) {
+                if let Some((new_pulse, new_dsts)) = module.inner_mut().send(&src, &pulse) {
                     for new_dst in new_dsts.into_iter() {
                         stack.push_back((dst.clone(), new_pulse.clone(), new_dst));
                         match new_pulse {
