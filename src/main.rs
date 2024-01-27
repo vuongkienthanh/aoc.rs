@@ -16,32 +16,39 @@ or `cargo run -- fetch DAY` to download input"#
         );
         Ok(())
     } else {
-        let action = env::args().nth(1).unwrap();
         let year = env::var("AOC_year").expect("edit in .env file");
         let year_path = env::current_dir()?.join(year.clone());
+        let action = env::args().nth(1).unwrap();
         match action.as_str() {
             "gen" => {
                 if !year_path.exists() {
-                    // copy cargo.toml
+                    // make year workspace
                     fs::create_dir(year_path.clone())?;
-                    let src = Path::new("year_template");
-                    fs::copy(src.join("Cargo.toml"), year_path.clone().join("Cargo.toml"))?;
 
-                    let mut day_template = TemplatePath::default();
-                    day_template.path = Some(
-                        env::current_dir()?
-                            .join("year_template")
-                            .join("{{project-name}}")
-                            .to_string_lossy()
-                            .into_owned(),
-                    );
+                    // copy year workspace cargo.toml
+                    let src = Path::new("year_template");
+                    fs::copy(src.join("Cargo.toml"), year_path.join("Cargo.toml"))?;
+
+                    // day template for cargo-generate
+                    let day_template = TemplatePath {
+                        path: Some(
+                            env::current_dir()?
+                                .join("year_template")
+                                .join("{{project-name}}")
+                                .to_string_lossy()
+                                .into_owned(),
+                        ),
+                        ..Default::default()
+                    };
+
+                    // cargo-generate day template
                     for i in 1..=25 {
-                        let mut gen_arg = GenerateArgs::default();
-                        gen_arg.name = Some(format!("day{:0>2}", i));
-                        gen_arg.template_path = day_template.clone();
-                        gen_arg.destination = Some(year_path.clone());
-                        generate(gen_arg)?;
-                        // dbg!(&gen_arg);
+                        generate(GenerateArgs {
+                            name: Some(format!("day{:0>2}", i)),
+                            template_path: day_template.clone(),
+                            destination: Some(year_path.clone()),
+                            ..Default::default()
+                        })?;
                     }
                     Ok(())
                 } else {
@@ -54,8 +61,8 @@ or `cargo run -- fetch DAY` to download input"#
                     .expect("Expect DAY")
                     .parse::<u32>()
                     .expect("DAY should be a number");
-                if day < 1 || day > 25 {
-                    panic!("DAY should be 1..25");
+                if !(1..=25).contains(&day) {
+                    panic!("DAY should be 1..=25");
                 }
                 let dst = year_path
                     .join(format!("day{:0>2}", day))

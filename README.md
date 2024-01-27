@@ -1,40 +1,28 @@
-# An Advent Of Code template and solver in Rust
+# An Advent Of Code template generator and solver in Rust
 
-### Template
-Edit `.env` in root folder with `AOC_session` and `AOC_year`.
-
-You can look up session in your chrome's F12, Network tab, reload AOC input page and look for Cookie in request object.
+## Prepare
+- Edit `.env` in root folder, provide `AOC_session` and `AOC_year`. You can look up session in your browser, Network tab, reload page and look for Cookie session in request object.
 ```sh
 AOC_session=blahblah
 AOC_year=2023
 ```
 
-Generate workspace
-```sh
-# generate /aoc.rs/2023/day01 and so on
-cargo run --release -- gen 
-```
-
-Fetch input
-```sh
-# download into /aoc/2023/day01/src/input.txt and so on
-cargo run --release -- fetch 1 # puzzle day
-```
-
-Shortcuts
+## Command s
+- Build
 ```sh
 cargo build --release
+```
+
+- Shortcuts: I made simple shortcuts to generate workspace and fetch input
+```sh
+chmod +x ./gen
 chmod +x ./fetch
+./gen
 ./fetch 1
 ```
 
-### Solve
-Go inside `2023/day01` for example.
-```sh
-cd 2023/day01
-```
-
-Edit `src/part1.rs` and `src/part2.rs` correspondingly.
+## Solve
+- `cd 2023/day01` for example. Edit `src/part1.rs` and `src/part2.rs` correspondingly.
 ```rust
 pub fn process(_input: &str) -> usize {
     todo!("part1") // edit your solution here
@@ -52,8 +40,8 @@ mod tests {
 
 To run tests:
 ```sh
-cargo test --lib part1
-cargo test --lib part2
+cargo test 1
+cargo test 2
 ```
 
 To solve:
@@ -62,7 +50,25 @@ cargo run --bin p1
 cargo run --bin p2
 ```
 
-# Recommended crates
+# Recommended crates & tools
+
+## Parsing
 - [nom](https://crates.io/crates/nom) - easy parsing input
-- [itertools](https://crates.io/crates/itertools) - versatile iterator
+- [nom_locate](https://crates.io/crates/nom_locate) - nom with location
+
+
+## Multi processing
 - [rayon](https://crates.io/crates/rayon) - parallel processing
+- [crossbeam](https://crates.io/crates/crossbeam) - concurrent programming
+
+## Graph
+- [petgraph](https://crates.io/crates/petgraph) - graph data structure
+- [pathfinding](https://crates.io/crates/pathfinding) - generic path finding algos
+- [graphviz](https://graphviz.org/documentation/) - graph visualization
+
+## Testing
+- [rstest](https://crates.io/crates/rstest) - fixture and table-based testing
+
+## Ultilities
+- [itertools](https://crates.io/crates/itertools) - versatile iterator
+- [grid](https://crates.io/crates/grid) - faster than Vec<Vec<T>>

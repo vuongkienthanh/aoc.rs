@@ -1,17 +1,20 @@
 [workspace]
 members = ['']
 
-
 [package]
 name = 'aoc'
 version = '0.1.0'
 edition = '2021'
 authors = ["Vương Kiến Thanh <thanhstardust@outlook.com>"]
 rust-version = "1.70.0"
-description = "solver for adventofcode.com"
+description = "An Advent Of Code template generator and solver in Rust"
 publish = false
 
 [dependencies]
 dotenvy = "0.15.7"
-reqwest = { version = "0.11.22", features = ["blocking","cookies"] }
+reqwest = { version = "0.11.22", features = ["blocking", "cookies"] }
 cargo-generate = "0.18.5"
+
+[profile.release]
+strip = true
+lto = true
