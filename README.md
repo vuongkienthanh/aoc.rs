@@ -1,7 +1,10 @@
 # An Advent Of Code template generator and solver in Rust
 
 ## Prepare
-- Edit `.env` in root folder, provide `AOC_session` and `AOC_year`. You can look up session in your browser, Network tab, reload page and look for Cookie session in request object.
+- Edit `.env` in root folder, provide `AOC_session` and `AOC_year`.
+You can look up session in your browser:
+F12 -> Application tab -> Cookies
+
 ```sh
 AOC_session=blahblah
 AOC_year=2023
@@ -55,7 +58,6 @@ cargo run --bin p2
 ## Parsing
 - [nom](https://crates.io/crates/nom) - easy parsing input
 - [nom_locate](https://crates.io/crates/nom_locate) - nom with location
-
 
 ## Multi processing
 - [rayon](https://crates.io/crates/rayon) - parallel processing
