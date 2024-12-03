@@ -1,6 +1,3 @@
-[workspace]
-members = ['']
-
 [package]
 name = 'aoc'
 version = '0.1.0'
@@ -12,8 +9,8 @@ publish = false
 
 [dependencies]
 dotenvy = "0.15.7"
-reqwest = { version = "0.11.22", features = ["blocking", "cookies"] }
-cargo-generate = "0.18.5"
+reqwest = { version = "~0.12", features = ["blocking", "cookies"] }
+cargo-generate = "~0.22"
 
 [profile.release]
 strip = true

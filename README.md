@@ -25,7 +25,7 @@ chmod +x ./fetch
 ```
 
 ## Solve
-- `cd 2023/day01` for example. Edit `src/part1.rs` and `src/part2.rs` correspondingly.
+- `cd 2024/day01` for example. Edit `src/part1.rs` and `src/part2.rs` correspondingly.
 ```rust
 pub fn process(_input: &str) -> usize {
     todo!("part1") // edit your solution here
