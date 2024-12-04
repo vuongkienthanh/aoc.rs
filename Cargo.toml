@@ -8,7 +8,7 @@ description = "An Advent Of Code template generator and solver in Rust"
 publish = false
 
 [dependencies]
-dotenvy = "0.15.7"
+dotenvy = "~0.15"
 reqwest = { version = "~0.12", features = ["blocking", "cookies"] }
 cargo-generate = "~0.22"
 

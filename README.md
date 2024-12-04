@@ -7,10 +7,10 @@ F12 -> Application tab -> Cookies
 
 ```sh
 AOC_session=blahblah
-AOC_year=2023
+AOC_year=2024
 ```
 
-## Command s
+## Command
 - Build
 ```sh
 cargo build --release
@@ -18,10 +18,12 @@ cargo build --release
 
 - Shortcuts: I made simple shortcuts to generate workspace and fetch input
 ```sh
-chmod +x ./gen
-chmod +x ./fetch
+chmod +x ./gen ./fetch
+
 ./gen
-./fetch 1
+## generate template for AOC_year
+./fetch 1 
+## fetch day 1 input
 ```
 
 ## Solve
@@ -56,12 +58,8 @@ cargo run --bin p2
 # Recommended crates & tools
 
 ## Parsing
-- [nom](https://crates.io/crates/nom) - easy parsing input
+- [nom](https://crates.io/crates/nom) - combinator parser
 - [nom_locate](https://crates.io/crates/nom_locate) - nom with location
-
-## Multi processing
-- [rayon](https://crates.io/crates/rayon) - parallel processing
-- [crossbeam](https://crates.io/crates/crossbeam) - concurrent programming
 
 ## Graph
 - [petgraph](https://crates.io/crates/petgraph) - graph data structure
@@ -69,8 +67,8 @@ cargo run --bin p2
 - [graphviz](https://graphviz.org/documentation/) - graph visualization
 
 ## Testing
-- [rstest](https://crates.io/crates/rstest) - fixture and table-based testing
+- [rstest](https://crates.io/crates/rstest)
 
 ## Ultilities
-- [itertools](https://crates.io/crates/itertools) - versatile iterator
-- [grid](https://crates.io/crates/grid) - faster than Vec<Vec<T>>
+- [itertools](https://crates.io/crates/itertools)
+- [grid](https://crates.io/crates/grid)
