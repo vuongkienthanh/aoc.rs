@@ -75,14 +75,19 @@ or `cargo run -- fetch DAY` to download input"#
                 let jar = Jar::default();
                 jar.add_cookie_str(&format!("session={session}"), &url);
 
-                let input = Client::builder()
+                let response = Client::builder()
                     .cookie_provider(std::sync::Arc::new(jar))
                     .build()?
                     .get(get_url)
-                    .send()?
-                    .text()?;
-                println!("{}", &input);
-                fs::write(dst, input)?;
+                    .send()?;
+                if response.status().is_success() {
+                    let input = response.text()?;
+                    println!("{}", &input);
+                    fs::write(dst, input)?;
+                } else {
+                    let input = response.text()?;
+                    println!("{}", &input);
+                }
                 Ok(())
             }
             _ => Ok(()),
