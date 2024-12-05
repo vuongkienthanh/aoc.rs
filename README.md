@@ -43,10 +43,9 @@ mod tests {
 }
 ```
 
-To run tests:
+To run all tests:
 ```sh
-cargo test 1
-cargo test 2
+cargo test
 ```
 
 To solve:

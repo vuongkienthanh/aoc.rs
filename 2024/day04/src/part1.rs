@@ -1,13 +1,7 @@
-use grid::Grid;
+use super::parse;
 
 pub fn process(_input: &str) -> usize {
-    let grid = Grid::from(
-        _input
-            .lines()
-            .map(|line| line.chars().collect::<Vec<_>>())
-            .collect::<Vec<_>>(),
-    );
-
+    let grid = parse(_input);
     grid.indexed_iter()
         .filter(|(_, x)| **x == 'X')
         .flat_map(|((i, j), _)| {
