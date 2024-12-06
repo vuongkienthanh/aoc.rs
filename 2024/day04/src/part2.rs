@@ -13,32 +13,33 @@ pub fn process(_input: &str) -> usize {
                     (row - 1, col + 1),
                     (row + 1, col + 1),
                     (row + 1, col - 1),
-                ]
-                .map(|(row, col)| grid.get(row, col).unwrap()),
+                ],
                 [
                     (row - 1, col + 1),
                     (row + 1, col + 1),
                     (row + 1, col - 1),
                     (row - 1, col - 1),
-                ]
-                .map(|(row, col)| grid.get(row, col).unwrap()),
+                ],
                 [
                     (row + 1, col + 1),
                     (row + 1, col - 1),
                     (row - 1, col - 1),
                     (row - 1, col + 1),
-                ]
-                .map(|(row, col)| grid.get(row, col).unwrap()),
+                ],
                 [
                     (row + 1, col - 1),
                     (row - 1, col - 1),
                     (row - 1, col + 1),
                     (row + 1, col + 1),
-                ]
-                .map(|(row, col)| grid.get(row, col).unwrap()),
+                ],
             ]
             .into_iter()
-            .any(|v| v == [&'M', &'S', &'S', &'M'])
+            .any(|v| {
+                v.map(|(row, col)| grid.get(row, col).unwrap())
+                    .into_iter()
+                    .zip("MSSM".chars())
+                    .all(|(a, b)| a == &b)
+            })
         })
         .count()
 }
