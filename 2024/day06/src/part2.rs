@@ -1,4 +1,4 @@
-use super::{parse, CellType, Coord, Direction, Guard, MoveType};
+use super::{parse, CellType, Coord, Direction, Guard };
 use grid::Grid;
 use std::collections::{HashMap, HashSet};
 
@@ -7,22 +7,7 @@ pub fn process(_input: &str) -> usize {
     let origin_guard = guard.clone();
     let mut visited = Grid::new(grid.rows(), grid.cols());
     visited.fill(0);
-    let mut origin_obs = HashSet::new();
 
-    while let Some((movetype, next_guard)) = guard.try_forward(&grid) {
-        guard = next_guard;
-        visited[guard.position.into()] = 1;
-
-        if let MoveType::Turn {
-            guard_direction_when_approach_obstacle: _,
-            obstacle_position,
-        } = movetype
-        {
-            origin_obs.insert(obstacle_position);
-        }
-    }
-    visited[guard.position.into()] = usize::MAX;
-    let origin_obs = origin_obs.into_iter().collect::<Vec<_>>();
 
     todo!()
 

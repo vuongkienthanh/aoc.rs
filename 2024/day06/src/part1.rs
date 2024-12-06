@@ -1,4 +1,4 @@
-use super::parse;
+use super::{parse, GuardForwardResult};
 use grid::Grid;
 
 pub fn process(_input: &str) -> usize {
@@ -6,9 +6,19 @@ pub fn process(_input: &str) -> usize {
     let mut visited = Grid::new(grid.rows(), grid.cols());
     visited.fill(0);
     visited[guard.position.into()] = 1;
-    while let Some((_, next_guard)) = guard.try_forward(&grid) {
+    loop {
+        let GuardForwardResult {
+            visited: this_time_visited,
+            next_guard,
+            is_stop,
+        } = guard.forward(&grid);
         guard = next_guard;
-        visited[guard.position.into()] = 1;
+        for pos in this_time_visited {
+            visited[pos.into()] = 1;
+        }
+        if is_stop {
+            break;
+        }
     }
     visited.iter_rows().map(|row| row.sum::<usize>()).sum()
 }

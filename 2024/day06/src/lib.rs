@@ -19,81 +19,150 @@ pub enum CellType {
 
 pub type Coord = [usize; 2];
 
-#[derive(Debug, Eq, PartialEq)]
-pub enum MoveType {
-    Forward,
-    Turn {
-        guard_direction_when_approach_obstacle: Direction,
-        obstacle_position: Coord,
-    },
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct Guard {
     direction: Direction,
     position: Coord,
 }
+pub struct GuardForwardResult {
+    visited: Vec<Coord>,
+    next_guard: Guard,
+    is_stop: bool,
+}
 impl Guard {
-    fn change_direction(mut self, direction: Direction) -> Guard {
-        self.direction = direction;
-        self
-    }
-    fn try_up(mut self) -> Option<Guard> {
-        (self.position[0] > 0).then(|| {
-            self.position[0] -= 1;
-            self
-        })
-    }
-    fn try_down(mut self, grid: &Grid<CellType>) -> Option<Guard> {
-        (self.position[0] < grid.rows() - 1).then(|| {
-            self.position[0] += 1;
-            self
-        })
-    }
-    fn try_left(mut self) -> Option<Guard> {
-        (self.position[1] > 0).then(|| {
-            self.position[1] -= 1;
-            self
-        })
-    }
-    fn try_right(mut self, grid: &Grid<CellType>) -> Option<Guard> {
-        (self.position[1] < grid.cols() - 1).then(|| {
-            self.position[1] += 1;
-            self
-        })
-    }
-    fn try_forward(&self, grid: &Grid<CellType>) -> Option<(MoveType, Guard)> {
-        let (try_candidate_fw, candidate_turn) = match self.direction {
-            Direction::West => (
-                self.clone().try_left(),
-                self.clone().change_direction(Direction::North),
-            ),
-            Direction::East => (
-                self.clone().try_right(grid),
-                self.clone().change_direction(Direction::South),
-            ),
-            Direction::South => (
-                self.clone().try_down(grid),
-                self.clone().change_direction(Direction::West),
-            ),
-            Direction::North => (
-                self.clone().try_up(),
-                self.clone().change_direction(Direction::East),
-            ),
-        };
-        if let Some(candidate_fw) = try_candidate_fw {
-            match grid[candidate_fw.position.into()] {
-                CellType::Obstacle => Some((
-                    MoveType::Turn {
-                        guard_direction_when_approach_obstacle: candidate_fw.direction,
-                        obstacle_position: candidate_fw.position,
-                    },
-                    candidate_turn,
-                )),
-                CellType::Empty => Some((MoveType::Forward, candidate_fw)),
+    /// return visited coords, next_guard, stop
+    fn forward(&self, grid: &Grid<CellType>) -> GuardForwardResult {
+        match self.direction {
+            Direction::North => {
+                if let Some((i, _)) = (0..self.position[0])
+                    .rev()
+                    .map(|i| (i, grid.get(i, self.position[1]).unwrap()))
+                    .find(|(_, ele)| **ele == CellType::Obstacle)
+                {
+                    let visited = (i + 1..self.position[0])
+                        .map(|x| [x, self.position[1]])
+                        .collect::<Vec<_>>();
+                    let next_guard = Guard {
+                        direction: Direction::East,
+                        position: [i + 1, self.position[1]],
+                    };
+                    GuardForwardResult {
+                        visited,
+                        next_guard,
+                        is_stop: false,
+                    }
+                } else {
+                    let visited = (0..self.position[0])
+                        .map(|x| [x, self.position[1]])
+                        .collect::<Vec<_>>();
+                    let next_guard = Guard {
+                        direction: self.direction.clone(),
+                        position: [0, self.position[1]],
+                    };
+                    GuardForwardResult {
+                        visited,
+                        next_guard,
+                        is_stop: true,
+                    }
+                }
             }
-        } else {
-            None
+            Direction::South => {
+                if let Some((i, _)) = (self.position[0] + 1..grid.rows())
+                    .map(|i| (i, grid.get(i, self.position[1]).unwrap()))
+                    .find(|(_, ele)| **ele == CellType::Obstacle)
+                {
+                    let visited = (self.position[0] + 1..i)
+                        .map(|x| [x, self.position[1]])
+                        .collect::<Vec<_>>();
+                    let next_guard = Guard {
+                        direction: Direction::West,
+                        position: [i - 1, self.position[1]],
+                    };
+                    GuardForwardResult {
+                        visited,
+                        next_guard,
+                        is_stop: false,
+                    }
+                } else {
+                    let visited = (self.position[0] + 1..grid.rows())
+                        .map(|x| [x, self.position[1]])
+                        .collect::<Vec<_>>();
+                    let next_guard = Guard {
+                        direction: self.direction.clone(),
+                        position: [grid.rows() - 1, self.position[1]],
+                    };
+                    GuardForwardResult {
+                        visited,
+                        next_guard,
+                        is_stop: true,
+                    }
+                }
+            }
+            Direction::East => {
+                if let Some((j, _)) = (self.position[1] + 1..grid.cols())
+                    .map(|j| (j, grid.get(self.position[0], j).unwrap()))
+                    .find(|(_, ele)| **ele == CellType::Obstacle)
+                {
+                    let visited = (self.position[1] + 1..j)
+                        .map(|y| [self.position[0], y])
+                        .collect::<Vec<_>>();
+                    let next_guard = Guard {
+                        direction: Direction::South,
+                        position: [self.position[0], j - 1],
+                    };
+                    GuardForwardResult {
+                        visited,
+                        next_guard,
+                        is_stop: false,
+                    }
+                } else {
+                    let visited = (self.position[1] + 1..grid.cols())
+                        .map(|y| [self.position[0], y])
+                        .collect::<Vec<_>>();
+                    let next_guard = Guard {
+                        direction: self.direction.clone(),
+                        position: [self.position[0], grid.cols() - 1],
+                    };
+                    GuardForwardResult {
+                        visited,
+                        next_guard,
+                        is_stop: true,
+                    }
+                }
+            }
+            Direction::West => {
+                if let Some((j, _)) = (0..self.position[1])
+                    .rev()
+                    .map(|j| (j, grid.get(self.position[0], j).unwrap()))
+                    .find(|(_, ele)| **ele == CellType::Obstacle)
+                {
+                    let visited = (j + 1..self.position[1])
+                        .map(|y| [self.position[0], y])
+                        .collect::<Vec<_>>();
+                    let next_guard = Guard {
+                        direction: Direction::North,
+                        position: [self.position[0], j + 1],
+                    };
+                    GuardForwardResult {
+                        visited,
+                        next_guard,
+                        is_stop: false,
+                    }
+                } else {
+                    let visited = (0..self.position[1])
+                        .map(|y| [self.position[0], y])
+                        .collect::<Vec<_>>();
+                    let next_guard = Guard {
+                        direction: self.direction.clone(),
+                        position: [self.position[0], 0],
+                    };
+                    GuardForwardResult {
+                        visited,
+                        next_guard,
+                        is_stop: true,
+                    }
+                }
+            }
         }
     }
 }
