@@ -1,4 +1,4 @@
-use super::{parse, CellType, ForwardResult, Guard};
+use super::{parse, CellType, ForwardResult, Guard, JumpResult};
 use grid::Grid;
 
 pub fn process(_input: &str) -> usize {
@@ -40,11 +40,10 @@ pub fn process(_input: &str) -> usize {
             // dfs algo to check loop
             let mut dfs = Vec::from([loop_guard.clone()]);
             loop {
-                let ForwardResult {
-                    middle_path: _,
+                let JumpResult {
                     next_guard: next_loop_guard,
                     is_stop,
-                } = loop_guard.forward(&grid);
+                } = loop_guard.jump(&grid);
                 if is_stop {
                     break;
                 } else if dfs.contains(&next_loop_guard) {

@@ -29,6 +29,10 @@ pub struct ForwardResult {
     next_guard: Guard,
     is_stop: bool,
 }
+pub struct JumpResult {
+    next_guard: Guard,
+    is_stop: bool,
+}
 impl Guard {
     fn forward(&self, grid: &Grid<CellType>) -> ForwardResult {
         match self.direction {
@@ -94,6 +98,68 @@ impl Guard {
                 let is_stop = next_guard.position[1] == grid.cols() - 1;
                 ForwardResult {
                     middle_path,
+                    next_guard,
+                    is_stop,
+                }
+            }
+        }
+    }
+    fn jump(&self, grid: &Grid<CellType>) -> JumpResult {
+        match self.direction {
+            Direction::North => {
+                let (is_stop, position) = (0..self.position[0])
+                    .rev()
+                    .find(|i| *grid.get(*i, self.position[1]).unwrap() == CellType::Obstacle)
+                    .map(|i| (false, [i + 1, self.position[1]]))
+                    .unwrap_or((true, [0, self.position[1]]));
+                let next_guard = Guard {
+                    direction: Direction::East,
+                    position,
+                };
+                JumpResult {
+                    next_guard,
+                    is_stop,
+                }
+            }
+            Direction::South => {
+                let (is_stop, position) = (self.position[0] + 1..grid.rows())
+                    .find(|i| *grid.get(*i, self.position[1]).unwrap() == CellType::Obstacle)
+                    .map(|i| (false, [i - 1, self.position[1]]))
+                    .unwrap_or((true, [grid.rows() - 1, self.position[1]]));
+                let next_guard = Guard {
+                    direction: Direction::West,
+                    position,
+                };
+                JumpResult {
+                    next_guard,
+                    is_stop,
+                }
+            }
+            Direction::West => {
+                let (is_stop, position) = (0..self.position[1])
+                    .rev()
+                    .find(|j| *grid.get(self.position[0], *j).unwrap() == CellType::Obstacle)
+                    .map(|j| (false, [self.position[0], j + 1]))
+                    .unwrap_or((true, [self.position[0], 0]));
+                let next_guard = Guard {
+                    direction: Direction::North,
+                    position,
+                };
+                JumpResult {
+                    next_guard,
+                    is_stop,
+                }
+            }
+            Direction::East => {
+                let (is_stop, position) = (self.position[1] + 1..grid.cols())
+                    .find(|j| *grid.get(self.position[0], *j).unwrap() == CellType::Obstacle)
+                    .map(|j| (false, [self.position[0], j - 1]))
+                    .unwrap_or((true, [self.position[0], grid.cols() - 1]));
+                let next_guard = Guard {
+                    direction: Direction::South,
+                    position,
+                };
+                JumpResult {
                     next_guard,
                     is_stop,
                 }
