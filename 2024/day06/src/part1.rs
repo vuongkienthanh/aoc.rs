@@ -1,4 +1,4 @@
-use super::parse;
+use super::{parse, ForwardResult};
 use grid::Grid;
 
 pub fn process(_input: &str) -> usize {
@@ -7,15 +7,26 @@ pub fn process(_input: &str) -> usize {
     visited.fill(0);
     visited[guard.position.into()] = 1;
     loop {
-        let (this_time_visited, opt_next_guard) = guard.forward(&grid);
-        for pos in this_time_visited {
+        let ForwardResult {
+            middle_path,
+            next_guard,
+            is_stop,
+        } = guard.forward(&grid);
+
+        // mark middle_path and next_guard as visited
+        for pos in middle_path
+            .into_iter()
+            .chain(Some(&next_guard.position).cloned())
+        {
             visited[pos.into()] = 1;
         }
-        if let Some(next_guard) = opt_next_guard {
-            guard = next_guard;
-        } else {
+
+
+        // prepare next loop
+        if is_stop {
             break;
         }
+        guard = next_guard;
     }
     visited.iter_rows().map(|row| row.sum::<usize>()).sum()
 }

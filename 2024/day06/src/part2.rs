@@ -1,53 +1,73 @@
-use super::{parse, CellType, Coord, Direction, Guard };
+use super::{parse, CellType, ForwardResult, Guard};
 use grid::Grid;
-use std::collections::{HashMap, HashSet};
 
 pub fn process(_input: &str) -> usize {
-    let (mut guard, grid) = parse(_input);
-    let origin_guard = guard.clone();
-    let mut visited = Grid::new(grid.rows(), grid.cols());
-    visited.fill(0);
+    let (mut guard, mut grid) = parse(_input);
+    let mut tried_obs = Grid::new(grid.rows(), grid.cols());
+    tried_obs.fill(0);
+    tried_obs[guard.position.into()] = 1;
+    let mut loop_counter = 0;
 
+    loop {
+        let ForwardResult {
+            middle_path,
+            next_guard,
+            is_stop,
+        } = guard.forward(&grid);
 
-    todo!()
+        // for each pair (prv, nxt) coord in start + path + next_guard
+        // try putting obs in right hand coord
+        // and then make a guard at prv and run to check loop
+        for (prv, nxt) in Some(&guard.position)
+            .into_iter()
+            .chain(middle_path.iter())
+            .zip(middle_path.iter().chain(Some(&next_guard.position)))
+            .map(|(prv, nxt)| (*prv, *nxt))
+            .filter(|(_, nxt)| tried_obs[(*nxt).into()] != 1)
+            .collect::<Vec<_>>()
+        {
+            // ---- do smth with nxt coord
+            // mark as tried obs && update grid
+            tried_obs[nxt.into()] = 1;
+            grid[nxt.into()] = CellType::Obstacle;
 
-    // visited
-    //     .into_iter()
-    //     .filter(|obs| {
-    //         // prepare
-    //         let mut grid = grid.clone();
-    //         let mut guard = origin_guard.clone();
-    //         *grid.get_mut(obs[0], obs[1]).unwrap() = CellType::Obstacle;
-    //         let mut seen = HashMap::from([
-    //             (Direction::North, false),
-    //             (Direction::South, false),
-    //             (Direction::East, false),
-    //             (Direction::West, false),
-    //         ]);
-    //         // run
-    //         let mut is_loop = false;
-    //         while let Some((move_type, next_guard)) = guard.try_forward(&grid) {
-    //             guard = next_guard;
-    //             // check loop
-    //             if let MoveType::Turn {
-    //                 guard_direction_when_approach_obstacle: direction,
-    //                 obstacle_position: position,
-    //             } = move_type
-    //             {
-    //                 if &position == obs {
-    //                     if *seen.get(&direction).unwrap() {
-    //                         is_loop = true;
-    //                         break;
-    //                     } else {
-    //                         *seen.get_mut(&direction).unwrap() = true
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //
-    //         is_loop
-    //     })
-    //     .count()
+            // ---- do smth with prv coord
+            // assume a guard that turned before obs
+            let mut loop_guard = Guard {
+                direction: next_guard.direction.clone(),
+                position: prv,
+            };
+            // dfs algo to check loop
+            let mut dfs = Vec::from([loop_guard.clone()]);
+            loop {
+                let ForwardResult {
+                    middle_path: _,
+                    next_guard: next_loop_guard,
+                    is_stop,
+                } = loop_guard.forward(&grid);
+                if is_stop {
+                    break;
+                } else if dfs.contains(&next_loop_guard) {
+                    loop_counter += 1;
+                    break;
+                } else {
+                    dfs.push(next_loop_guard.clone());
+                    loop_guard = next_loop_guard;
+                }
+            }
+            // ---- finish do smth with prv coord
+
+            // revert grid to initial state
+            grid[nxt.into()] = CellType::Empty;
+        }
+
+        // prepare next loop
+        if is_stop {
+            break;
+        }
+        guard = next_guard;
+    }
+    loop_counter
 }
 #[cfg(test)]
 mod tests {

@@ -3,7 +3,7 @@ pub mod part2;
 
 use grid::Grid;
 
-#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Direction {
     West,
     East,
@@ -19,60 +19,84 @@ pub enum CellType {
 
 pub type Coord = [usize; 2];
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Guard {
     direction: Direction,
     position: Coord,
 }
+pub struct ForwardResult {
+    middle_path: Vec<Coord>,
+    next_guard: Guard,
+    is_stop: bool,
+}
 impl Guard {
-    /// return visited coords, some next_guard if touch obs, else at edge return none
-    fn forward(&self, grid: &Grid<CellType>) -> (Vec<Coord>, Option<Guard>) {
+    fn forward(&self, grid: &Grid<CellType>) -> ForwardResult {
         match self.direction {
             Direction::North => {
-                let visited = (0..self.position[0])
+                let mut middle_path = (0..self.position[0])
                     .rev()
                     .take_while(|i| *grid.get(*i, self.position[1]).unwrap() == CellType::Empty)
                     .map(|i| [i, self.position[1]])
                     .collect::<Vec<_>>();
-                let next_guard = (visited.last().unwrap()[0] > 0).then_some(Guard {
+                let next_guard = Guard {
                     direction: Direction::East,
-                    position: *visited.last().unwrap(),
-                });
-                (visited, next_guard)
+                    position: middle_path.pop().unwrap_or(self.position),
+                };
+                let is_stop = next_guard.position[0] == 0;
+                ForwardResult {
+                    middle_path,
+                    next_guard,
+                    is_stop,
+                }
             }
             Direction::South => {
-                let visited = (self.position[0] + 1..grid.rows())
+                let mut middle_path = (self.position[0] + 1..grid.rows())
                     .take_while(|i| *grid.get(*i, self.position[1]).unwrap() == CellType::Empty)
                     .map(|i| [i, self.position[1]])
                     .collect::<Vec<_>>();
-                let next_guard = (visited.last().unwrap()[0] < grid.rows() - 1).then_some(Guard {
+                let next_guard = Guard {
                     direction: Direction::West,
-                    position: *visited.last().unwrap(),
-                });
-                (visited, next_guard)
+                    position: middle_path.pop().unwrap_or(self.position),
+                };
+                let is_stop = next_guard.position[0] == grid.rows() - 1;
+                ForwardResult {
+                    middle_path,
+                    next_guard,
+                    is_stop,
+                }
             }
             Direction::West => {
-                let visited = (0..self.position[1])
+                let mut middle_path = (0..self.position[1])
                     .rev()
                     .take_while(|j| *grid.get(self.position[0], *j).unwrap() == CellType::Empty)
                     .map(|j| [self.position[0], j])
                     .collect::<Vec<_>>();
-                let next_guard = (visited.last().unwrap()[1] > 0).then_some(Guard {
+                let next_guard = Guard {
                     direction: Direction::North,
-                    position: *visited.last().unwrap(),
-                });
-                (visited, next_guard)
+                    position: middle_path.pop().unwrap_or(self.position),
+                };
+                let is_stop = next_guard.position[1] == 0;
+                ForwardResult {
+                    middle_path,
+                    next_guard,
+                    is_stop,
+                }
             }
             Direction::East => {
-                let visited = (self.position[1] + 1..grid.cols())
+                let mut middle_path = (self.position[1] + 1..grid.cols())
                     .take_while(|j| *grid.get(self.position[0], *j).unwrap() == CellType::Empty)
                     .map(|j| [self.position[0], j])
                     .collect::<Vec<_>>();
-                let next_guard = (visited.last().unwrap()[1] < grid.cols() - 1).then_some(Guard {
+                let next_guard = Guard {
                     direction: Direction::South,
-                    position: *visited.last().unwrap(),
-                });
-                (visited, next_guard)
+                    position: middle_path.pop().unwrap_or(self.position),
+                };
+                let is_stop = next_guard.position[1] == grid.cols() - 1;
+                ForwardResult {
+                    middle_path,
+                    next_guard,
+                    is_stop,
+                }
             }
         }
     }
