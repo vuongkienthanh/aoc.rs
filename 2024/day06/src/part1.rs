@@ -1,4 +1,4 @@
-use super::{parse, GuardForwardResult};
+use super::parse;
 use grid::Grid;
 
 pub fn process(_input: &str) -> usize {
@@ -7,16 +7,13 @@ pub fn process(_input: &str) -> usize {
     visited.fill(0);
     visited[guard.position.into()] = 1;
     loop {
-        let GuardForwardResult {
-            visited: this_time_visited,
-            next_guard,
-            is_stop,
-        } = guard.forward(&grid);
-        guard = next_guard;
+        let (this_time_visited, opt_next_guard) = guard.forward(&grid);
         for pos in this_time_visited {
             visited[pos.into()] = 1;
         }
-        if is_stop {
+        if let Some(next_guard) = opt_next_guard {
+            guard = next_guard;
+        } else {
             break;
         }
     }

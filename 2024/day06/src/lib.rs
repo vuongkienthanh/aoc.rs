@@ -24,144 +24,55 @@ pub struct Guard {
     direction: Direction,
     position: Coord,
 }
-pub struct GuardForwardResult {
-    visited: Vec<Coord>,
-    next_guard: Guard,
-    is_stop: bool,
-}
 impl Guard {
-    /// return visited coords, next_guard, stop
-    fn forward(&self, grid: &Grid<CellType>) -> GuardForwardResult {
+    /// return visited coords, some next_guard if touch obs, else at edge return none
+    fn forward(&self, grid: &Grid<CellType>) -> (Vec<Coord>, Option<Guard>) {
         match self.direction {
             Direction::North => {
-                if let Some((i, _)) = (0..self.position[0])
+                let visited = (0..self.position[0])
                     .rev()
-                    .map(|i| (i, grid.get(i, self.position[1]).unwrap()))
-                    .find(|(_, ele)| **ele == CellType::Obstacle)
-                {
-                    let visited = (i + 1..self.position[0])
-                        .map(|x| [x, self.position[1]])
-                        .collect::<Vec<_>>();
-                    let next_guard = Guard {
-                        direction: Direction::East,
-                        position: [i + 1, self.position[1]],
-                    };
-                    GuardForwardResult {
-                        visited,
-                        next_guard,
-                        is_stop: false,
-                    }
-                } else {
-                    let visited = (0..self.position[0])
-                        .map(|x| [x, self.position[1]])
-                        .collect::<Vec<_>>();
-                    let next_guard = Guard {
-                        direction: self.direction.clone(),
-                        position: [0, self.position[1]],
-                    };
-                    GuardForwardResult {
-                        visited,
-                        next_guard,
-                        is_stop: true,
-                    }
-                }
+                    .take_while(|i| *grid.get(*i, self.position[1]).unwrap() == CellType::Empty)
+                    .map(|i| [i, self.position[1]])
+                    .collect::<Vec<_>>();
+                let next_guard = (visited.last().unwrap()[0] > 0).then_some(Guard {
+                    direction: Direction::East,
+                    position: *visited.last().unwrap(),
+                });
+                (visited, next_guard)
             }
             Direction::South => {
-                if let Some((i, _)) = (self.position[0] + 1..grid.rows())
-                    .map(|i| (i, grid.get(i, self.position[1]).unwrap()))
-                    .find(|(_, ele)| **ele == CellType::Obstacle)
-                {
-                    let visited = (self.position[0] + 1..i)
-                        .map(|x| [x, self.position[1]])
-                        .collect::<Vec<_>>();
-                    let next_guard = Guard {
-                        direction: Direction::West,
-                        position: [i - 1, self.position[1]],
-                    };
-                    GuardForwardResult {
-                        visited,
-                        next_guard,
-                        is_stop: false,
-                    }
-                } else {
-                    let visited = (self.position[0] + 1..grid.rows())
-                        .map(|x| [x, self.position[1]])
-                        .collect::<Vec<_>>();
-                    let next_guard = Guard {
-                        direction: self.direction.clone(),
-                        position: [grid.rows() - 1, self.position[1]],
-                    };
-                    GuardForwardResult {
-                        visited,
-                        next_guard,
-                        is_stop: true,
-                    }
-                }
-            }
-            Direction::East => {
-                if let Some((j, _)) = (self.position[1] + 1..grid.cols())
-                    .map(|j| (j, grid.get(self.position[0], j).unwrap()))
-                    .find(|(_, ele)| **ele == CellType::Obstacle)
-                {
-                    let visited = (self.position[1] + 1..j)
-                        .map(|y| [self.position[0], y])
-                        .collect::<Vec<_>>();
-                    let next_guard = Guard {
-                        direction: Direction::South,
-                        position: [self.position[0], j - 1],
-                    };
-                    GuardForwardResult {
-                        visited,
-                        next_guard,
-                        is_stop: false,
-                    }
-                } else {
-                    let visited = (self.position[1] + 1..grid.cols())
-                        .map(|y| [self.position[0], y])
-                        .collect::<Vec<_>>();
-                    let next_guard = Guard {
-                        direction: self.direction.clone(),
-                        position: [self.position[0], grid.cols() - 1],
-                    };
-                    GuardForwardResult {
-                        visited,
-                        next_guard,
-                        is_stop: true,
-                    }
-                }
+                let visited = (self.position[0] + 1..grid.rows())
+                    .take_while(|i| *grid.get(*i, self.position[1]).unwrap() == CellType::Empty)
+                    .map(|i| [i, self.position[1]])
+                    .collect::<Vec<_>>();
+                let next_guard = (visited.last().unwrap()[0] < grid.rows() - 1).then_some(Guard {
+                    direction: Direction::West,
+                    position: *visited.last().unwrap(),
+                });
+                (visited, next_guard)
             }
             Direction::West => {
-                if let Some((j, _)) = (0..self.position[1])
+                let visited = (0..self.position[1])
                     .rev()
-                    .map(|j| (j, grid.get(self.position[0], j).unwrap()))
-                    .find(|(_, ele)| **ele == CellType::Obstacle)
-                {
-                    let visited = (j + 1..self.position[1])
-                        .map(|y| [self.position[0], y])
-                        .collect::<Vec<_>>();
-                    let next_guard = Guard {
-                        direction: Direction::North,
-                        position: [self.position[0], j + 1],
-                    };
-                    GuardForwardResult {
-                        visited,
-                        next_guard,
-                        is_stop: false,
-                    }
-                } else {
-                    let visited = (0..self.position[1])
-                        .map(|y| [self.position[0], y])
-                        .collect::<Vec<_>>();
-                    let next_guard = Guard {
-                        direction: self.direction.clone(),
-                        position: [self.position[0], 0],
-                    };
-                    GuardForwardResult {
-                        visited,
-                        next_guard,
-                        is_stop: true,
-                    }
-                }
+                    .take_while(|j| *grid.get(self.position[0], *j).unwrap() == CellType::Empty)
+                    .map(|j| [self.position[0], j])
+                    .collect::<Vec<_>>();
+                let next_guard = (visited.last().unwrap()[1] > 0).then_some(Guard {
+                    direction: Direction::North,
+                    position: *visited.last().unwrap(),
+                });
+                (visited, next_guard)
+            }
+            Direction::East => {
+                let visited = (self.position[1] + 1..grid.cols())
+                    .take_while(|j| *grid.get(self.position[0], *j).unwrap() == CellType::Empty)
+                    .map(|j| [self.position[0], j])
+                    .collect::<Vec<_>>();
+                let next_guard = (visited.last().unwrap()[1] < grid.cols() - 1).then_some(Guard {
+                    direction: Direction::South,
+                    position: *visited.last().unwrap(),
+                });
+                (visited, next_guard)
             }
         }
     }
