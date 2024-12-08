@@ -1,4 +1,4 @@
-use super::{parse, CellType, ForwardResult, Guard, JumpResult};
+use super::{parse, CellType, Guard, WalkResult};
 use grid::Grid;
 
 pub fn process(_input: &str) -> usize {
@@ -9,11 +9,11 @@ pub fn process(_input: &str) -> usize {
     let mut loop_counter = 0;
 
     loop {
-        let ForwardResult {
+        let WalkResult {
             middle_path,
             next_guard,
             is_stop,
-        } = guard.forward(&grid);
+        } = guard.walk(&grid);
 
         // for each pair (prv, nxt) coord in start + path + next_guard
         // try putting obs in right hand coord
@@ -39,14 +39,8 @@ pub fn process(_input: &str) -> usize {
             };
             // dfs algo to check loop
             let mut dfs = Vec::from([loop_guard.clone()]);
-            loop {
-                let JumpResult {
-                    next_guard: next_loop_guard,
-                    is_stop,
-                } = loop_guard.jump(&grid);
-                if is_stop {
-                    break;
-                } else if dfs.contains(&next_loop_guard) {
+            while let Some(next_loop_guard) = loop_guard.jump(&grid) {
+                if dfs.contains(&next_loop_guard) {
                     loop_counter += 1;
                     break;
                 } else {

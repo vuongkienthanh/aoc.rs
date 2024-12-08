@@ -1,4 +1,4 @@
-use super::{parse, ForwardResult};
+use super::{parse, WalkResult};
 use grid::Grid;
 
 pub fn process(_input: &str) -> usize {
@@ -7,11 +7,11 @@ pub fn process(_input: &str) -> usize {
     visited.fill(0);
     visited[guard.position.into()] = 1;
     loop {
-        let ForwardResult {
+        let WalkResult {
             middle_path,
             next_guard,
             is_stop,
-        } = guard.forward(&grid);
+        } = guard.walk(&grid);
 
         // mark middle_path and next_guard as visited
         for pos in middle_path
@@ -20,7 +20,6 @@ pub fn process(_input: &str) -> usize {
         {
             visited[pos.into()] = 1;
         }
-
 
         // prepare next loop
         if is_stop {
