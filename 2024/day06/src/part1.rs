@@ -4,7 +4,6 @@ use grid::Grid;
 pub fn process(_input: &str) -> usize {
     let (mut guard, grid) = parse(_input);
     let mut visited = Grid::new(grid.rows(), grid.cols());
-    visited.fill(0);
     visited[guard.position.into()] = 1;
     loop {
         let WalkResult {
