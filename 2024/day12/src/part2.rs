@@ -28,7 +28,7 @@ fn travel(
     visited: &mut Grid<bool>,
 ) {
     for adj in adj4(i, j, grid.rows(), grid.cols())
-        .into_iter()
+        .into_iter().flatten()
         .filter(|coord| grid[*coord] == c)
     {
         if !visited[adj] {

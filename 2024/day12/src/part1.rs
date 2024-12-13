@@ -30,6 +30,7 @@ fn travel(
 ) {
     for adj in adj4(i, j, grid.rows(), grid.cols())
         .into_iter()
+        .flatten()
         .filter(|coord| grid[*coord] == c)
     {
         *region.entry(CoordKey { i: adj.0, j: adj.1 }).or_insert(4) -= 1;
