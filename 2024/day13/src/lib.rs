@@ -2,8 +2,7 @@ pub mod part1;
 pub mod part2;
 
 use nom::{
-    branch::alt,
-    bytes::complete::tag,
+    bytes::complete::{tag, take, take_until},
     character::complete::{digit1, line_ending},
     multi::separated_list1,
     sequence::{preceded, separated_pair, terminated, tuple},
@@ -16,33 +15,28 @@ fn parse(input: &str) -> IResult<&str, Vec<(Coord, Coord, Coord)>> {
     separated_list1(line_ending, group)(input)
 }
 
-fn button(input: &str) -> IResult<&str, Coord> {
+fn line(input: &str) -> IResult<&str, Coord> {
     preceded(
-        alt((tag("Button A: "), tag("Button B: "))),
+        take_until("X"),
         separated_pair(
-            preceded(tag("X+"), digit1.map(|x: &str| x.parse::<isize>().unwrap())),
+            preceded(
+                take(2usize),
+                digit1.map(|x: &str| x.parse::<isize>().unwrap()),
+            ),
             tag(", "),
-            preceded(tag("Y+"), digit1.map(|x: &str| x.parse::<isize>().unwrap())),
-        ),
-    )(input)
-}
-
-fn prize(input: &str) -> IResult<&str, Coord> {
-    preceded(
-        tag("Prize: "),
-        separated_pair(
-            preceded(tag("X="), digit1.map(|x: &str| x.parse::<isize>().unwrap())),
-            tag(", "),
-            preceded(tag("Y="), digit1.map(|x: &str| x.parse::<isize>().unwrap())),
+            preceded(
+                take(2usize),
+                digit1.map(|x: &str| x.parse::<isize>().unwrap()),
+            ),
         ),
     )(input)
 }
 
 fn group(input: &str) -> IResult<&str, (Coord, Coord, Coord)> {
     tuple((
-        terminated(button, line_ending),
-        terminated(button, line_ending),
-        terminated(prize, line_ending),
+        terminated(line, line_ending),
+        terminated(line, line_ending),
+        terminated(line, line_ending),
     ))(input)
 }
 

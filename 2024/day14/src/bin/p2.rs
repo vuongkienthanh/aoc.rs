@@ -1,5 +1,5 @@
 use day14::part2::process;
 fn main() {
     let input = include_str!("../input.txt");
-    println!("{}",process(input));
+    process(input, 103, 101)
 }
