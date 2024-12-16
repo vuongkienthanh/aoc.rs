@@ -1,34 +1,18 @@
+use crate::{CellType, Coord, MoveType, parse_instruction};
 use grid::Grid;
 
-#[derive(Debug, Eq, PartialEq)]
-enum CellType {
-    Box,
-    Empty,
-    Wall,
-}
-
-#[derive(Debug)]
-enum MoveType {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-type Coord = (usize, usize);
-
 fn parse(input: &str) -> (Coord, Grid<CellType>, Vec<MoveType>) {
-    let (map, instruction) = input.split_once("\n\n").unwrap();
+    let (grid, instruction) = input.split_once("\n\n").unwrap();
     let mut robot = (0, 0);
-    let map = Grid::from(
-        map.lines()
+    let grid = Grid::from(
+        grid.lines()
             .enumerate()
             .map(|(i, line)| {
                 line.char_indices()
                     .map(|(j, c)| match c {
                         '.' => CellType::Empty,
                         '#' => CellType::Wall,
-                        'O' => CellType::Box,
+                        'O' => CellType::SBox,
                         '@' => {
                             robot = (i, j);
                             CellType::Empty
@@ -39,19 +23,8 @@ fn parse(input: &str) -> (Coord, Grid<CellType>, Vec<MoveType>) {
             })
             .collect::<Vec<_>>(),
     );
-    let instruction = instruction
-        .lines()
-        .flat_map(|line| {
-            line.chars().map(|c| match c {
-                '^' => MoveType::Up,
-                'v' => MoveType::Down,
-                '>' => MoveType::Right,
-                '<' => MoveType::Left,
-                _ => panic!("unknown move type"),
-            })
-        })
-        .collect();
-    (robot, map, instruction)
+    let instruction = parse_instruction(instruction);
+    (robot, grid, instruction)
 }
 
 pub fn process(_input: &str) -> usize {
@@ -61,7 +34,7 @@ pub fn process(_input: &str) -> usize {
         step(&mut robot, &mut map, movetype);
     }
     map.indexed_iter()
-        .filter(|(_, c)| **c == CellType::Box)
+        .filter(|(_, c)| **c == CellType::SBox)
         .map(|((i, j), _)| 100 * i + j)
         .sum()
 }
@@ -75,7 +48,7 @@ fn step(robot: &mut Coord, map: &mut Grid<CellType>, movetype: MoveType) {
     };
     let candidate = dir(*robot);
     match map[candidate] {
-        CellType::Box => {
+        CellType::SBox => {
             if push(candidate, map, dir) {
                 *robot = candidate;
             }
@@ -83,15 +56,15 @@ fn step(robot: &mut Coord, map: &mut Grid<CellType>, movetype: MoveType) {
         CellType::Empty => {
             *robot = candidate;
         }
-        CellType::Wall => (),
+        _ => (),
     }
 }
 fn push(box_: Coord, map: &mut Grid<CellType>, dir: impl Fn(Coord) -> Coord) -> bool {
     let candidate = dir(box_);
     match map[candidate] {
-        CellType::Box => {
+        CellType::SBox => {
             if push(candidate, map, dir) {
-                map[candidate] = CellType::Box;
+                map[candidate] = CellType::SBox;
                 map[box_] = CellType::Empty;
                 true
             } else {
@@ -99,11 +72,11 @@ fn push(box_: Coord, map: &mut Grid<CellType>, dir: impl Fn(Coord) -> Coord) -> 
             }
         }
         CellType::Empty => {
-            map[candidate] = CellType::Box;
+            map[candidate] = CellType::SBox;
             map[box_] = CellType::Empty;
             true
         }
-        CellType::Wall => false,
+        _ => false,
     }
 }
 
