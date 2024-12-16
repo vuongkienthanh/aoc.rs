@@ -1,4 +1,4 @@
-use super::{adj4, parse, Adj, Coord};
+use super::{adj4, parse, Coord};
 use grid::Grid;
 
 pub fn process(_input: &str) -> usize {
@@ -8,8 +8,8 @@ pub fn process(_input: &str) -> usize {
     grid.indexed_iter().fold(0, |mut acc, ((i, j), c)| {
         if !visited[(i, j)] {
             let mut region: Vec<Coord> = vec![(i, j)];
-            let mut corners = 0;
             visited[(i, j)] = true;
+            let mut corners = 0;
             travel(i, j, *c, &mut region, &grid, &mut visited, &mut corners);
 
             let area = region.len();
@@ -29,37 +29,28 @@ fn travel(
     corners: &mut usize,
 ) {
     let adjs = adj4(i, j, grid.rows(), grid.cols());
-    let mut to_check = vec![];
-    if let Some(x) = adjs.up {
-        if let Some(y) = adjs.left {
-            to_check.push((x, y));
-        }
-        if let Some(y) = adjs.right {
-            to_check.push((x, y));
-        }
-    }
-    if let Some(x) = adjs.down {
-        if let Some(y) = adjs.left {
-            to_check.push((x, y));
-        }
-        if let Some(y) = adjs.right {
-            to_check.push((x, y));
-        }
-    }
-    for (x, y) in to_check {
-        if grid[(x.0, y.1)] != c {
-            *corners += 1;
-        }
-        if grid[x] != c && grid[y] != c {
-            *corners += 1;
-        }
-    }
+    for (x, y) in [
+        (adjs.up, adjs.left),
+        (adjs.up, adjs.right),
+        (adjs.down, adjs.left),
+        (adjs.down, adjs.right),
+    ] {
+        let a = x.is_some_and(|x| grid[x] == c);
+        let b = y.is_some_and(|y| grid[y] == c);
 
-    for adj in adjs.into_iter().flatten().filter(|coord| grid[*coord] == c) {
+        if (a && b && grid[(x.unwrap().0, y.unwrap().1)] != c) || (!a && !b) {
+            *corners += 1;
+        }
+    }
+    for adj in adj4(i, j, grid.rows(), grid.cols())
+        .into_iter()
+        .flatten()
+        .filter(|coord| grid[*coord] == c)
+    {
         if !visited[adj] {
             region.push(adj);
             visited[adj] = true;
-            travel(adj.0, adj.1, c, region, grid, visited, corners);
+            travel(adj.0, adj.1, c, region, grid, visited, corners)
         }
     }
 }
