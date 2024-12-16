@@ -2,8 +2,10 @@ pub mod part1;
 pub mod part2;
 
 use grid::Grid;
-use std::collections::{HashMap, VecDeque};
-use std::ops::Neg;
+use std::{
+    collections::{HashMap, VecDeque},
+    iter,
+};
 
 #[derive(Debug, PartialEq, Eq, Hash)]
 struct CoordKey(usize, usize);
@@ -15,14 +17,14 @@ impl From<Coord> for CoordKey {
 
 type Coord = (usize, usize);
 #[derive(Debug, Default)]
-struct Cross {
-    up: Option<(Coord, usize)>,
-    down: Option<(Coord, usize)>,
-    left: Option<(Coord, usize)>,
-    right: Option<(Coord, usize)>,
+struct Intersection {
+    up: Option<(Coord, Direction, usize)>,
+    down: Option<(Coord, Direction, usize)>,
+    left: Option<(Coord, Direction, usize)>,
+    right: Option<(Coord, Direction, usize)>,
 }
-impl Cross {
-    fn get_dir(&mut self, dir: Direction) -> &mut Option<(Coord, usize)> {
+impl Intersection {
+    fn get_dir(&mut self, dir: Direction) -> &mut Option<(Coord, Direction, usize)> {
         match dir {
             Direction::Up => &mut self.up,
             Direction::Down => &mut self.down,
@@ -39,20 +41,8 @@ enum Direction {
     Left,
     Right,
 }
-impl Neg for Direction {
-    type Output = Self;
 
-    fn neg(self) -> Self::Output {
-        match self {
-            Direction::Up => Direction::Down,
-            Direction::Down => Direction::Up,
-            Direction::Left => Direction::Right,
-            Direction::Right => Direction::Left,
-        }
-    }
-}
-
-fn parse(input: &str) -> (Grid<char>, Coord, Coord, HashMap<CoordKey, Cross>) {
+fn parse(input: &str) -> (Grid<char>, Coord, Coord, HashMap<CoordKey, Intersection>) {
     let mut grid = vec![];
     let mut start = (0, 0);
     let mut end = (0, 0);
@@ -89,7 +79,7 @@ fn parse(input: &str) -> (Grid<char>, Coord, Coord, HashMap<CoordKey, Cross>) {
         }
     }
 
-    let mut graph = HashMap::<CoordKey, Cross>::new();
+    let mut graph = HashMap::<CoordKey, Intersection>::new();
     for (x, y) in &nodes {
         let mut stack = VecDeque::from_iter(
             [
@@ -101,24 +91,22 @@ fn parse(input: &str) -> (Grid<char>, Coord, Coord, HashMap<CoordKey, Cross>) {
             .into_iter()
             .filter(|(node, _, _, _)| grid[*node] != '#'),
         );
-        while let Some((n, count, dir, origin_dir)) = stack.pop_front() {
-            for (candidate, new_count, new_dir) in step(n, count, dir) {
+        while let Some((n, cost, dir, origin_dir)) = stack.pop_front() {
+            for (candidate, new_cost, new_dir) in step(n, cost, dir) {
                 if grid[candidate] == '#' {
                     continue;
                 } else if nodes.contains(&candidate) {
-                    let cross = graph
+                    let itersection = graph
                         .entry(CoordKey::from((*x, *y)))
                         .or_default()
                         .get_dir(origin_dir);
-                    if let Some(old_cross) = cross {
-                        if old_cross.1 > new_count {
-                            *old_cross = (candidate, new_count);
-                        }
-                    } else {
-                        *cross = Some((candidate, new_count));
+                    if itersection.is_some_and(|old_cost| old_cost.2 > new_cost)
+                        || itersection.is_none()
+                    {
+                        *itersection = Some((candidate, new_dir, new_cost));
                     }
                 } else if grid[candidate] == '.' {
-                    stack.push_back((candidate, new_count, new_dir, origin_dir));
+                    stack.push_back((candidate, new_cost, new_dir, origin_dir));
                 }
             }
         }
