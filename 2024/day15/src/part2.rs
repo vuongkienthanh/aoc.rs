@@ -61,10 +61,6 @@ fn step_vertical(robot: &mut Coord, grid: &mut Grid<CellType>, dir: impl Fn(Coor
     let candidate = dir(*robot);
     match &grid[candidate] {
         CellType::DBox(side) => {
-            let box_dir = |b: &MyBox| MyBox {
-                left: dir(b.left),
-                right: dir(b.right),
-            };
             let candidate_box = match side {
                 Side::Left => MyBox {
                     left: candidate,
@@ -75,6 +71,10 @@ fn step_vertical(robot: &mut Coord, grid: &mut Grid<CellType>, dir: impl Fn(Coor
                     right: candidate,
                 },
             };
+            let box_dir = |b: &MyBox| MyBox {
+                left: dir(b.left),
+                right: dir(b.right),
+            };
             if try_push_vertical(HashSet::from([candidate_box]), grid, box_dir) {
                 *robot = candidate;
             }
@@ -82,8 +82,7 @@ fn step_vertical(robot: &mut Coord, grid: &mut Grid<CellType>, dir: impl Fn(Coor
         CellType::Empty => {
             *robot = candidate;
         }
-        CellType::Wall => (),
-        CellType::SBox => unreachable!("not in part 2"),
+        _ => (),
     }
 }
 fn try_push_vertical(
