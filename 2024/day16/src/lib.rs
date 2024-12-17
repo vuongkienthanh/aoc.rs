@@ -1,13 +1,10 @@
 pub mod part1;
 pub mod part2;
-
 use grid::Grid;
-use std::{
-    collections::{HashMap, VecDeque},
-    iter,
-};
+use std::collections::{HashMap, VecDeque};
+use std::ops::Neg;
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 struct CoordKey(usize, usize);
 impl From<Coord> for CoordKey {
     fn from(value: Coord) -> Self {
@@ -24,7 +21,15 @@ struct Intersection {
     right: Option<(Coord, Direction, usize)>,
 }
 impl Intersection {
-    fn get_dir(&mut self, dir: Direction) -> &mut Option<(Coord, Direction, usize)> {
+    fn get_dir(&self, dir: Direction) -> &Option<(Coord, Direction, usize)> {
+        match dir {
+            Direction::Up => &self.up,
+            Direction::Down => &self.down,
+            Direction::Left => &self.left,
+            Direction::Right => &self.right,
+        }
+    }
+    fn get_mut_dir(&mut self, dir: Direction) -> &mut Option<(Coord, Direction, usize)> {
         match dir {
             Direction::Up => &mut self.up,
             Direction::Down => &mut self.down,
@@ -41,22 +46,56 @@ enum Direction {
     Left,
     Right,
 }
+impl Neg for Direction {
+    type Output = Self;
 
-fn parse(input: &str) -> (Grid<char>, Coord, Coord, HashMap<CoordKey, Intersection>) {
+    fn neg(self) -> Self::Output {
+        match self {
+            Direction::Up => Direction::Down,
+            Direction::Down => Direction::Up,
+            Direction::Left => Direction::Right,
+            Direction::Right => Direction::Left,
+        }
+    }
+}
+impl Direction {
+    fn expand(&self) -> [(Direction, usize); 3] {
+        match self {
+            Direction::Up | Direction::Down => [
+                (*self, 0),
+                (Direction::Left, 1000),
+                (Direction::Right, 1000),
+            ],
+            Direction::Left | Direction::Right => {
+                [(*self, 0), (Direction::Up, 1000), (Direction::Down, 1000)]
+            }
+        }
+    }
+    fn move_coord(&self, c: Coord) -> Coord {
+        match self {
+            Direction::Up => (c.0 - 1, c.1),
+            Direction::Down => (c.0 + 1, c.1),
+            Direction::Left => (c.0, c.1 - 1),
+            Direction::Right => (c.0, c.1 + 1),
+        }
+    }
+}
+
+fn parse_to_grid(input: &str) -> (Grid<char>, Coord, Coord) {
     let mut grid = vec![];
-    let mut start = (0, 0);
-    let mut end = (0, 0);
+    let mut start = None;
+    let mut end = None;
     for (i, line) in input.lines().enumerate() {
         let mut row = vec![];
         for (j, c) in line.char_indices() {
             match c {
                 '#' | '.' => row.push(c),
                 'S' => {
-                    start = (i, j);
+                    start = Some((i, j));
                     row.push('.');
                 }
                 'E' => {
-                    end = (i, j);
+                    end = Some((i, j));
                     row.push('.');
                 }
                 _ => (),
@@ -64,8 +103,13 @@ fn parse(input: &str) -> (Grid<char>, Coord, Coord, HashMap<CoordKey, Intersecti
         }
         grid.push(row);
     }
-    let grid = Grid::from(grid);
-    let mut nodes = vec![start, end];
+    (Grid::from(grid), start.unwrap(), end.unwrap())
+}
+
+fn parse_to_graph(grid: &Grid<char>, start: Coord, end: Coord) -> HashMap<CoordKey, Intersection> {
+    let mut graph = HashMap::<CoordKey, Intersection>::new();
+    graph.insert(CoordKey::from(start), Intersection::default());
+    graph.insert(CoordKey::from(end), Intersection::default());
     for ((i, j), _) in grid.indexed_iter().filter(|((i, j), c)| {
         **c == '.' && *i > 0 && *i < grid.rows() - 1 && *j > 0 && *j < grid.cols() - 1
     }) {
@@ -75,67 +119,71 @@ fn parse(input: &str) -> (Grid<char>, Coord, Coord, HashMap<CoordKey, Intersecti
             .count()
             >= 3
         {
-            nodes.push((i, j));
+            graph.insert(CoordKey::from((i, j)), Intersection::default());
         }
     }
 
-    let mut graph = HashMap::<CoordKey, Intersection>::new();
-    for (x, y) in &nodes {
+    for key in graph.keys().cloned().collect::<Vec<_>>() {
+        let CoordKey(ndx, ndy) = key;
         let mut stack = VecDeque::from_iter(
             [
-                ((*x - 1, *y), 1, Direction::Up, Direction::Up),
-                ((*x + 1, *y), 1, Direction::Down, Direction::Down),
-                ((*x, *y - 1), 1, Direction::Left, Direction::Left),
-                ((*x, *y + 1), 1, Direction::Right, Direction::Right),
+                ((ndx - 1, ndy), 1, Direction::Up, Direction::Up),
+                ((ndx + 1, ndy), 1, Direction::Down, Direction::Down),
+                ((ndx, ndy - 1), 1, Direction::Left, Direction::Left),
+                ((ndx, ndy + 1), 1, Direction::Right, Direction::Right),
             ]
             .into_iter()
-            .filter(|(node, _, _, _)| grid[*node] != '#'),
+            .filter(|(node, _, _, _)| grid[*node] != '#')
+            .filter(|(_, _, dir, _)| graph[&key].get_dir(*dir).is_none()),
         );
-        while let Some((n, cost, dir, origin_dir)) = stack.pop_front() {
-            for (candidate, new_cost, new_dir) in step(n, cost, dir) {
-                if grid[candidate] == '#' {
+        while let Some((pos, cost, dir, origin_dir)) = stack.pop_front() {
+            for (next_pos, next_cost, next_dir) in step(pos, cost, dir) {
+                let next_pos_key = CoordKey::from(next_pos);
+                if grid[next_pos] == '#' {
                     continue;
-                } else if nodes.contains(&candidate) {
-                    let itersection = graph
-                        .entry(CoordKey::from((*x, *y)))
-                        .or_default()
-                        .get_dir(origin_dir);
-                    if itersection.is_some_and(|old_cost| old_cost.2 > new_cost)
-                        || itersection.is_none()
-                    {
-                        *itersection = Some((candidate, new_dir, new_cost));
-                    }
-                } else if grid[candidate] == '.' {
-                    stack.push_back((candidate, new_cost, new_dir, origin_dir));
+                } else if graph.contains_key(&next_pos_key) {
+                    *graph.get_mut(&key).unwrap().get_mut_dir(origin_dir) =
+                        Some((next_pos, next_dir, next_cost));
+                    *graph.get_mut(&next_pos_key).unwrap().get_mut_dir(-next_dir) =
+                        Some(((ndx, ndy), -origin_dir, next_cost));
+                } else if grid[next_pos] == '.' {
+                    stack.push_back((next_pos, next_cost, next_dir, origin_dir));
                 }
             }
         }
     }
 
-    (grid, start, end, graph)
+    graph
 }
 
-fn step(c: Coord, count: usize, dir: Direction) -> [(Coord, usize, Direction); 3] {
-    match dir {
-        Direction::Up => [
-            ((c.0 - 1, c.1), count + 1, dir),
-            ((c.0, c.1 - 1), count + 1001, Direction::Left),
-            ((c.0, c.1 + 1), count + 1001, Direction::Right),
-        ],
-        Direction::Down => [
-            ((c.0 + 1, c.1), count + 1, dir),
-            ((c.0, c.1 - 1), count + 1001, Direction::Left),
-            ((c.0, c.1 + 1), count + 1001, Direction::Right),
-        ],
-        Direction::Left => [
-            ((c.0, c.1 - 1), count + 1, dir),
-            ((c.0 - 1, c.1), count + 1001, Direction::Up),
-            ((c.0 + 1, c.1), count + 1001, Direction::Down),
-        ],
-        Direction::Right => [
-            ((c.0, c.1 + 1), count + 1, dir),
-            ((c.0 - 1, c.1), count + 1001, Direction::Up),
-            ((c.0 + 1, c.1), count + 1001, Direction::Down),
-        ],
+fn step(c: Coord, cost: usize, dir: Direction) -> [(Coord, usize, Direction); 3] {
+    dir.expand().map(|(expand_dir, expand_cost)| {
+        (expand_dir.move_coord(c), cost + expand_cost + 1, expand_dir)
+    })
+}
+
+fn print_grid(grid: &Grid<char>, graph: &HashMap<CoordKey, Intersection>) {
+    for (i, line) in grid.iter_rows().enumerate() {
+        for (j, c) in line.enumerate() {
+            if graph.contains_key(&CoordKey::from((i, j))) {
+                print!("X");
+            } else {
+                print!("{c}");
+            }
+        }
+        println!();
+    }
+}
+fn print_graph(graph: &HashMap<CoordKey, Intersection>) {
+    for (k, v) in graph {
+        println!(
+            r#"
+({}, {}):
+    up:{:?}
+    down:{:?}
+    left:{:?}
+    right:{:?}"#,
+            k.0, k.1, v.up, v.down, v.left, v.right
+        );
     }
 }
