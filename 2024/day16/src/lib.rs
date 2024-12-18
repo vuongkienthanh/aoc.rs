@@ -1,11 +1,11 @@
 pub mod part1;
 pub mod part2;
 use grid::Grid;
-use std::collections::{HashMap, VecDeque};
-use std::ops::Neg;
+use std::collections::{HashMap, HashSet, VecDeque};
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 struct CoordKey(usize, usize);
+
 impl From<Coord> for CoordKey {
     fn from(value: Coord) -> Self {
         CoordKey(value.0, value.1)
@@ -13,15 +13,18 @@ impl From<Coord> for CoordKey {
 }
 
 type Coord = (usize, usize);
+
+/// each dir is destination coord, dir at dest, cost to dst, and tiles list
+/// exclude start and end
 #[derive(Debug, Default)]
 struct Intersection {
-    up: Option<(Coord, Direction, usize)>,
-    down: Option<(Coord, Direction, usize)>,
-    left: Option<(Coord, Direction, usize)>,
-    right: Option<(Coord, Direction, usize)>,
+    up: Option<(Coord, usize, Direction, Vec<Coord>)>,
+    down: Option<(Coord, usize, Direction, Vec<Coord>)>,
+    left: Option<(Coord, usize, Direction, Vec<Coord>)>,
+    right: Option<(Coord, usize, Direction, Vec<Coord>)>,
 }
 impl Intersection {
-    fn get_dir(&self, dir: Direction) -> &Option<(Coord, Direction, usize)> {
+    fn get_dir(&self, dir: Direction) -> &Option<(Coord, usize, Direction, Vec<Coord>)> {
         match dir {
             Direction::Up => &self.up,
             Direction::Down => &self.down,
@@ -29,7 +32,10 @@ impl Intersection {
             Direction::Right => &self.right,
         }
     }
-    fn get_mut_dir(&mut self, dir: Direction) -> &mut Option<(Coord, Direction, usize)> {
+    fn get_mut_dir(
+        &mut self,
+        dir: Direction,
+    ) -> &mut Option<(Coord, usize, Direction, Vec<Coord>)> {
         match dir {
             Direction::Up => &mut self.up,
             Direction::Down => &mut self.down,
@@ -45,18 +51,6 @@ enum Direction {
     Down,
     Left,
     Right,
-}
-impl Neg for Direction {
-    type Output = Self;
-
-    fn neg(self) -> Self::Output {
-        match self {
-            Direction::Up => Direction::Down,
-            Direction::Down => Direction::Up,
-            Direction::Left => Direction::Right,
-            Direction::Right => Direction::Left,
-        }
-    }
 }
 impl Direction {
     fn expand(&self) -> [(Direction, usize); 3] {
@@ -81,7 +75,21 @@ impl Direction {
     }
 }
 
-fn parse_to_grid(input: &str) -> (Grid<char>, Coord, Coord) {
+#[derive(Debug, Eq, PartialEq)]
+enum CellType {
+    Wall,
+    Empty,
+    Intersection,
+}
+
+fn parse(
+    input: &str,
+) -> (
+    Coord,
+    Coord,
+    Grid<CellType>,
+    HashMap<CoordKey, Intersection>,
+) {
     let mut grid = vec![];
     let mut start = None;
     let mut end = None;
@@ -89,71 +97,76 @@ fn parse_to_grid(input: &str) -> (Grid<char>, Coord, Coord) {
         let mut row = vec![];
         for (j, c) in line.char_indices() {
             match c {
-                '#' | '.' => row.push(c),
+                '#' => row.push(CellType::Wall),
+                '.' => row.push(CellType::Empty),
                 'S' => {
                     start = Some((i, j));
-                    row.push('.');
+                    row.push(CellType::Intersection);
                 }
                 'E' => {
                     end = Some((i, j));
-                    row.push('.');
+                    row.push(CellType::Intersection);
                 }
                 _ => (),
             }
         }
         grid.push(row);
     }
-    (Grid::from(grid), start.unwrap(), end.unwrap())
-}
+    let mut grid = Grid::from(grid);
+    let start = start.unwrap();
+    let end = end.unwrap();
 
-fn parse_to_graph(grid: &Grid<char>, start: Coord, end: Coord) -> HashMap<CoordKey, Intersection> {
     let mut graph = HashMap::<CoordKey, Intersection>::new();
-    graph.insert(CoordKey::from(start), Intersection::default());
-    graph.insert(CoordKey::from(end), Intersection::default());
-    for ((i, j), _) in grid.indexed_iter().filter(|((i, j), c)| {
-        **c == '.' && *i > 0 && *i < grid.rows() - 1 && *j > 0 && *j < grid.cols() - 1
-    }) {
-        if [(i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)]
-            .into_iter()
-            .filter(|x| grid[*x] == '.')
-            .count()
-            >= 3
-        {
-            graph.insert(CoordKey::from((i, j)), Intersection::default());
+    graph.insert(start.into(), Intersection::default());
+    graph.insert(end.into(), Intersection::default());
+
+    for i in 1..grid.rows() - 1 {
+        for j in 1..grid.cols() - 1 {
+            if grid[(i, j)] == CellType::Empty
+                && [(i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)]
+                    .into_iter()
+                    .filter(|x| grid[*x] == CellType::Empty)
+                    .count()
+                    >= 3
+            {
+                grid[(i, j)] = CellType::Intersection;
+                graph.insert((i, j).into(), Intersection::default());
+            }
         }
     }
+    for (coordkey, intersection) in graph.iter_mut() {
+        let coord = (coordkey.0, coordkey.1);
 
-    for key in graph.keys().cloned().collect::<Vec<_>>() {
-        let CoordKey(ndx, ndy) = key;
-        let mut stack = VecDeque::from_iter(
-            [
-                ((ndx - 1, ndy), 1, Direction::Up, Direction::Up),
-                ((ndx + 1, ndy), 1, Direction::Down, Direction::Down),
-                ((ndx, ndy - 1), 1, Direction::Left, Direction::Left),
-                ((ndx, ndy + 1), 1, Direction::Right, Direction::Right),
-            ]
-            .into_iter()
-            .filter(|(node, _, _, _)| grid[*node] != '#')
-            .filter(|(_, _, dir, _)| graph[&key].get_dir(*dir).is_none()),
-        );
-        while let Some((pos, cost, dir, origin_dir)) = stack.pop_front() {
-            for (next_pos, next_cost, next_dir) in step(pos, cost, dir) {
-                let next_pos_key = CoordKey::from(next_pos);
-                if grid[next_pos] == '#' {
-                    continue;
-                } else if graph.contains_key(&next_pos_key) {
-                    *graph.get_mut(&key).unwrap().get_mut_dir(origin_dir) =
-                        Some((next_pos, next_dir, next_cost));
-                    *graph.get_mut(&next_pos_key).unwrap().get_mut_dir(-next_dir) =
-                        Some(((ndx, ndy), -origin_dir, next_cost));
-                } else if grid[next_pos] == '.' {
-                    stack.push_back((next_pos, next_cost, next_dir, origin_dir));
+        for origin_dir in [
+            Direction::Up,
+            Direction::Down,
+            Direction::Left,
+            Direction::Right,
+        ] {
+            let next_coord = origin_dir.move_coord(coord);
+            if grid[next_coord] != CellType::Wall {
+                let visited = vec![next_coord];
+                let mut stack = VecDeque::from([(next_coord, 1, origin_dir, visited)]);
+                while let Some((coord, cost, dir, visited)) = stack.pop_front() {
+                    for (next_coord, next_cost, next_dir) in step(coord, cost, dir) {
+                        match grid[next_coord] {
+                            CellType::Wall => continue,
+                            CellType::Empty => {
+                                let mut next_visited = visited.clone();
+                                next_visited.push(next_coord);
+                                stack.push_back((next_coord, next_cost, next_dir, next_visited));
+                            }
+                            CellType::Intersection => {
+                                *intersection.get_mut_dir(origin_dir) =
+                                    Some((next_coord, next_cost, next_dir, visited.clone()));
+                            }
+                        }
+                    }
                 }
             }
         }
     }
-
-    graph
+    (start, end, grid, graph)
 }
 
 fn step(c: Coord, cost: usize, dir: Direction) -> [(Coord, usize, Direction); 3] {
@@ -162,13 +175,13 @@ fn step(c: Coord, cost: usize, dir: Direction) -> [(Coord, usize, Direction); 3]
     })
 }
 
-fn print_grid(grid: &Grid<char>, graph: &HashMap<CoordKey, Intersection>) {
-    for (i, line) in grid.iter_rows().enumerate() {
-        for (j, c) in line.enumerate() {
-            if graph.contains_key(&CoordKey::from((i, j))) {
-                print!("X");
-            } else {
-                print!("{c}");
+fn print_grid(grid: &Grid<CellType>) {
+    for line in grid.iter_rows() {
+        for cell in line {
+            match cell {
+                CellType::Wall => print!("#"),
+                CellType::Empty => print!("."),
+                CellType::Intersection => print!("X"),
             }
         }
         println!();
