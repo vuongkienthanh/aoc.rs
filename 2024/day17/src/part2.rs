@@ -25,9 +25,8 @@ pub fn process(_input: &str) -> usize {
         va = new_va;
     }
 
-    println!("va = {va:?}");
-
     for a in &va {
+        println!("{a}");
         let recheck = super::part1::process(
             format!(
                 r#"Register A: {}
@@ -47,9 +46,9 @@ Program: 2,4,1,1,7,5,4,0,0,3,1,6,5,5,3,0"#,
 }
 
 fn find_b(a: usize) -> usize {
-    let mut b = a % 8;
+    let mut b = a & 0b111;
     b ^= 1;
     b ^= a >> b;
     b ^= 6;
-    b % 8
+    b & 0b111
 }
