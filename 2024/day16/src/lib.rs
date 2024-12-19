@@ -1,7 +1,7 @@
 pub mod part1;
 pub mod part2;
 use grid::Grid;
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, VecDeque};
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 struct CoordKey(usize, usize);
@@ -165,6 +165,10 @@ fn parse(
                 }
             }
         }
+    }
+    if cfg!(test) {
+        print_grid(&grid);
+        print_graph(&graph);
     }
     (start, end, grid, graph)
 }

@@ -1,24 +1,32 @@
-use crate::{parse, CellType, CoordKey, Direction};
+use crate::{parse, CellType, Coord, CoordKey, Direction};
 use std::collections::{HashMap, HashSet, VecDeque};
+
+#[derive(Debug, Clone)]
+struct Path {
+    in_dir: Option<Direction>,
+    coord: Coord,
+    out_dir: Direction,
+}
+
 #[derive(Debug)]
 struct CostIntersection {
-    from_top: (usize, HashSet<CoordKey>),
-    from_bottom: (usize, HashSet<CoordKey>),
-    from_left: (usize, HashSet<CoordKey>),
-    from_right: (usize, HashSet<CoordKey>),
+    from_top: (usize, Vec<Path>),
+    from_bottom: (usize, Vec<Path>),
+    from_left: (usize, Vec<Path>),
+    from_right: (usize, Vec<Path>),
 }
 impl Default for CostIntersection {
     fn default() -> Self {
         Self {
-            from_top: (usize::MAX, HashSet::new()),
-            from_bottom: (usize::MAX, HashSet::new()),
-            from_left: (usize::MAX, HashSet::new()),
-            from_right: (usize::MAX, HashSet::new()),
+            from_top: (usize::MAX, Vec::new()),
+            from_bottom: (usize::MAX, Vec::new()),
+            from_left: (usize::MAX, Vec::new()),
+            from_right: (usize::MAX, Vec::new()),
         }
     }
 }
 impl CostIntersection {
-    fn get_dir(&self, dir: Direction) -> &(usize, HashSet<CoordKey>) {
+    fn get_dir(&self, dir: Direction) -> &(usize, Vec<Path>) {
         match dir {
             Direction::Up => &self.from_bottom,
             Direction::Down => &self.from_top,
@@ -26,7 +34,7 @@ impl CostIntersection {
             Direction::Right => &self.from_left,
         }
     }
-    fn get_mut_dir(&mut self, dir: Direction) -> &mut (usize, HashSet<CoordKey>) {
+    fn get_mut_dir(&mut self, dir: Direction) -> &mut (usize, Vec<Path>) {
         match dir {
             Direction::Up => &mut self.from_bottom,
             Direction::Down => &mut self.from_top,
@@ -36,11 +44,7 @@ impl CostIntersection {
     }
 }
 pub fn process(_input: &str) -> usize {
-    let (start, end, grid, graph) = parse(_input);
-
-    // print_grid(&grid);
-    // print_graph(&graph);
-    // todo!("ASD")
+    let (start, end, _grid, graph) = parse(_input);
 
     let mut costmap = HashMap::new();
     for node in graph.keys() {
@@ -52,70 +56,121 @@ pub fn process(_input: &str) -> usize {
     start_cost_intersection.from_left.0 = 0;
     start_cost_intersection.from_right.0 = 0;
 
-    let mut stack = VecDeque::from([(start, 0, Direction::Right, HashSet::<CoordKey>::new())]);
-    while let Some((coord, cost, dir, tiles)) = stack.pop_front() {
-        for (expand_dir, expand_cost) in dir.expand() {
-            if let Some((next_coord, next_cost, next_dir, path)) =
-                graph[&coord.into()].get_dir(expand_dir)
+    let mut stack = VecDeque::from([(
+        0,
+        Path {
+            in_dir: None,
+            coord: start,
+            out_dir: Direction::Right,
+        },
+    )]);
+
+    while let Some((
+        cost,
+        Path {
+            in_dir,
+            coord,
+            out_dir,
+        },
+    )) = stack.pop_front()
+    {
+        for (expand_out_dir, expand_cost) in out_dir.expand() {
+            if let Some((next_coord, next_cost, next_dir, _)) =
+                graph[&coord.into()].get_dir(expand_out_dir)
             {
                 let next_cost = cost + expand_cost + next_cost;
                 match next_cost.cmp(&costmap[&(*next_coord).into()].get_dir(*next_dir).0) {
                     std::cmp::Ordering::Less => {
-                        let mut next_tiles = tiles.clone();
-                        next_tiles.insert(coord.into());
-                        for tile in path {
-                            next_tiles.insert((*tile).into());
-                        }
                         let cost_intersection = costmap
                             .get_mut(&(*next_coord).into())
                             .unwrap()
                             .get_mut_dir(*next_dir);
                         cost_intersection.0 = next_cost;
-                        cost_intersection.1 = next_tiles.clone();
-                        stack.push_back((*next_coord, next_cost, *next_dir, next_tiles));
+                        cost_intersection.1 = vec![Path {
+                            in_dir,
+                            coord,
+                            out_dir: expand_out_dir,
+                        }];
+                        stack.push_back((
+                            next_cost,
+                            Path {
+                                in_dir: Some(*next_dir),
+                                coord: *next_coord,
+                                out_dir: *next_dir,
+                            },
+                        ));
                     }
                     std::cmp::Ordering::Equal => {
-                        let mut next_tiles = tiles.clone();
-                        next_tiles.insert(coord.into());
-                        for tile in path {
-                            next_tiles.insert((*tile).into());
-                        }
                         let cost_intersection = costmap
                             .get_mut(&(*next_coord).into())
                             .unwrap()
                             .get_mut_dir(*next_dir);
-                        cost_intersection.1.extend(next_tiles.clone());
-                        stack.push_back((*next_coord, next_cost, *next_dir, next_tiles));
+                        cost_intersection.1.push(Path {
+                            in_dir,
+                            coord,
+                            out_dir: expand_out_dir,
+                        });
                     }
                     std::cmp::Ordering::Greater => (),
                 }
             }
         }
     }
-    for (i, line) in grid.iter_rows().enumerate() {
-        for (j, cell) in line.enumerate() {
-            if costmap[&end.into()].from_bottom.1.contains(&(i, j).into()) {
-                print!("O")
-            } else {
-                match cell {
-                    CellType::Wall => print!("#"),
-                    CellType::Empty => print!("."),
-                    CellType::Intersection => print!("X"),
-                }
+    let mut stack = VecDeque::from_iter(
+        [
+            Direction::Up,
+            Direction::Down,
+            Direction::Left,
+            Direction::Down,
+        ]
+        .into_iter()
+        .min_by_key(|x| costmap[&end.into()].get_dir(*x).0)
+        .map(|x| costmap[&end.into()].get_dir(x).1.as_slice())
+        .unwrap()
+        .iter(),
+    );
+    let mut tiles = HashSet::new();
+    while let Some(Path {
+        in_dir,
+        coord,
+        out_dir,
+    }) = stack.pop_front()
+    {
+        let (dst, _, _, path) = graph
+            .get(&(*coord).into())
+            .unwrap()
+            .get_dir(*out_dir)
+            .as_ref()
+            .unwrap();
+        tiles.insert(CoordKey::from(*dst));
+        for tile in path.as_slice() {
+            tiles.insert(CoordKey::from(*tile));
+        }
+        if let Some(dir) = in_dir {
+            for path in &costmap[&(*coord).into()].get_dir(*dir).1 {
+                stack.push_back(path);
             }
         }
-        println!();
     }
-    [
-        Direction::Up,
-        Direction::Down,
-        Direction::Left,
-        Direction::Down,
-    ]
-    .into_iter()
-    .min_by_key(|x| costmap[&end.into()].get_dir(*x).0)
-    .map(|x| costmap[&end.into()].get_dir(x).1.len() + 1)
-    .unwrap()
+
+    if cfg!(test) {
+        for (i, line) in _grid.iter_rows().enumerate() {
+            for (j, cell) in line.enumerate() {
+                if tiles.contains(&(i, j).into()) {
+                    print!("O")
+                } else {
+                    match cell {
+                        CellType::Wall => print!("#"),
+                        CellType::Empty => print!("."),
+                        CellType::Intersection => print!("X"),
+                    }
+                }
+            }
+            println!();
+        }
+    }
+
+    tiles.len() + 1
 }
 #[cfg(test)]
 mod tests {

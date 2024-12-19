@@ -1,4 +1,4 @@
-use crate::{parse, print_graph, print_grid ,Direction};
+use crate::{parse, print_graph, print_grid, Direction};
 use std::collections::{HashMap, VecDeque};
 
 struct CostIntersection {
@@ -37,11 +37,7 @@ impl CostIntersection {
 }
 
 pub fn process(_input: &str) -> usize {
-    let (start, end, grid, graph) = parse(_input);
-
-    // print_grid(&grid);
-    // print_graph(&graph);
-    // todo!("ASD")
+    let (start, end, _grid, graph) = parse(_input);
 
     let mut costmap = HashMap::new();
     for node in graph.keys() {
