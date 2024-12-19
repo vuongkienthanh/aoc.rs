@@ -1,4 +1,4 @@
-use crate::{parse, print_graph, print_grid, Direction};
+use crate::{parse, Direction, IntersectionDirInfo};
 use std::collections::{HashMap, VecDeque};
 
 struct CostIntersection {
@@ -52,28 +52,32 @@ pub fn process(_input: &str) -> usize {
     let mut stack = VecDeque::from([(start, 0, Direction::Right)]);
     while let Some((coord, cost, dir)) = stack.pop_front() {
         for (expand_dir, expand_cost) in dir.expand() {
-            if let Some((next_coord, next_cost, next_dir, _)) =
-                graph[&coord.into()].get_dir(expand_dir)
+            if let Some(IntersectionDirInfo {
+                dst: next_coord,
+                cost: next_cost,
+                dir_at_dst: next_dir,
+                path_to_dst: _,
+            }) = graph[&coord.into()].get_dir(expand_dir)
             {
                 let next_cost = cost + expand_cost + next_cost;
                 if next_cost < *costmap[&(*next_coord).into()].get_dir(*next_dir) {
-                    stack.push_back((*next_coord, next_cost, *next_dir));
                     *costmap
                         .get_mut(&(*next_coord).into())
                         .unwrap()
                         .get_mut_dir(*next_dir) = next_cost;
+                    stack.push_back((*next_coord, next_cost, *next_dir));
                 }
             }
         }
     }
-    let end_node = &costmap[&end.into()];
     [
-        end_node.from_top,
-        end_node.from_bottom,
-        end_node.from_left,
-        end_node.from_right,
+        Direction::Up,
+        Direction::Down,
+        Direction::Left,
+        Direction::Right,
     ]
     .into_iter()
+    .map(|x| *costmap[&end.into()].get_dir(x))
     .min()
     .unwrap()
 }

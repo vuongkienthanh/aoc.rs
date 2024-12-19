@@ -14,17 +14,24 @@ impl From<Coord> for CoordKey {
 
 type Coord = (usize, usize);
 
-/// each dir is destination coord, dir at dest, cost to dst, and tiles list
-/// exclude start and end
+/// path_to_dst exclude dst
+#[derive(Debug)]
+struct IntersectionDirInfo {
+    dst: Coord,
+    cost: usize,
+    dir_at_dst: Direction,
+    path_to_dst: Vec<Coord>,
+}
+
 #[derive(Debug, Default)]
 struct Intersection {
-    up: Option<(Coord, usize, Direction, Vec<Coord>)>,
-    down: Option<(Coord, usize, Direction, Vec<Coord>)>,
-    left: Option<(Coord, usize, Direction, Vec<Coord>)>,
-    right: Option<(Coord, usize, Direction, Vec<Coord>)>,
+    up: Option<IntersectionDirInfo>,
+    down: Option<IntersectionDirInfo>,
+    left: Option<IntersectionDirInfo>,
+    right: Option<IntersectionDirInfo>,
 }
 impl Intersection {
-    fn get_dir(&self, dir: Direction) -> &Option<(Coord, usize, Direction, Vec<Coord>)> {
+    fn get_dir(&self, dir: Direction) -> &Option<IntersectionDirInfo> {
         match dir {
             Direction::Up => &self.up,
             Direction::Down => &self.down,
@@ -32,10 +39,7 @@ impl Intersection {
             Direction::Right => &self.right,
         }
     }
-    fn get_mut_dir(
-        &mut self,
-        dir: Direction,
-    ) -> &mut Option<(Coord, usize, Direction, Vec<Coord>)> {
+    fn get_mut_dir(&mut self, dir: Direction) -> &mut Option<IntersectionDirInfo> {
         match dir {
             Direction::Up => &mut self.up,
             Direction::Down => &mut self.down,
@@ -45,7 +49,7 @@ impl Intersection {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Direction {
     Up,
     Down,
@@ -157,8 +161,12 @@ fn parse(
                                 stack.push_back((next_coord, next_cost, next_dir, next_visited));
                             }
                             CellType::Intersection => {
-                                *intersection.get_mut_dir(origin_dir) =
-                                    Some((next_coord, next_cost, next_dir, visited.clone()));
+                                *intersection.get_mut_dir(origin_dir) = Some(IntersectionDirInfo {
+                                    dst: next_coord,
+                                    cost: next_cost,
+                                    dir_at_dst: next_dir,
+                                    path_to_dst: visited.clone(),
+                                })
                             }
                         }
                     }

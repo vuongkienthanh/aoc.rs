@@ -1,7 +1,7 @@
-use crate::{parse, CellType, Coord, CoordKey, Direction};
+use crate::{parse, CellType, Coord, CoordKey, Direction, IntersectionDirInfo};
 use std::collections::{HashMap, HashSet, VecDeque};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 struct Path {
     in_dir: Option<Direction>,
     coord: Coord,
@@ -75,8 +75,12 @@ pub fn process(_input: &str) -> usize {
     )) = stack.pop_front()
     {
         for (expand_out_dir, expand_cost) in out_dir.expand() {
-            if let Some((next_coord, next_cost, next_dir, _)) =
-                graph[&coord.into()].get_dir(expand_out_dir)
+            if let Some(IntersectionDirInfo {
+                dst: next_coord,
+                cost: next_cost,
+                dir_at_dst: next_dir,
+                path_to_dst: _,
+            }) = graph[&coord.into()].get_dir(expand_out_dir)
             {
                 let next_cost = cost + expand_cost + next_cost;
                 match next_cost.cmp(&costmap[&(*next_coord).into()].get_dir(*next_dir).0) {
@@ -101,15 +105,19 @@ pub fn process(_input: &str) -> usize {
                         ));
                     }
                     std::cmp::Ordering::Equal => {
-                        let cost_intersection = costmap
+                        let cost_intersection = &mut costmap
                             .get_mut(&(*next_coord).into())
                             .unwrap()
-                            .get_mut_dir(*next_dir);
-                        cost_intersection.1.push(Path {
+                            .get_mut_dir(*next_dir)
+                            .1;
+                        let path = Path {
                             in_dir,
                             coord,
                             out_dir: expand_out_dir,
-                        });
+                        };
+                        if !cost_intersection.contains(&path) {
+                            cost_intersection.push(path);
+                        }
                     }
                     std::cmp::Ordering::Greater => (),
                 }
@@ -136,14 +144,19 @@ pub fn process(_input: &str) -> usize {
         out_dir,
     }) = stack.pop_front()
     {
-        let (dst, _, _, path) = graph
+        let IntersectionDirInfo {
+            dst,
+            cost: _,
+            dir_at_dst: _,
+            path_to_dst,
+        } = graph
             .get(&(*coord).into())
             .unwrap()
             .get_dir(*out_dir)
             .as_ref()
             .unwrap();
         tiles.insert(CoordKey::from(*dst));
-        for tile in path.as_slice() {
+        for tile in path_to_dst.as_slice() {
             tiles.insert(CoordKey::from(*tile));
         }
         if let Some(dir) = in_dir {
