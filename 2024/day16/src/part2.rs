@@ -167,6 +167,22 @@ pub fn process(_input: &str) -> usize {
     }
 
     if cfg!(test) {
+        for (k, v) in costmap.iter() {
+            let paths = [
+                Direction::Up,
+                Direction::Down,
+                Direction::Left,
+                Direction::Down,
+            ]
+            .into_iter()
+            .map(|x| &v.get_dir(x).1)
+            .collect::<Vec<&Vec<Path>>>();
+            for path in paths {
+                if path.len() >= 2 {
+                    println!("k: {k:?}, v: {v:?}");
+                }
+            }
+        }
         for (i, line) in _grid.iter_rows().enumerate() {
             for (j, cell) in line.enumerate() {
                 if tiles.contains(&(i, j).into()) {

@@ -17,16 +17,16 @@ pub fn process(_input: &str) -> String {
         .1
         .chars()
         .step_by(2)
+        .map(|x| x.to_digit(10).unwrap() as usize)
         .collect::<Vec<_>>();
 
-    while computer.pointer < program.len() - 2 {
+    while computer.pointer < program.len() {
         Instruction::run(
             program[computer.pointer],
-            program[computer.pointer + 1].to_digit(10).unwrap() as usize,
+            program[computer.pointer + 1],
             &mut computer,
         );
     }
-    println!("{:?}", program);
 
     computer
         .output
