@@ -4,24 +4,23 @@ use std::collections::BinaryHeap;
 type Coord = (usize, usize);
 
 struct State {
-    cost: usize,
     coord: Coord,
-    visited: Vec<Coord>,
+    len: usize,
 }
 impl Eq for State {}
 impl PartialEq for State {
     fn eq(&self, other: &Self) -> bool {
-        self.cost == other.cost
+        self.len == other.len
     }
 }
 impl Ord for State {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        other.cost.cmp(&self.cost)
+        other.len.cmp(&self.len)
     }
 }
 impl PartialOrd for State {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(other.cost.cmp(&self.cost))
+        Some(other.len.cmp(&self.len))
     }
 }
 fn adj(coord: Coord, size: usize) -> Vec<Coord> {
@@ -40,16 +39,12 @@ fn adj(coord: Coord, size: usize) -> Vec<Coord> {
     };
     ans
 }
-fn manhattan(coord: Coord, end: Coord) -> usize {
-    end.0 - coord.0 + end.1 - coord.1
-}
 
 #[derive(Default, PartialEq, Eq)]
 enum CellType {
     #[default]
     Empty,
     Block,
-    White,
 }
 
 pub fn process(_input: &str, size: usize, count: usize) -> usize {
@@ -62,72 +57,35 @@ pub fn process(_input: &str, size: usize, count: usize) -> usize {
             .unwrap();
         grid[coord] = CellType::Block;
     }
+    let mut costmap = Grid::new(grid.rows(), grid.cols());
+    costmap.fill(usize::MAX);
 
-    if cfg!(test) {
-        for line in grid.iter_rows() {
-            for c in line {
-                match c {
-                    CellType::Empty => print!("."),
-                    CellType::Block => print!("#"),
-                    CellType::White => (),
-                }
-            }
-            println!();
-        }
-    }
-
-    let cost_max = size * size;
     let start = (0, 0);
     let end = (size - 1, size - 1);
 
     let mut heap = BinaryHeap::from([State {
-        cost: manhattan(start, end) + 1,
         coord: start,
-        visited: vec![start],
+        len: 1,
     }]);
-    while let Some(State {
-        cost,
-        coord,
-        visited,
-    }) = heap.pop()
-    {
+    while let Some(State { coord, len }) = heap.pop() {
         for new_coord in adj(coord, size)
             .into_iter()
             .filter(|coord| grid[*coord] == CellType::Empty)
         {
             if new_coord == end {
-                return visited.len() + 1;
+                return len;
             }
-            if !visited.contains(&new_coord) {
-                // if cfg!(test) {
-                    println!("testing newcoord {new_coord:?}");
-                    for (i, line) in grid.iter_rows().enumerate() {
-                        for (j, c) in line.enumerate() {
-                            if visited.contains(&(i, j)) {
-                                print!("0");
-                            } else {
-                                match c {
-                                    CellType::Empty => print!("."),
-                                    CellType::Block => print!("#"),
-                                    CellType::White => (),
-                                }
-                            }
-                        }
-                        println!();
-                    }
-                // }
-                let mut new_visited = visited.clone();
-                new_visited.push(new_coord);
+            let new_len = len + 1;
+            if new_len < costmap[new_coord] {
+                costmap[new_coord] = new_len;
                 heap.push(State {
-                    cost: manhattan(new_coord, end) + new_visited.len(),
                     coord: new_coord,
-                    visited: new_visited,
+                    len: new_len,
                 });
             }
         }
     }
-
-    todo!("part1")
+    panic!("should return ans")
 }
 #[cfg(test)]
 mod tests {
