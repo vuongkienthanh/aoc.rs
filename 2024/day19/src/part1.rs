@@ -1,52 +1,39 @@
 use std::collections::HashMap;
 
 pub fn process(_input: &str) -> usize {
-    let mut categories = HashMap::<char, Vec<&str>>::new();
     let mut memo = HashMap::<&str, bool>::new();
 
-    let (pattern_cat, puzzle) = _input.split_once("\n\n").unwrap();
-    for pat in pattern_cat.split(", ") {
-        let c = pat.chars().next().unwrap();
-        categories.entry(c).or_default().push(pat);
+    let (pattern_list, towels) = _input.split_once("\n\n").unwrap();
+    for pat in pattern_list.split(", ") {
         memo.insert(pat, true);
     }
-    if cfg!(test) {
-        println!("memo = {memo:?}");
-        println!("categories = {categories:?}");
-    }
+    let initial_patterns = memo.keys().cloned().collect::<Vec<_>>();
 
-    puzzle
+    towels
         .lines()
-        .filter(|line| is_possible(line, &mut categories, &mut memo))
+        .filter(|line| is_possible(line, &mut memo, &initial_patterns))
         .count()
 }
 
 fn is_possible<'a>(
-    line: &'a str,
-    categories: &mut HashMap<char, Vec<&'a str>>,
+    towel: &'a str,
     memo: &mut HashMap<&'a str, bool>,
+    initial_patterns: &[&str],
 ) -> bool {
-    if line.is_empty() {
-        true
-    } else if let Some(ans) = memo.get(&line) {
+    if let Some(ans) = memo.get(&towel) {
         *ans
     } else {
-        let first_char = line.chars().next().unwrap();
-        if let Some(patterns) = categories.get(&first_char).cloned() {
-            for pat in patterns {
-                if let Some(rest) = line.strip_prefix(pat) {
-                    if is_possible(rest, categories, memo) {
-                        categories.get_mut(&first_char).unwrap().push(line);
-                        memo.insert(line, true);
-                        return true;
-                    }
-                }
+        for sub in initial_patterns
+            .iter()
+            .filter_map(|pat| towel.strip_prefix(pat))
+        {
+            if is_possible(sub, memo, initial_patterns) {
+                memo.insert(towel, true);
+                return true;
             }
-            memo.insert(line, false);
-            false
-        } else {
-            false
         }
+        memo.insert(towel, false);
+        false
     }
 }
 

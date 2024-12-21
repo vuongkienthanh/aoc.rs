@@ -19,13 +19,10 @@ fn parse(input: &str) -> (Vec<&str>, HashMap<&str, usize>, &str) {
 
     for i in 2..max_len + 1 {
         for pat in lens.get(&i).unwrap() {
-            let count = 1 + counting(pat, &mut memo, &initial_patterns);
-            memo.insert(pat, count);
+            counting(pat, &mut memo, &initial_patterns);
+            *memo.get_mut(pat).unwrap() += 1;
             initial_patterns.push(*pat);
         }
-    }
-    if cfg!(test) {
-        println!("after initial builing memo = {memo:?}");
     }
     (initial_patterns, memo, towels)
 }
