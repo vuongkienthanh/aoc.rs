@@ -1,8 +1,6 @@
-
-
+pub mod directionals;
 pub mod numerics;
-pub mod directionnals;
-pub mod actions;
 
-pub use actions::Action;
-pub use numerics::numeric_paths;
+pub use directionals::{directional_paths, DirectionPair, Directional};
+pub use numerics::{numeric_paths, Numeric, NumericPair};
+
