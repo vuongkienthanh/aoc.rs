@@ -1,12 +1,11 @@
+use crate::min_keypresses;
 pub fn process(_input: &str) -> usize {
-    todo!("part2")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn test_process() {
-        let input = r#""#;
-        assert_eq!(process(input), 0);
-    }
+    _input
+        .lines()
+        .map(|line| {
+            let keypresses = min_keypresses(line, 25);
+            let code = line[0..3].parse::<usize>().unwrap();
+            code * keypresses
+        })
+        .sum()
 }

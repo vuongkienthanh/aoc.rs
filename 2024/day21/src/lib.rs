@@ -1,23 +1,27 @@
 pub mod part1;
 pub mod part2;
 
-// mod enums;
-// pub use enums::*;
 use std::{cell::LazyCell, collections::HashMap};
 
-type Coord = (usize, usize);
-const DIRS: LazyCell<HashMap<char, Coord>> = LazyCell::new(|| {
+type Coord = (isize, isize);
+const DIRECTIONAL_KEYPAD: LazyCell<HashMap<char, Coord>> = LazyCell::new(|| {
     [" ^A", "<v>"]
         .iter()
         .enumerate()
-        .flat_map(|(i, line)| line.char_indices().map(move |(j, c)| (c, (i, j))))
+        .flat_map(|(i, line)| {
+            line.char_indices()
+                .map(move |(j, c)| (c, (j as isize, i as isize)))
+        })
         .collect::<HashMap<char, Coord>>()
 });
-const KEYS: LazyCell<HashMap<char, Coord>> = LazyCell::new(|| {
+const NUMERIC_KEYPAD: LazyCell<HashMap<char, Coord>> = LazyCell::new(|| {
     ["789", "456", "123", " 0A"]
         .iter()
         .enumerate()
-        .flat_map(|(i, line)| line.char_indices().map(move |(j, c)| (c, (i, j))))
+        .flat_map(|(i, line)| {
+            line.char_indices()
+                .map(move |(j, c)| (c, (j as isize, i as isize)))
+        })
         .collect::<HashMap<char, Coord>>()
 });
 
@@ -56,11 +60,10 @@ fn cache_robot(
 ) {
     for (&key_start, &(x_start, y_start)) in keypad.iter() {
         for (&key_end, &(x_end, y_end)) in keypad.iter() {
-            let horizontal_dist = (x_end - x_start).abs() as usize;
-            let vertical_dist = (y_end - y_start).abs() as usize;
-
-            let horizontal_keys = if x_end > x_start { ">" } else { "<" }.repeat(horizontal_dist);
-            let vertical_keys = if y_end < y_start { "^" } else { "v" }.repeat(vertical_dist);
+            let horizontal_keys =
+                if x_end > x_start { ">" } else { "<" }.repeat(x_end.abs_diff(x_start));
+            let vertical_keys =
+                if y_end < y_start { "^" } else { "v" }.repeat(y_end.abs_diff(y_start));
 
             let horizontal_key_seq = format!("{horizontal_keys}{vertical_keys}A");
             let vertical_key_seq = format!("{vertical_keys}{horizontal_keys}A");
@@ -102,15 +105,4 @@ fn cache_robots(n_robots: usize) -> HashMap<(usize, char, char), usize> {
 fn min_keypresses(code: &str, n_robots: usize) -> usize {
     let cache = cache_robots(n_robots);
     keypresses_cost(&cache, n_robots + 1, code)
-}
-
-fn solve(input: &str) -> usize {
-    input
-        .lines()
-        .map(|line| {
-            let keypresses = min_keypresses(line, 2);
-            let code = line[0..line.len() - 1].parse::<usize>().unwrap();
-            code * keypresses
-        })
-        .sum()
 }
