@@ -1,72 +1,17 @@
-use std::collections::{HashMap, VecDeque};
-
-#[derive(Debug)]
-enum Side {
-    Lhs,
-    Rhs,
-}
-
-#[derive(Debug)]
-enum Op {
-    And,
-    Or,
-    Xor,
-}
-
-#[derive(Debug)]
-struct Gate<'a> {
-    lhs: Option<usize>,
-    rhs: Option<usize>,
-    op: Op,
-    out: &'a str,
-}
+use crate::{parse, Op, Side};
+use std::collections::VecDeque;
 
 pub fn process(_input: &str) -> usize {
-    let (input_wires, input_gates) = _input.split_once("\n\n").unwrap();
-
-    let mut wires = HashMap::<&str, Vec<(&str, Side)>>::new();
-    let mut gates = HashMap::new();
+    let (wire_val, wire_loc, mut gates) = parse(_input);
     let mut zs = vec![];
 
-    for gate in input_gates.lines() {
-        let mut v = gate.split_ascii_whitespace();
-        let lhs = v.next().unwrap();
-        let op = match v.next().unwrap() {
-            "AND" => Op::And,
-            "OR" => Op::Or,
-            "XOR" => Op::Xor,
-            _ => panic!(),
-        };
-        let rhs = v.next().unwrap();
-        v.next().unwrap();
-        let out = v.next().unwrap();
-        wires.entry(lhs).or_default().push((gate, Side::Lhs));
-        wires.entry(rhs).or_default().push((gate, Side::Rhs));
-        gates.insert(
-            gate,
-            Gate {
-                lhs: None,
-                rhs: None,
-                op,
-                out,
-            },
-        );
-    }
+    let mut in_wires: VecDeque<(&str, usize)> = VecDeque::from_iter(wire_val);
 
-    let mut input_wires = input_wires
-        .lines()
-        .map(|line| {
-            let (name, value) = line.split_once(": ").unwrap();
-            let value = value.parse::<usize>().unwrap();
-            (name, value)
-        })
-        .collect::<VecDeque<_>>();
-
-    while let Some((wire, value)) = input_wires.pop_front() {
+    while let Some((wire, value)) = in_wires.pop_front() {
         if wire.starts_with("z") {
             zs.push((wire, value));
         }
-        if let Some(dst) = wires.get(&wire) {
+        if let Some(dst) = wire_loc.get(&wire) {
             for (gate, side) in dst {
                 match side {
                     Side::Lhs => gates.get_mut(gate).unwrap().lhs.replace(value),
@@ -79,7 +24,7 @@ pub fn process(_input: &str) -> usize {
                         Op::Or => l | r,
                         Op::Xor => l ^ r,
                     };
-                    input_wires.push_back((gate.out, new_value));
+                    in_wires.push_back((gate.out, new_value));
                 }
             }
         }
