@@ -30,6 +30,7 @@ fn main() {
 
     let ans = format!("Digraph G {{\n{s}}}");
     println!("{ans}");
-    std::fs::write("input.gv", ans).unwrap();
-    println!("Saved to input.gv");
+    let filename = "visualize.gv"
+    std::fs::write(filename, ans).unwrap();
+    println!("Saved to {filename}");
 }

@@ -29,12 +29,21 @@ impl Hash for Pair<'_> {
 }
 
 pub fn process(_input: &str) -> String {
-    let (wire_val, wire_loc, gates) = parse(_input);
+    let (wire_val, wire_loc, mut gates) = parse(_input);
     let ((x, y, z), (xb, yb, zb)) = find_z(&wire_val);
 
     println!("x = {x} {xb:?}");
     println!("y = {y} {yb:?}");
     println!("z = {z} {zb:?}");
+
+    for (k, v) in wire_val {
+        for (gate, side) in wire_loc.get(&k).unwrap() {
+            match side {
+                Side::Lhs => gates.get_mut(gate).unwrap().lhs.replace(v),
+                Side::Rhs => gates.get_mut(gate).unwrap().rhs.replace(v),
+            };
+        }
+    }
 
     let mut visited: BTreeSet<BTreeSet<Pair>> = BTreeSet::new();
     let mut z45: BTreeSet<Pair> = BTreeSet::new();
@@ -47,7 +56,7 @@ pub fn process(_input: &str) -> String {
         carry_wires: HashMap::new(),
     }]);
 
-    while let Some(State {
+    'outer: while let Some(State {
         i,
         changes,
         to_change,
@@ -55,33 +64,30 @@ pub fn process(_input: &str) -> String {
         carry_wires,
     }) = deq.pop_front()
     {
-        if i == 3 {
+        if i == 1 {
             break;
         }
+
+        println!("========================================");
+        println!("state i={i} changes={changes:?}, to_change={to_change:?}, carry_gates={carry_gates:?}, carry_wires={carry_wires:?}");
+
         let mut new_changes = changes.clone();
         if let Some(p) = to_change.clone() {
             new_changes.insert(p);
         }
-        let new_changes_wires = new_changes.iter().flat_map(|x| [x.0, x.1]).collect_vec();
-
-        // invalid carry_wires that starts with "z"
         if carry_wires.keys().any(|x| x.starts_with("z")) {
+            println!("SKIP: invalid carry_wires that starts with z");
             continue;
         }
-        if let Some(Pair(a, b)) = to_change {
+        if to_change.is_some() {
             // check if already seen this changes
             if visited.contains(&new_changes) {
+                println!("SKIP: this (changes, to_change) is already seen");
                 continue;
-            }
-            // check loop a
-            let mut loop_visited = wire_loc.get(&a).unwrap().iter().map(|y| y.0).collect_vec();
-            let mut current_a_gate = VecDeque::from_iter(loop_visited.iter().cloned());
-            while let Some(next_a_gate) = current_a_gate.pop_front() {
-                let a_gate = gates.get(next_a_gate).unwrap().out;
+            } else {
+                visited.insert(new_changes.clone());
             }
         }
-        println!("========================================");
-        println!("state i={i} changes={changes:?}, to_change={to_change:?}, carry_gates={carry_gates:?}, carry_wires={carry_wires:?}");
         let xk = format!("x{i:0>2}");
         let yk = format!("y{i:0>2}");
         let zk = format!("z{i:0>2}");
@@ -104,14 +110,10 @@ pub fn process(_input: &str) -> String {
         }
 
         // new candidates
-        if new_changes.len() < 4 {
+        if changes.len() < 4 {
             for out in this_gates
                 .values()
                 .map(|x| x.out)
-                .filter(|x| {
-                    // avoid loop
-                    !new_changes_wires.contains(x)
-                })
                 .collect::<BTreeSet<&str>>()
                 .iter()
                 .combinations(2)
@@ -154,7 +156,7 @@ pub fn process(_input: &str) -> String {
                 };
             }
         }
-        // cal out wire
+        // calculate out wire
         let mut new_carry_wires = HashMap::new();
         let mut new_carry_gates = HashMap::new();
         for (name, gate) in this_gates.iter_mut() {

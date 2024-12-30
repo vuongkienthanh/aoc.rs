@@ -1,13 +1,13 @@
 pub mod part1;
 pub mod part2;
 use std::collections::HashMap;
-#[derive(Debug, Clone)]
+#[derive(Eq, PartialEq, Debug, Clone)]
 enum Side {
     Lhs,
     Rhs,
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 enum Op {
     And,
     Or,
