@@ -16,27 +16,21 @@ enum Op {
 
 #[derive(Debug, Clone)]
 struct Gate<'a> {
-    lhs: Option<usize>,
-    rhs: Option<usize>,
+    lhs: (&'a str, Option<usize>),
+    rhs: (&'a str, Option<usize>),
     op: Op,
-    out: &'a str,
+    out: (&'a str, Option<usize>),
 }
 
 type WireVal<'a> = HashMap<&'a str, usize>;
-type WireLoc<'a> = HashMap<&'a str, Vec<(&'a str, Side)>>;
+type WireInLoc<'a> = HashMap<&'a str, Vec<(&'a str, Side)>>;
+type WireOutLoc<'a> = HashMap<&'a str, &'a str>;
 type Gates<'a> = HashMap<&'a str, Gate<'a>>;
 
-fn parse(_input: &str) -> (WireVal, WireLoc, Gates) {
+fn parse(_input: &str) -> (WireVal, WireInLoc, WireOutLoc, Gates) {
     let (input_wires, input_gates) = _input.split_once("\n\n").unwrap();
-    let wire_val = input_wires
-        .lines()
-        .map(|line| {
-            let (name, val) = line.split_once(": ").unwrap();
-            let val = val.parse::<usize>().unwrap();
-            (name, val)
-        })
-        .collect::<HashMap<_, _>>();
-    let mut wire_loc = HashMap::<&str, Vec<(&str, Side)>>::new();
+    let mut wire_in_loc = HashMap::<&str, Vec<(&str, Side)>>::new();
+    let mut wire_out_loc = HashMap::<&str, &str>::new();
     let mut gates = HashMap::new();
 
     for gate in input_gates.lines() {
@@ -51,17 +45,26 @@ fn parse(_input: &str) -> (WireVal, WireLoc, Gates) {
         let rhs = v.next().unwrap();
         v.next().unwrap();
         let out = v.next().unwrap();
-        wire_loc.entry(lhs).or_default().push((gate, Side::Lhs));
-        wire_loc.entry(rhs).or_default().push((gate, Side::Rhs));
+        wire_in_loc.entry(lhs).or_default().push((gate, Side::Lhs));
+        wire_in_loc.entry(rhs).or_default().push((gate, Side::Rhs));
+        wire_out_loc.insert(out, gate);
         gates.insert(
             gate,
             Gate {
-                lhs: None,
-                rhs: None,
+                lhs: (lhs, None),
+                rhs: (rhs, None),
                 op,
-                out,
+                out: (out, None),
             },
         );
     }
-    (wire_val, wire_loc, gates)
+    let wire_val = input_wires
+        .lines()
+        .map(|line| {
+            let (name, val) = line.split_once(": ").unwrap();
+            let val = val.parse::<usize>().unwrap();
+            (name, val)
+        })
+        .collect::<HashMap<_, _>>();
+    (wire_val, wire_in_loc, wire_out_loc, gates)
 }
