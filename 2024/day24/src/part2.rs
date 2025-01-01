@@ -1,290 +1,295 @@
-use crate::{parse, Gate, Gates, Op, Side, WireLoc, WireVal};
-use itertools::Itertools;
-use std::{
-    collections::{BTreeSet, HashMap, HashSet, VecDeque},
-    hash::Hash,
+use std::collections::{HashMap, HashSet, VecDeque};
+
+use nom::{
+    branch::alt, bytes::complete::tag, character::complete::alphanumeric1, combinator::map,
+    multi::separated_list1, sequence::tuple, IResult,
 };
 
-struct State<'a> {
-    i: usize,
-    changes: BTreeSet<Pair<'a>>,
-    to_change: Option<Pair<'a>>,
-    carry_gates: HashMap<&'a str, Gate<'a>>,
-    carry_wires: HashMap<&'a str, usize>,
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+enum GateType {
+    And,
+    Or,
+    Xor,
 }
 
-#[derive(Debug, Clone, Ord, PartialOrd)]
-struct Pair<'a>(&'a str, &'a str);
-impl Eq for Pair<'_> {}
-impl PartialEq for Pair<'_> {
-    fn eq(&self, other: &Self) -> bool {
-        (self.0 == other.0 && self.1 == other.1) || (self.0 == other.1 && self.1 == other.0)
-    }
-}
-impl Hash for Pair<'_> {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.0.hash(state);
-        self.1.hash(state);
+impl From<&str> for GateType {
+    fn from(s: &str) -> Self {
+        match s {
+            "AND" => GateType::And,
+            "OR" => GateType::Or,
+            "XOR" => GateType::Xor,
+            _ => panic!("Unknown gate type: {}", s),
+        }
     }
 }
 
-pub fn process(_input: &str) -> String {
-    let (wire_val, wire_loc, mut gates) = parse(_input);
-    let ((x, y, z), (xb, yb, zb)) = find_z(&wire_val);
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+struct Gate<'a> {
+    a: &'a str,
+    b: &'a str,
+    q: &'a str,
+    t: GateType,
+}
 
-    println!("x = {x} {xb:?}");
-    println!("y = {y} {yb:?}");
-    println!("z = {z} {zb:?}");
+impl<'a> Gate<'a> {
+    fn new(a: &'a str, b: &'a str, t: GateType, q: &'a str) -> Self {
+        Gate { a, b, t, q }
+    }
 
-    for (k, v) in wire_val {
-        for (gate, side) in wire_loc.get(&k).unwrap() {
-            match side {
-                Side::Lhs => gates.get_mut(gate).unwrap().lhs.replace(v),
-                Side::Rhs => gates.get_mut(gate).unwrap().rhs.replace(v),
-            };
+    fn parse(input: &'a str) -> IResult<&'a str, Self> {
+        let (input, gate) = map(
+            tuple((
+                alphanumeric1,
+                tag(" "),
+                alt((tag("AND"), tag("OR"), tag("XOR"))),
+                tag(" "),
+                alphanumeric1,
+                tag(" -> "),
+                alphanumeric1,
+            )),
+            |(a, _, t, _, b, _, s)| Gate::new(a, b, t.into(), s),
+        )(input)?;
+        Ok((input, gate))
+    }
+
+    fn run(&self, a: bool, b: bool) -> bool {
+        match self.t {
+            GateType::And => a && b,
+            GateType::Or => a || b,
+            GateType::Xor => a ^ b,
         }
     }
 
-    let out_list = level_out_list(&wire_loc, &gates);
-    println!("out_list: {out_list:?}");
+    fn has_input(&self, wire: &str) -> bool {
+        self.a == wire || self.b == wire
+    }
 
-    // let mut visited: BTreeSet<BTreeSet<Pair>> = BTreeSet::new();
-    // let mut z45: BTreeSet<Pair> = BTreeSet::new();
-    //
-    // let mut deq = VecDeque::from([State {
-    //     i: 0,
-    //     changes: BTreeSet::new(),
-    //     to_change: None,
-    //     carry_gates: HashMap::new(),
-    //     carry_wires: HashMap::new(),
-    // }]);
-    //
-    // 'outer: while let Some(State {
-    //     i,
-    //     changes,
-    //     to_change,
-    //     carry_gates,
-    //     carry_wires,
-    // }) = deq.pop_front()
-    // {
-    //     if i == 1 {
-    //         break;
-    //     }
-    //
-    //     println!("========================================");
-    //     println!("state i={i} changes={changes:?}, to_change={to_change:?}, carry_gates={carry_gates:?}, carry_wires={carry_wires:?}");
-    //
-    //     let mut new_changes = changes.clone();
-    //     if let Some(p) = to_change.clone() {
-    //         new_changes.insert(p);
-    //     }
-    //     if carry_wires.keys().any(|x| x.starts_with("z")) {
-    //         println!("SKIP: invalid carry_wires that starts with z");
-    //         continue;
-    //     }
-    //     if to_change.is_some() {
-    //         // check if already seen this changes
-    //         if visited.contains(&new_changes) {
-    //             println!("SKIP: this (changes, to_change) is already seen");
-    //             continue;
-    //         } else {
-    //             visited.insert(new_changes.clone());
-    //         }
-    //     }
-    //     let xk = format!("x{i:0>2}");
-    //     let yk = format!("y{i:0>2}");
-    //     let zk = format!("z{i:0>2}");
-    //
-    //     // build gates store
-    //     // from i
-    //     // and from prev carry_wires
-    //     let mut this_gates = [xk.as_str(), yk.as_str()]
-    //         .into_iter()
-    //         .chain(carry_wires.keys().cloned())
-    //         .map(|x| wire_loc.get(x).unwrap())
-    //         .flat_map(|v| v.iter().map(|x| x.0))
-    //         .collect::<BTreeSet<&str>>()
-    //         .iter()
-    //         .map(|x| (*x, gates.get(x).unwrap().clone()))
-    //         .collect::<HashMap<&str, Gate>>();
-    //     // and from prev carry_gates
-    //     for (k, v) in &carry_gates {
-    //         this_gates.insert(*k, v.clone());
-    //     }
-    //
-    //     // new candidates
-    //     if changes.len() < 4 {
-    //         for out in this_gates
-    //             .values()
-    //             .map(|x| x.out)
-    //             .collect::<BTreeSet<&str>>()
-    //             .iter()
-    //             .combinations(2)
-    //         {
-    //             let value = if out[0] < out[1] {
-    //                 Pair(out[0], out[1])
-    //             } else {
-    //                 Pair(out[1], out[0])
-    //             };
-    //             deq.push_back(State {
-    //                 i,
-    //                 changes: changes.clone(),
-    //                 to_change: Some(value),
-    //                 carry_gates: carry_gates.clone(),
-    //                 carry_wires: carry_wires.clone(),
-    //             });
-    //         }
-    //     }
-    //
-    //     // swapping out wires if any
-    //     if let Some(Pair(a, b)) = to_change {
-    //         for gate in this_gates.values_mut() {
-    //             if gate.out == a {
-    //                 gate.out = b;
-    //             } else if gate.out == b {
-    //                 gate.out = a;
-    //             }
-    //         }
-    //     }
-    //     // fill gates
-    //     for (k, v) in [(xk.as_str(), xb[i]), (yk.as_str(), yb[i])]
-    //         .into_iter()
-    //         .chain(carry_wires.iter().map(|(k, v)| (*k, *v)))
-    //     {
-    //         let dst = wire_loc.get(&k).unwrap();
-    //         for (gate, side) in dst {
-    //             match side {
-    //                 Side::Lhs => this_gates.get_mut(gate).unwrap().lhs.replace(v),
-    //                 Side::Rhs => this_gates.get_mut(gate).unwrap().rhs.replace(v),
-    //             };
-    //         }
-    //     }
-    //     // calculate out wire
-    //     let mut new_carry_wires = HashMap::new();
-    //     let mut new_carry_gates = HashMap::new();
-    //     for (name, gate) in this_gates.iter_mut() {
-    //         if let (Some(l), Some(r)) = (gate.lhs, gate.rhs) {
-    //             let new_value = match gate.op {
-    //                 Op::And => l & r,
-    //                 Op::Or => l | r,
-    //                 Op::Xor => l ^ r,
-    //             };
-    //             new_carry_wires.insert(gate.out, new_value);
-    //         } else {
-    //             new_carry_gates.insert(*name, gate.clone());
-    //         }
-    //     }
-    //     // check z45
-    //     if let Some(z) = new_carry_wires.remove("z45") {
-    //         if z == zb[45] {
-    //             z45 = new_changes;
-    //             break;
-    //         } else {
-    //             continue;
-    //         }
-    //     }
-    //     // if valid
-    //     if let Some(z) = new_carry_wires.remove(zk.as_str()) {
-    //         if z == zb[i] {
-    //             println!("is valid");
-    //             deq.push_back(State {
-    //                 i: i + 1,
-    //                 changes: new_changes,
-    //                 to_change: None,
-    //                 carry_gates: new_carry_gates.clone(),
-    //                 carry_wires: new_carry_wires.clone(),
-    //             });
-    //         } else {
-    //             println!("not valid");
-    //         }
-    //     } else {
-    //         println!("keep going");
-    //         deq.push_back(State {
-    //             i,
-    //             changes: new_changes,
-    //             to_change: None,
-    //             carry_gates: new_carry_gates.clone(),
-    //             carry_wires: new_carry_wires.clone(),
-    //         });
-    //     }
-    // }
-    // let mut ans = z45.into_iter().flat_map(|x| [x.0, x.1]).collect_vec();
-    // ans.sort_unstable();
-    // ans.join(",")
-    todo!()
+    fn has_output(&self, wire: &str) -> bool {
+        self.q == wire
+    }
+
+    fn is_half_adder_input(&self) -> bool {
+        self.a == "x00" || self.b == "x00"
+    }
+
+    fn is_input(&self) -> bool {
+        self.a.starts_with("x")
+            || self.b.starts_with("x")
+            || self.a.starts_with("y")
+            || self.b.starts_with("y")
+    }
+
+    fn is_output(&self) -> bool {
+        self.q.starts_with("z")
+    }
+
+    fn is_type(&self, t: GateType) -> bool {
+        self.t == t
+    }
 }
 
-type XYZ = (usize, usize, usize);
-type VecXYZ = (Vec<usize>, Vec<usize>, Vec<usize>);
-
-fn find_z(wire_val: &WireVal) -> (XYZ, VecXYZ) {
-    let mut xs: Vec<(&str, usize)> = wire_val
-        .iter()
-        .filter(|(k, _)| k.starts_with("x"))
-        .map(|(k, v)| (*k, *v))
-        .collect();
-    let mut ys: Vec<(&str, usize)> = wire_val
-        .iter()
-        .filter(|(k, _)| k.starts_with("y"))
-        .map(|(k, v)| (*k, *v))
-        .collect();
-    xs.sort_unstable_by(|a, b| b.0.cmp(a.0));
-    let xn = xs.into_iter().map(|(_, v)| v).collect::<Vec<_>>();
-    let x = xn
-        .iter()
-        .cloned()
-        .reduce(|acc, ele| acc << 1 | ele)
-        .unwrap();
-    ys.sort_unstable_by(|a, b| b.0.cmp(a.0));
-    let yn = ys.into_iter().map(|(_, v)| v).collect::<Vec<_>>();
-    let y = yn
-        .iter()
-        .cloned()
-        .reduce(|acc, ele| acc << 1 | ele)
-        .unwrap();
-    let z = x + y;
-    let zs = format!("{z:b}")
-        .chars()
-        .rev()
-        .map(|c| c.to_digit(2).unwrap() as usize)
-        .collect();
-    ((x, y, z), (xn, yn, zs))
+#[derive(Debug)]
+struct Wires<'a> {
+    wires: HashMap<&'a str, bool>,
 }
 
-fn level_out_list<'a>(wire_loc: &WireLoc<'a>, gates: &Gates<'a>) -> Vec<Vec<String>> {
-    let mut ans = Vec::new();
-    let mut carry_wire: Option<String> = None;
-    for i in 0..45 {
-        let xk = format!("x{i:0>2}");
-        let yk = format!("y{i:0>2}");
-        let mut counting = HashMap::<&str, usize>::new();
-        let mut deq = VecDeque::from([xk, yk]);
-        let mut out_list = vec![];
-        if let Some(ref carry) = carry_wire {
-            deq.push_back(carry.to_string());
-        }
-        while let Some(wire) = deq.pop_front() {
-            for loc in wire_loc.get(&wire.as_str()).unwrap() {
-                let out = gates.get(loc.0).unwrap().out;
-                *counting.entry(out).or_default() += 1;
-                if counting.get(out).unwrap() >= &2 {
-                    if !out.starts_with("z") {
-                        deq.push_back(out.to_string());
+impl<'a> Wires<'a> {
+    fn parse_bool(input: &'a str) -> IResult<&'a str, bool> {
+        let (input, b) = alt((tag("0"), tag("1")))(input)?;
+        Ok((input, b == "1"))
+    }
+
+    fn parse_wire(input: &'a str) -> IResult<&'a str, (&'a str, bool)> {
+        let (input, (name, _, state)) =
+            tuple((alphanumeric1, tag(": "), Wires::parse_bool))(input)?;
+        Ok((input, (name, state)))
+    }
+
+    fn parse_all(input: &'a str) -> IResult<&'a str, Self> {
+        let (input, wires) = separated_list1(tag("\n"), Wires::parse_wire)(input)?;
+        let wires = wires.into_iter().collect();
+        Ok((input, Self { wires }))
+    }
+
+    fn get(&self, wire: &'a str) -> Option<bool> {
+        self.wires.get(wire).copied()
+    }
+
+    fn get_inputs(&self, a: &'a str, b: &'a str) -> Option<(bool, bool)> {
+        let a = self.get(a)?;
+        let b = self.get(b)?;
+        Some((a, b))
+    }
+
+    fn set(&mut self, wire: &'a str, value: bool) {
+        self.wires.insert(wire, value);
+    }
+
+    fn with_prefix(&self, prefix: &str) -> Vec<(&'a str, bool)> {
+        self.wires
+            .iter()
+            .filter(|(k, _)| k.starts_with(prefix))
+            .map(|(&k, &v)| (k, v))
+            .collect()
+    }
+}
+
+#[derive(Debug)]
+struct Device<'a> {
+    gates: Vec<Gate<'a>>,
+    wires: Wires<'a>,
+}
+
+impl<'a> Device<'a> {
+    fn new(input: &'a str) -> IResult<&'a str, Self> {
+        let (input, wires) = Wires::parse_all(input)?;
+        let (input, _) = tag("\n\n")(input)?;
+        let (input, gates) = separated_list1(tag("\n"), Gate::parse)(input)?;
+        Ok((input, Device { gates, wires }))
+    }
+
+    fn run(&mut self) {
+        let mut changed = true;
+        while changed {
+            changed = false;
+            for gate in &self.gates {
+                if let Some((a, b)) = self.wires.get_inputs(gate.a, gate.b) {
+                    // If we already have a value for this wire, skip it.
+                    if let Some(_) = self.wires.get(gate.q) {
+                        continue;
                     }
-                } else {
-                    carry_wire.replace(wire.to_string());
+                    self.wires.set(gate.q, gate.run(a, b));
+                    changed = true;
                 }
             }
         }
-
-        for wire in counting
-            .into_iter()
-            .filter(|(_, v)| *v >= 2)
-            .map(|(k, _)| k.to_string())
-        {
-            out_list.push(wire);
-        }
-        ans.push(out_list);
     }
-    ans
+
+    fn z_as_usize(&self) -> usize {
+        let mut wires = self.wires.with_prefix("z");
+        wires.sort_by(|a, b| b.cmp(a));
+        wires.into_iter().fold(0_usize, |mut acc, (_, z)| {
+            acc = acc << 1;
+            if z {
+                acc |= 1;
+            }
+            acc
+        })
+    }
+}
+
+pub fn process(input: &str) -> String {
+    let (_, mut device) = Device::new(input).unwrap();
+
+    // Track bad wires.
+    let mut bad_wires = vec![];
+
+    let input_xor_gates = device
+        .gates
+        .iter()
+        .filter(|gate| gate.is_input() && gate.is_type(GateType::Xor))
+        .cloned()
+        .collect::<Vec<_>>();
+
+    // First check all the input xor gates.
+    for gate in &input_xor_gates {
+        // The initial half adder gate should have a z00 output. No other input
+        // gates should have z00.
+        match (gate.is_half_adder_input(), gate.has_output("z00")) {
+            (true, true) => continue,
+            (true, false) => bad_wires.push(gate.q),
+            (false, true) => bad_wires.push(gate.q),
+            (false, false) => continue,
+        }
+        // All other input gates should not have an output because it needs to
+        // be XOR with the previous carry wire.
+        if gate.is_output() {
+            bad_wires.push(gate.q);
+        }
+    }
+
+    let intermediate_xor_gates = device
+        .gates
+        .iter()
+        .filter(|gate| !gate.is_input() && gate.is_type(GateType::Xor))
+        .cloned()
+        .collect::<Vec<_>>();
+
+    // All other XOR gates should be internal to the full adders and produce an
+    // output.
+    intermediate_xor_gates.iter().for_each(|gate| {
+        if !gate.is_output() {
+            bad_wires.push(gate.q);
+        }
+    });
+
+    let output_gates = device
+        .gates
+        .iter()
+        .filter(|gate| gate.is_output())
+        .cloned()
+        .collect::<Vec<_>>();
+
+    // All output gates but the last one should come from a carry wire and the
+    // XOR of the input wires. The last wire is just the last carry wire of the last
+    // full adder.
+    let last_z_wire = format!(
+        "z{:02}",
+        device.gates.iter().filter(|gate| gate.is_output()).count() - 1
+    );
+    for gate in &output_gates {
+        if gate.has_output(&last_z_wire) {
+            if !gate.is_type(GateType::Or) {
+                bad_wires.push(gate.q);
+            }
+            continue;
+        } else if !gate.is_type(GateType::Xor) {
+            bad_wires.push(gate.q);
+        }
+    }
+
+    // Gather all the variables from the input_gates
+    let mut check = vec![];
+    for gate in &input_xor_gates {
+        // No need to check the first half adder or any bad wires we've already found.
+        if bad_wires.contains(&gate.q) || gate.has_output("z00") {
+            continue;
+        }
+
+        // Look for intermediate xor gates that don't have the output of an input XOR gate.
+        if intermediate_xor_gates
+            .iter()
+            .filter(|g| g.has_input(gate.q))
+            .count()
+            == 0
+        {
+            // They are bad wires and we need to check them later.
+            bad_wires.push(gate.q);
+            check.push(gate);
+        }
+    }
+
+    for gate in check {
+        let expected = format!("z{}", &gate.a[1..]);
+        let m = intermediate_xor_gates
+            .iter()
+            .find(|gate| gate.has_output(&expected))
+            .unwrap();
+
+        let o = device
+            .gates
+            .iter()
+            .find(|gate| gate.is_type(GateType::Or) && (gate.q == m.a || gate.q == m.b))
+            .unwrap();
+
+        if m.a != o.q {
+            bad_wires.push(m.a);
+        }
+        if m.b != o.q {
+            bad_wires.push(m.b);
+        }
+    }
+
+    bad_wires.sort();
+    bad_wires.join(",")
 }

@@ -2,7 +2,7 @@ use crate::{parse, Op, Side};
 use std::collections::VecDeque;
 
 pub fn process(_input: &str) -> usize {
-    let (wire_val, wire_loc, mut gates) = parse(_input);
+    let (wire_val, wire_loc, _, mut gates) = parse(_input);
     let mut zs = vec![];
 
     let mut in_wires: VecDeque<(&str, usize)> = VecDeque::from_iter(wire_val);
@@ -14,17 +14,17 @@ pub fn process(_input: &str) -> usize {
         if let Some(dst) = wire_loc.get(&wire) {
             for (gate, side) in dst {
                 match side {
-                    Side::Lhs => gates.get_mut(gate).unwrap().lhs.replace(value),
-                    Side::Rhs => gates.get_mut(gate).unwrap().rhs.replace(value),
+                    Side::Lhs => gates.get_mut(gate).unwrap().lhs.1.replace(value),
+                    Side::Rhs => gates.get_mut(gate).unwrap().rhs.1.replace(value),
                 };
                 let gate = gates.get(gate).unwrap();
-                if let (Some(l), Some(r)) = (gate.lhs, gate.rhs) {
+                if let (Some(l), Some(r)) = (gate.lhs.1, gate.rhs.1) {
                     let new_value = match gate.op {
                         Op::And => l & r,
                         Op::Or => l | r,
                         Op::Xor => l ^ r,
                     };
-                    in_wires.push_back((gate.out, new_value));
+                    in_wires.push_back((gate.out.0, new_value));
                 }
             }
         }
