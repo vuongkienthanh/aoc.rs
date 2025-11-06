@@ -42,7 +42,8 @@ or `cargo run -- fetch DAY` to download input"#
                     };
 
                     // cargo-generate day template
-                    for i in 1..=25 {
+                    let num_of_day = env::var("AOC_num_of_day").expect("edit in .env file").parse::<usize>()?;
+                    for i in 1..=num_of_day {
                         generate(GenerateArgs {
                             name: Some(format!("day{:0>2}", i)),
                             template_path: day_template.clone(),
