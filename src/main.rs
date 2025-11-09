@@ -60,10 +60,11 @@ or `cargo run -- fetch DAY` to download input"#
                 let day = env::args()
                     .nth(2)
                     .expect("Expect DAY")
-                    .parse::<u32>()
+                    .parse::<usize>()
                     .expect("DAY should be a number");
-                if !(1..=25).contains(&day) {
-                    panic!("DAY should be 1..=25");
+                let num_of_day = env::var("AOC_num_of_day").expect("edit in .env file").parse::<usize>()?;
+                if !(1..=num_of_day).contains(&day) {
+                    panic!("DAY should be 1..={}", num_of_day);
                 }
                 let dst = year_path
                     .join(format!("day{:0>2}", day))

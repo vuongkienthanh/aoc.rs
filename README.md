@@ -1,13 +1,19 @@
 # An Advent Of Code template generator and solver in Rust
 
 ## Prepare
-- Edit `.env` in root folder, provide `AOC_session` and `AOC_year`.
+Edit `.env` in root folder, provide the following environment variables:
+    - `AOC_session`
+    - `AOC_year`
+    - `AOC_num_of_day`
+
 You can look up session in your browser:
-F12 -> Application tab -> Cookies
+
+`F12` -> `Application tab` -> `Cookies`
 
 ```sh
-AOC_session=blahblah
-AOC_year=2024
+AOC_session=my_secret_session_key
+AOC_year=2025
+AOC_num_of_day=12
 ```
 
 ## Command
@@ -21,13 +27,13 @@ cargo build --release
 chmod +x ./gen ./fetch
 
 ./gen
-## generate template for AOC_year
+## generate template
 ./fetch 1 
 ## fetch day 1 input
 ```
 
 ## Solve
-- `cd 2024/day01` for example. Edit `src/part1.rs` and `src/part2.rs` correspondingly.
+- `cd 2025/day01` for example. Edit `src/part1.rs` and `src/part2.rs` correspondingly.
 ```rust
 pub fn process(_input: &str) -> usize {
     todo!("part1") // edit your solution here
