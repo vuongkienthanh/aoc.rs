@@ -8,3 +8,5 @@ description.workspace = true
 publish.workspace = true
 
 [dependencies]
+md5 = "0.8.0"
+rstest.workspace = true

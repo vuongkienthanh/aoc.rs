@@ -38,7 +38,7 @@ edition = "2024"
 rust-version = "1.91.0"
 
 [workspace.dependencies]
-glam = "0.30.9"
-itertools = "0.14"
-nom = "8.0.0"
-rstest = "0.26.1"
+glam = "~0.30.9"
+itertools = "~0.14"
+nom = "~8.0.0"
+rstest = "~0.26.1"

@@ -4,9 +4,10 @@ pub fn process(_input: &str) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn test_process() {
-        let input = r#""#;
-        assert_eq!(process(input), 0);
+    use rstest::rstest;
+    #[rstest]
+    #[case("", 0)]
+    fn test_process(#[case] input: &str, #[case] expected: usize) {
+        assert_eq!(process(input), expected);
     }
 }

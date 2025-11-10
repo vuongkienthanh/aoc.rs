@@ -8,3 +8,5 @@ description.workspace = true
 publish.workspace = true
 
 [dependencies]
+rstest.workspace = true
+micromap = "0.1.0"
