@@ -9,7 +9,11 @@ publish = false
 
 [dependencies]
 dotenvy = "~0.15"
-reqwest = { version = "~0.12", features = ["blocking", "cookies"] }
+reqwest = { version = "~0.12", default-features = false, features = [
+    "blocking",
+    "cookies",
+    "native-tls",
+] }
 cargo-generate = "~0.23"
 
 [profile.release]

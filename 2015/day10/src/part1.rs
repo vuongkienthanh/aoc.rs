@@ -1,13 +1,10 @@
+use crate::next;
 pub fn process(_input: &str) -> usize {
-    todo!("part1")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::rstest;
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+    let mut input = String::from(_input);
+
+    for _ in 0..40 {
+        input = next(input);
     }
+
+    input.len()
 }

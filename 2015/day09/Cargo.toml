@@ -9,3 +9,5 @@ publish.workspace = true
 
 [dependencies]
 rstest.workspace = true
+itertools.workspace = true
+nom.workspace = true

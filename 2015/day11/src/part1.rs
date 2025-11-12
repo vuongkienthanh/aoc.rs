@@ -1,13 +1,5 @@
-pub fn process(_input: &str) -> usize {
-    todo!("part1")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::rstest;
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+use crate::next_valid_password;
+
+pub fn process(_input: &str) -> String {
+    next_valid_password(_input.to_string())
 }
