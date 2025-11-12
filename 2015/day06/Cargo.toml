@@ -9,3 +9,5 @@ publish.workspace = true
 
 [dependencies]
 rstest.workspace = true
+nom.workspace = true
+grid.workspace = true

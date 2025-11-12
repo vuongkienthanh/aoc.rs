@@ -1,13 +1,10 @@
+use crate::parsing::parse_input;
+use crate::{Gates, Wires, run_instructions};
+
 pub fn process(_input: &str) -> usize {
-    todo!("part1")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::rstest;
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    let (_, instructions) = parse_input(_input).expect("parse succeed");
+    let mut wires = Wires::new();
+    let mut pending_gates = Gates::new();
+    run_instructions(&instructions, &mut wires, &mut pending_gates);
+    wires.remove(&"a").unwrap() as usize
 }
