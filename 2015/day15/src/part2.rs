@@ -1,13 +1,34 @@
+use crate::parsing::parse_input;
+use crate::{build_all_combinations, score};
+
+
 pub fn process(_input: &str) -> usize {
-    todo!("part2")
+    let (_rest, input) = parse_input(_input).unwrap();
+    build_all_combinations(input.len())
+        .iter()
+        .filter(|v| {
+            v
+                .iter()
+                .zip(input.iter())
+                .map(|(q, i)| i[4] * *q as isize)
+                .sum::<isize>()
+                == 500
+        })
+        .map(|v| score(v, &input))
+        .max()
+        .unwrap()
 }
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rstest::rstest;
+    use rstest::*;
+    #[fixture]
+    pub fn fixture() -> &'static str {
+        r#"Butterscotch: capacity -1, durability -2, flavor 6, texture 3, calories 8
+Cinnamon: capacity 2, durability 3, flavor -2, texture -1, calories 3"#
+    }
     #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+    fn test_process(fixture: &str) {
+        assert_eq!(process(fixture), 57600000);
     }
 }

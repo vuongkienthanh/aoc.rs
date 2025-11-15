@@ -8,4 +8,5 @@ description.workspace = true
 publish.workspace = true
 
 [dependencies]
-rstest.workspace = true
+aoc_helper = { path = "../aoc_helper" }
+grid.workspace = true

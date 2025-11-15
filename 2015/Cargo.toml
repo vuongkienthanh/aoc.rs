@@ -26,8 +26,9 @@ members = [
     "day23",
     "day24",
     "day25",
+    "aoc_helper",
 ]
-resolver = "2"
+resolver = "3"
 
 [workspace.package]
 version = "0.1.0"
