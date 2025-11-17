@@ -6,11 +6,10 @@ use nom::{
     sequence::{preceded, terminated},
 };
 
-pub fn parse_input(input: &str) -> IResult<&str, (usize, usize, usize)> {
+pub fn parse_input(input: &str) -> IResult<&str, (usize, usize)> {
     (
         terminated(preceded(tag("Hit Points: "), parse_number), line_ending),
-        terminated(preceded(tag("Damage: "), parse_number), line_ending),
-        preceded(tag("Armor: "), parse_number),
+        preceded(tag("Damage: "), parse_number),
     )
         .parse(input)
 }
