@@ -1,13 +1,20 @@
+use itertools::Itertools;
+
 pub fn process(_input: &str) -> usize {
-    todo!("part2")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::rstest;
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+    let data = _input
+        .lines()
+        .map(|x| x.parse::<usize>().unwrap())
+        .collect::<Vec<usize>>();
+
+    let sum: usize = data.iter().copied().sum();
+    let quarter = sum / 4;
+
+    for i in 2..=data.len() / 2 {
+        for comb in data.iter().combinations(i) {
+            if comb.iter().copied().sum::<usize>() == quarter {
+                return comb.iter().copied().product();
+            }
+        }
     }
+    panic!("no answer")
 }

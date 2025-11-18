@@ -1,13 +1,14 @@
+use crate::Computer;
+use crate::parsing::parse_input;
+
 pub fn process(_input: &str) -> usize {
-    todo!("part2")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::rstest;
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+    let (_rest, input) = parse_input(_input).unwrap();
+
+    let mut comp = Computer::new(input);
+    comp.reg[0] = 1;
+    loop {
+        if comp.run() {
+            return comp.reg[1];
+        }
     }
 }
