@@ -9,6 +9,7 @@ pub fn parse_number(input: &str) -> IResult<&str, usize> {
 
 pub fn parse_integer(input: &str) -> IResult<&str, isize> {
     alt((
+        (tag("+"), digit1).map(|(_, i): (_, &str)| i.parse::<isize>().unwrap()),
         (tag("-"), digit1).map(|(_, i): (_, &str)| -i.parse::<isize>().unwrap()),
         map_res(digit1, str::parse),
     ))
