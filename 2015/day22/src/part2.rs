@@ -1,13 +1,35 @@
+use crate::parsing::parse_input;
+use crate::{Battle, Boss, Hero, IsHeroWin, SPELLS};
+use std::collections::BinaryHeap;
 pub fn process(_input: &str) -> usize {
-    todo!("part2")
+    let (_rest, (hp, atk)) = parse_input(_input).unwrap();
+    find_least_mana(hp, atk)
 }
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::rstest;
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+fn find_least_mana(hp: usize, atk: usize) -> usize {
+    let mut heap = BinaryHeap::new();
+    heap.push(Battle::new(
+        Hero {
+            hp: 50,
+            mana: 500,
+            used_mana: 0,
+            def: 0,
+        },
+        Boss { hp, atk },
+    ));
+
+    while let Some(battle) = heap.pop() {
+        for spell in SPELLS {
+            let mut new_battle = battle.clone();
+            let ret = new_battle.run2(spell);
+            match ret {
+                IsHeroWin::YES => {
+                    return new_battle.hero.used_mana;
+                }
+                IsHeroWin::NO => (),
+                IsHeroWin::NOT_YET => heap.push(new_battle),
+            }
+        }
     }
+
+    panic!("no answer")
 }
