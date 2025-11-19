@@ -20,8 +20,13 @@ command = ["cargo", "test", "part2"]
 need_stdout = true
 allow_warnings = true
 
+[jobs.print_input]
+command = ["cat", "src/input.txt"]
+need_stdout = true
+
 [keybindings]
 1 = "job:run_p1"
 2 = "job:run_p2"
 3 = "job:test_p1"
 4 = "job:test_p2"
+5 = "job:print_input"
