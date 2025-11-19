@@ -10,4 +10,5 @@ publish.workspace = true
 [dependencies]
 rstest.workspace = true
 nom.workspace = true
-# aoc_helper = { path = "../aoc_helper" }
+aoc_helper = { path = "../aoc_helper" }
+micromap = "0.1.0"

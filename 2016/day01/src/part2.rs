@@ -1,5 +1,5 @@
 use crate::parsing::{Turn, parse_input};
-use aoc_helper::grid::Direction;
+use aoc_helper::direction::Direction;
 use std::collections::HashSet;
 
 pub fn process(_input: &str) -> usize {

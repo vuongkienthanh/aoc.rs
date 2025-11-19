@@ -1,29 +1,48 @@
 use crate::parsing::parse_input;
+use micromap::Map;
+use std::cmp::Ordering;
 
 pub fn process(_input: &str) -> usize {
     let (_rest, input) = parse_input(_input).unwrap();
     assert!(_rest.is_empty());
-    println!("{input:?}");
 
-    todo!("part1")
+    input
+        .into_iter()
+        .filter_map(|(name, i, checksum)| is_real_room(name, checksum).then_some(i))
+        .sum()
 }
+
+fn is_real_room(name: &str, checksum: &str) -> bool {
+    let mut map: Map<char, usize, 26> = Map::new();
+    for c in 'a'..='z' {
+        map.insert(c, 0);
+    }
+    for c in name.chars() {
+        match c {
+            '-' => (),
+            'a'..='z' => *map.get_mut(&c).unwrap() += 1,
+            _ => panic!("should be 'a'..='z' and '-'"),
+        }
+    }
+    let mut vec: Vec<(char, usize)> = map.into_iter().collect();
+    vec.sort_unstable_by(|a, b| match b.1.cmp(&a.1) {
+        Ordering::Equal => a.0.cmp(&b.0),
+        o => o,
+    });
+    vec.into_iter().map(|(k, _)| k).take(5).collect::<String>() == checksum
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use rstest::*;
 
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
-    }
     #[rstest]
-    fn test_process_1(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process_2(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+    #[case("aaaaa-bbb-z-y-x-", "abxyz", true)]
+    #[case("a-b-c-d-e-f-g-h-", "abcde", true)]
+    #[case("not-a-real-room", "oarel", true)]
+    #[case("totally-real-room", "decoy", false)]
+    fn test_is_real_room(#[case] name: &str, #[case] checksum: &str, #[case] expected: bool) {
+        assert_eq!(is_real_room(name, checksum), expected);
     }
 }

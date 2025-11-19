@@ -103,43 +103,31 @@ pub fn adj8(i: usize, j: usize, rows: usize, cols: usize) -> Adj8 {
         bottom_right,
     }
 }
-
-pub enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
+pub fn up(c: Coord, _rows: usize, _cols: usize) -> Option<Coord> {
+    if c.0 == 0 {
+        None
+    } else {
+        Some((c.0 - 1, c.1))
+    }
 }
-
-impl Direction {
-    pub fn turn_right(&self) -> Self {
-        use Direction::*;
-        match self {
-            Up => Right,
-            Down => Left,
-            Left => Up,
-            Right => Down,
-        }
+pub fn down(c: Coord, rows: usize, _cols: usize) -> Option<Coord> {
+    if c.0 == rows - 1 {
+        None
+    } else {
+        Some((c.0 + 1, c.1))
     }
-    pub fn turn_left(&self) -> Self {
-        use Direction::*;
-        match self {
-            Up => Left,
-            Down => Right,
-            Left => Down,
-            Right => Up,
-        }
+}
+pub fn left(c: Coord, _rows: usize, _cols: usize) -> Option<Coord> {
+    if c.1 == 0 {
+        None
+    } else {
+        Some((c.0, c.1 - 1))
     }
-    pub fn forward(&self, c: (isize, isize), n: isize) -> (isize, isize) {
-        use Direction::*;
-        match self {
-            Up => (c.0 - n, c.1),
-            Down => (c.0 + n, c.1),
-            Left => (c.0, c.1 - n),
-            Right => (c.0, c.1 + n),
-        }
-    }
-    pub fn backward(&self, c: (isize, isize), n: isize) -> (isize, isize) {
-        self.forward(c, -n)
+}
+pub fn right(c: Coord, _rows: usize, cols: usize) -> Option<Coord> {
+    if c.1 == cols - 1 {
+        None
+    } else {
+        Some((c.0, c.1 + 1))
     }
 }
