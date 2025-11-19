@@ -23,12 +23,32 @@ or `cargo run -- fetch DAY` to download input"#
             "gen" => {
                 if !year_path.exists() {
                     // make year workspace
-                    fs::create_dir(year_path.clone())?;
+                    fs::create_dir(&year_path)?;
 
                     // copy year workspace cargo.toml & bacon.toml
                     let src = Path::new("year_template");
                     fs::copy(src.join("Cargo.toml"), year_path.join("Cargo.toml"))?;
                     fs::copy(src.join("bacon.toml"), year_path.join("bacon.toml"))?;
+
+                    // copy aoc_helper
+                    let aoc_helper_src = src.join("aoc_helper");
+                    let aoc_helper_dst = year_path.join("aoc_helper");
+                    fs::create_dir(&aoc_helper_dst)?;
+                    fs::copy(
+                        aoc_helper_src.join("Cargo.toml"),
+                        aoc_helper_dst.join("Cargo.toml"),
+                    )?;
+
+                    let aoc_helper_src_src_folder = aoc_helper_src.join("src");
+                    let aoc_helper_dst_src_folder = aoc_helper_dst.join("src");
+                    fs::create_dir(&aoc_helper_dst_src_folder)?;
+                    for f in ["grid.rs", "lib.rs", "nom.rs"] {
+                        fs::copy(
+                            aoc_helper_src_src_folder.join(f),
+                            aoc_helper_dst_src_folder.join(f),
+                        )?;
+                    }
+
 
                     // day template for cargo-generate
                     let day_template = TemplatePath {
@@ -43,7 +63,9 @@ or `cargo run -- fetch DAY` to download input"#
                     };
 
                     // cargo-generate day template
-                    let num_of_day = env::var("AOC_num_of_day").expect("edit in .env file").parse::<usize>()?;
+                    let num_of_day = env::var("AOC_num_of_day")
+                        .expect("edit in .env file")
+                        .parse::<usize>()?;
                     for i in 1..=num_of_day {
                         generate(GenerateArgs {
                             name: Some(format!("day{:0>2}", i)),
@@ -52,6 +74,7 @@ or `cargo run -- fetch DAY` to download input"#
                             ..Default::default()
                         })?;
                     }
+                    println!("Finish generating template for YEAR {year}");
                     Ok(())
                 } else {
                     Err("year_path existed".into())
@@ -63,7 +86,9 @@ or `cargo run -- fetch DAY` to download input"#
                     .expect("Expect DAY")
                     .parse::<usize>()
                     .expect("DAY should be a number");
-                let num_of_day = env::var("AOC_num_of_day").expect("edit in .env file").parse::<usize>()?;
+                let num_of_day = env::var("AOC_num_of_day")
+                    .expect("edit in .env file")
+                    .parse::<usize>()?;
                 if !(1..=num_of_day).contains(&day) {
                     panic!("DAY should be 1..={}", num_of_day);
                 }

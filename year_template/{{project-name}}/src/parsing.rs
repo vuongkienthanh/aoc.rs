@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 // use aoc_helper::nom::parse_number;
 use nom::{
     bytes::complete::tag,
