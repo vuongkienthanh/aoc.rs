@@ -103,3 +103,43 @@ pub fn adj8(i: usize, j: usize, rows: usize, cols: usize) -> Adj8 {
         bottom_right,
     }
 }
+
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+impl Direction {
+    pub fn turn_right(&self) -> Self {
+        use Direction::*;
+        match self {
+            Up => Right,
+            Down => Left,
+            Left => Up,
+            Right => Down,
+        }
+    }
+    pub fn turn_left(&self) -> Self {
+        use Direction::*;
+        match self {
+            Up => Left,
+            Down => Right,
+            Left => Down,
+            Right => Up,
+        }
+    }
+    pub fn forward(&self, c: (isize, isize), n: isize) -> (isize, isize) {
+        use Direction::*;
+        match self {
+            Up => (c.0 - n, c.1),
+            Down => (c.0 + n, c.1),
+            Left => (c, c.1 - n),
+            Right => (c, c.1 + n),
+        }
+    }
+    pub fn backward(&self, c: (isize, isize), n: isize) -> (isize, isize) {
+        self.forward(c, -n)
+    }
+}

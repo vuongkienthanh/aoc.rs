@@ -25,7 +25,7 @@ or `cargo run -- fetch DAY` to download input"#
                     // make year workspace
                     fs::create_dir(year_path.clone())?;
 
-                    // copy year workspace cargo.toml
+                    // copy year workspace cargo.toml & bacon.toml
                     let src = Path::new("year_template");
                     fs::copy(src.join("Cargo.toml"), year_path.join("Cargo.toml"))?;
                     fs::copy(src.join("bacon.toml"), year_path.join("bacon.toml"))?;
