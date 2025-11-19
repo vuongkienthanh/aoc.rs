@@ -1,8 +1,9 @@
 #[allow(unused_imports)]
 // use aoc_helper::nom::parse_number;
 use nom::{
+    branch::alt,
     bytes::complete::tag,
-    character::complete::{alpha1, line_ending},
+    character::complete::{alpha1, char, line_ending},
     multi::separated_list1,
     sequence::{delimited, preceded, separated_pair, terminated},
     IResult, Parser,

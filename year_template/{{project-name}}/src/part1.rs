@@ -17,13 +17,13 @@ mod tests {
         r#""#
     }
     #[rstest]
-    fn test_process_1(fixture: &str) {
+    fn test_process_(fixture: &str) {
         assert_eq!(process(fixture), 0);
     }
 
     #[rstest]
     #[case("", 0)]
-    fn test_process_2(#[case] input: &str, #[case] expected: usize) {
+    fn test_process(#[case] input: &str, #[case] expected: usize) {
         assert_eq!(process(input), expected);
     }
 }

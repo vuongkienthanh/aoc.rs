@@ -1,20 +1,32 @@
-#[allow(unused_imports)]
-// use aoc_helper::nom::parse_number;
 use nom::{
-    bytes::complete::tag,
-    character::complete::{alpha1, line_ending},
-    multi::separated_list1,
-    sequence::{delimited, preceded, separated_pair, terminated},
     IResult, Parser,
+    branch::alt,
+    character::complete::{char, line_ending},
+    multi::{many1, separated_list1},
 };
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
 
-type Item = usize;
-
-fn parse_line(input: &str) -> IResult<&str, Item> {
-    todo!()
+#[derive(Debug, Eq, PartialEq)]
+pub enum Item {
+    R,
+    L,
+    U,
+    D,
 }
 
-pub fn parse_input(input: &str) -> IResult<&str, Vec<Item>> {
+fn parse_item(input: &str) -> IResult<&str, Item> {
+    alt((
+        char('R').map(|_| Item::R),
+        char('L').map(|_| Item::L),
+        char('U').map(|_| Item::U),
+        char('D').map(|_| Item::D),
+    ))
+    .parse(input)
+}
+
+fn parse_line(input: &str) -> IResult<&str, Vec<Item>> {
+    many1(parse_item).parse(input)
+}
+
+pub fn parse_input(input: &str) -> IResult<&str, Vec<Vec<Item>>> {
     separated_list1(line_ending, parse_line).parse(input)
 }
