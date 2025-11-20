@@ -1,18 +1,59 @@
-#[allow(unused_imports)]
-// use aoc_helper::nom::parse_number;
+use aoc_helper::nom::parse_number;
 use nom::{
-    bytes::complete::tag,
-    character::complete::{alpha1, line_ending},
-    multi::separated_list1,
-    sequence::{delimited, preceded, separated_pair, terminated},
-    IResult, Parser,
+    IResult, Parser, branch::alt, bytes::complete::tag, character::complete::line_ending,
+    multi::separated_list1, sequence::preceded,
 };
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
 
-type Item = usize;
+#[derive(Debug)]
+pub enum Input {
+    Init(usize, usize),
+    Bot(usize, Target, Target),
+}
+#[derive(Debug)]
+pub enum Target {
+    Output(usize),
+    Bot(usize),
+}
+type Item = Input;
+
+fn parse_init_value(input: &str) -> IResult<&str, Input> {
+    (
+        tag("value "),
+        parse_number,
+        tag(" goes to bot "),
+        parse_number,
+    )
+        .map(|(_, a, _, b)| Input::Init(a, b))
+        .parse(input)
+}
+fn parse_bot_action(input: &str) -> IResult<&str, Input> {
+    (
+        tag("bot "),
+        parse_number,
+        parse_low_target,
+        parse_high_target,
+    )
+        .map(|(_, a, b, c)| Input::Bot(a, b, c))
+        .parse(input)
+}
+
+fn parse_low_target(input: &str) -> IResult<&str, Target> {
+    alt((
+        preceded(tag(" gives low to output "), parse_number).map(Target::Output),
+        preceded(tag(" gives low to bot "), parse_number).map(Target::Bot),
+    ))
+    .parse(input)
+}
+fn parse_high_target(input: &str) -> IResult<&str, Target> {
+    alt((
+        preceded(tag(" and high to output "), parse_number).map(Target::Output),
+        preceded(tag(" and high to bot "), parse_number).map(Target::Bot),
+    ))
+    .parse(input)
+}
 
 fn parse_line(input: &str) -> IResult<&str, Item> {
-    todo!()
+    alt((parse_init_value, parse_bot_action)).parse(input)
 }
 
 pub fn parse_input(input: &str) -> IResult<&str, Vec<Item>> {
