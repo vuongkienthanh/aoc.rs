@@ -1,11 +1,28 @@
-use crate::parsing::parse_input;
+use micromap::Map;
 
-pub fn process(_input: &str) -> usize {
-    let (_rest, input) = parse_input(_input).unwrap();
-    assert!(_rest.is_empty());
-    println!("{input:?}");
-
-    todo!("part1")
+pub fn process(_input: &str) -> String {
+    _input
+        .lines()
+        .fold(Vec::<Map<char, usize, 26>>::new(), |mut acc, line| {
+            for (i, c) in line.char_indices() {
+                if let Some(m) = acc.get_mut(i) {
+                    *m.entry(c).or_default() += 1;
+                } else {
+                    let mut m = Map::new();
+                    m.insert(c, 1);
+                    acc.push(m);
+                }
+            }
+            acc
+        })
+        .into_iter()
+        .map(|m| {
+            m.into_iter()
+                .max_by_key(|(_, x)| *x)
+                .map(|(c, _)| c)
+                .unwrap()
+        })
+        .collect()
 }
 #[cfg(test)]
 mod tests {
@@ -14,16 +31,25 @@ mod tests {
 
     #[fixture]
     pub fn fixture() -> &'static str {
-        r#""#
+        r#"eedadn
+drvtee
+eandsr
+raavrd
+atevrs
+tsrnev
+sdttsa
+rasrtv
+nssdts
+ntnada
+svetve
+tesnvt
+vntsnd
+vrdear
+dvrsen
+enarar"#
     }
     #[rstest]
     fn test_process_1(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process_2(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+        assert_eq!(process(fixture), "easter");
     }
 }
