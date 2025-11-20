@@ -1,20 +1,36 @@
-#[allow(unused_imports)]
-// use aoc_helper::nom::parse_number;
+use aoc_helper::nom::parse_number;
 use nom::{
-    bytes::complete::tag,
-    character::complete::{alpha1, line_ending},
+    IResult, Parser, branch::alt, bytes::complete::tag, character::complete::line_ending,
     multi::separated_list1,
-    sequence::{delimited, preceded, separated_pair, terminated},
-    IResult, Parser,
 };
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
-
-type Item = usize;
-
-fn parse_line(input: &str) -> IResult<&str, Item> {
-    todo!()
+#[derive(Debug)]
+pub enum Action {
+    Rect(usize, usize),
+    RotateRow(usize, usize),
+    RotateCol(usize, usize),
 }
 
-pub fn parse_input(input: &str) -> IResult<&str, Vec<Item>> {
+fn parse_line(input: &str) -> IResult<&str, Action> {
+    alt((
+        (tag("rect "), parse_number, tag("x"), parse_number).map(|(_, a, _, b)| Action::Rect(a, b)),
+        (
+            tag("rotate row y="),
+            parse_number,
+            tag(" by "),
+            parse_number,
+        )
+            .map(|(_, a, _, b)| Action::RotateRow(a, b)),
+        (
+            tag("rotate column x="),
+            parse_number,
+            tag(" by "),
+            parse_number,
+        )
+            .map(|(_, a, _, b)| Action::RotateCol(a, b)),
+    ))
+    .parse(input)
+}
+
+pub fn parse_input(input: &str) -> IResult<&str, Vec<Action>> {
     separated_list1(line_ending, parse_line).parse(input)
 }
