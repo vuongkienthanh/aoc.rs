@@ -11,3 +11,4 @@ publish.workspace = true
 rstest.workspace = true
 nom.workspace = true
 aoc_helper = { path = "../aoc_helper" }
+tinyvec = "1.10.0"

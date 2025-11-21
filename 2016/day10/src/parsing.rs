@@ -9,8 +9,10 @@ pub enum Input {
     Init(usize, usize),
     Bot(usize, Target, Target),
 }
-#[derive(Debug)]
+#[derive(Clone, Debug, Default)]
 pub enum Target {
+    #[default]
+    Unknown,
     Output(usize),
     Bot(usize),
 }
