@@ -1,11 +1,14 @@
-use crate::parsing::parse_input;
+use crate::parsing::{Item, parse_input};
+use aoc_helper::assembly::Computer;
 
 pub fn process(_input: &str) -> usize {
     let (_rest, input) = parse_input(_input).unwrap();
+    // println!("{input:?}");
+    // println!("{_rest:?}");
     assert!(_rest.is_empty());
-    println!("{input:?}");
-
-    todo!("part1")
+    let mut computer: Computer<4, Item> = Computer::new(input);
+    computer.run(true);
+    computer.registers[0]
 }
 #[cfg(test)]
 mod tests {
@@ -14,16 +17,15 @@ mod tests {
 
     #[fixture]
     pub fn fixture() -> &'static str {
-        r#""#
+        r#"cpy 41 a
+inc a
+inc a
+dec a
+jnz a 2
+dec a"#
     }
     #[rstest]
-    fn test_process_1(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process_2(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+    fn test_process(fixture: &str) {
+        assert_eq!(process(fixture), 42);
     }
 }

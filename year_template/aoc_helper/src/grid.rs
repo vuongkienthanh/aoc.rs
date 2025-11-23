@@ -103,31 +103,3 @@ pub fn adj8(i: usize, j: usize, rows: usize, cols: usize) -> Adj8 {
         bottom_right,
     }
 }
-pub fn up(c: Coord, _rows: usize, _cols: usize) -> Option<Coord> {
-    if c.0 == 0 {
-        None
-    } else {
-        Some((c.0 - 1, c.1))
-    }
-}
-pub fn down(c: Coord, rows: usize, _cols: usize) -> Option<Coord> {
-    if c.0 == rows - 1 {
-        None
-    } else {
-        Some((c.0 + 1, c.1))
-    }
-}
-pub fn left(c: Coord, _rows: usize, _cols: usize) -> Option<Coord> {
-    if c.1 == 0 {
-        None
-    } else {
-        Some((c.0, c.1 - 1))
-    }
-}
-pub fn right(c: Coord, _rows: usize, cols: usize) -> Option<Coord> {
-    if c.1 == cols - 1 {
-        None
-    } else {
-        Some((c.0, c.1 + 1))
-    }
-}
