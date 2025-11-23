@@ -3,7 +3,6 @@ use std::collections::HashSet;
 
 pub fn process(_input: &str) -> usize {
     let input = _input.parse::<usize>().unwrap();
-
     run(input)
 }
 fn run(input: usize) -> usize {
@@ -17,10 +16,8 @@ fn run(input: usize) -> usize {
         let mut new_v = Vec::new();
         for c in v {
             for adj in adj4(c).into_iter().filter_map(|x| x) {
-                if seen.insert(adj) && !is_wall(input, adj) {
-                    if i % 2 == 1 {
-                        ans += 1;
-                    }
+                if seen.insert(adj) && !is_wall(input, adj) {    
+                    ans += 1;
                     new_v.push(adj);
                 }
             }
