@@ -7,7 +7,7 @@ pub fn process(_input: &str) -> usize {
     // println!("{_rest:?}");
     assert!(_rest.is_empty());
     let mut computer: Computer<4, Item> = Computer::new(input);
-    computer.run(true);
+    computer.run();
     computer.registers[0]
 }
 #[cfg(test)]

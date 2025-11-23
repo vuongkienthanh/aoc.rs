@@ -11,10 +11,7 @@ where
     pub program: Vec<T>,
 }
 
-impl<const N: usize, T> Computer<N, T>
-where
-    T: Command,
-{
+impl<const N: usize, T> Computer<N, T> {
     pub fn new(program: Vec<T>) -> Self {
         Self {
             program,
@@ -23,13 +20,17 @@ where
         }
     }
 
-    pub fn run(&mut self, debug: bool) {
+    pub fn run(&mut self) {
         while self.i < self.program.len() {
             let cmd = self.program[self.i].clone();
             cmd.run(self);
-            if debug {
-                println!("registers {:?}, i: {}", &self.registers, self.i);
-            }
+        }
+    }
+    pub fn run_debug(&mut self) {
+        while self.i < self.program.len() {
+            let cmd = self.program[self.i].clone();
+            cmd.run(self);
+            println!("registers {:?}, i: {}", &self.registers, self.i);
         }
     }
 }
