@@ -1,41 +1,43 @@
 use crate::parsing::{Item, parse_input};
-use grid::Grid;
+
+const ROWS: usize = 3;
+const COLS: usize = 3;
+const GRID: [[usize; 3]; 3] = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
 
 pub fn process(_input: &str) -> usize {
     let (_rest, input) = parse_input(_input).unwrap();
     assert!(_rest.is_empty());
     // println!("{input:?}");
 
-    let grid = Grid::from(vec![vec![1, 2, 3], vec![4, 5, 6], vec![7, 8, 9]]);
     let mut coord = (1, 1);
     let mut ans = 0;
 
     for line in input {
         for i in line {
             match i {
-                Item::U => coord = up(coord, grid.rows(), grid.cols()),
-                Item::D => coord = down(coord, grid.rows(), grid.cols()),
-                Item::L => coord = left(coord, grid.rows(), grid.cols()),
-                Item::R => coord = right(coord, grid.rows(), grid.cols()),
+                Item::U => coord = up(coord),
+                Item::D => coord = down(coord),
+                Item::L => coord = left(coord),
+                Item::R => coord = right(coord),
             }
         }
-        ans = ans * 10 + grid[coord];
+        ans = ans * 10 + GRID[coord.0][coord.1];
     }
 
     ans
 }
 
-fn up(c: (usize, usize), _rows: usize, _cols: usize) -> (usize, usize) {
+fn up(c: (usize, usize)) -> (usize, usize) {
     if c.0 == 0 { c } else { (c.0 - 1, c.1) }
 }
-fn down(c: (usize, usize), rows: usize, _cols: usize) -> (usize, usize) {
-    if c.0 == rows - 1 { c } else { (c.0 + 1, c.1) }
+fn down(c: (usize, usize)) -> (usize, usize) {
+    if c.0 == ROWS - 1 { c } else { (c.0 + 1, c.1) }
 }
-fn left(c: (usize, usize), _rows: usize, _cols: usize) -> (usize, usize) {
+fn left(c: (usize, usize)) -> (usize, usize) {
     if c.1 == 0 { c } else { (c.0, c.1 - 1) }
 }
-fn right(c: (usize, usize), _rows: usize, cols: usize) -> (usize, usize) {
-    if c.1 == cols - 1 { c } else { (c.0, c.1 + 1) }
+fn right(c: (usize, usize)) -> (usize, usize) {
+    if c.1 == COLS - 1 { c } else { (c.0, c.1 + 1) }
 }
 #[cfg(test)]
 mod tests {

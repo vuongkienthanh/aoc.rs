@@ -1,5 +1,5 @@
 pub trait Command: Clone {
-    fn run<const N: usize, T: Command>(&self, computer: &mut Computer<N, T>);
+    fn run<const N: usize, T: Command>(self, computer: &mut Computer<N, T>);
 }
 
 pub struct Computer<const N: usize, T> {

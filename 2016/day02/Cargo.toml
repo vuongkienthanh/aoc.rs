@@ -8,6 +8,5 @@ description.workspace = true
 publish.workspace = true
 
 [dependencies]
-grid.workspace = true
 rstest.workspace = true
 nom.workspace = true

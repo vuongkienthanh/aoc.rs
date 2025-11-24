@@ -1,7 +1,5 @@
 [workspace]
 members = [
-    "aoc_helper",
-    "day*",
     "day01",
     "day02",
     "day03",
@@ -44,3 +42,6 @@ grid = "~1.0.0"
 itertools = "~0.14"
 nom = "~8.0.0"
 rstest = "~0.26.1"
+tinyvec = "~1.10.0"
+micromap = "~0.1.0"
+md5 = "~0.8.0"

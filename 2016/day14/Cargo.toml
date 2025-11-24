@@ -9,5 +9,5 @@ publish.workspace = true
 
 [dependencies]
 rstest.workspace = true
-nom.workspace = true
-# aoc_helper = { path = "../aoc_helper" }
+md5.workspace = true
+rayon = "1.11.0"

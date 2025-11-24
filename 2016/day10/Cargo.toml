@@ -10,5 +10,5 @@ publish.workspace = true
 [dependencies]
 rstest.workspace = true
 nom.workspace = true
-aoc_helper = { path = "../aoc_helper" }
-tinyvec = "1.10.0"
+aoc_helper = { path = "../../aoc_helper" }
+tinyvec.workspace = true

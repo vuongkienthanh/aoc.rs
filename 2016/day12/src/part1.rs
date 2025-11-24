@@ -3,8 +3,6 @@ use aoc_helper::assembly::Computer;
 
 pub fn process(_input: &str) -> usize {
     let (_rest, input) = parse_input(_input).unwrap();
-    // println!("{input:?}");
-    // println!("{_rest:?}");
     assert!(_rest.is_empty());
     let mut computer: Computer<4, Item> = Computer::new(input);
     computer.run();

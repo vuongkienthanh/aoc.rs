@@ -6,7 +6,6 @@ use nom::{
     combinator::map_res,
     multi::separated_list1,
 };
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
 
 type Item = (Turn, isize);
 

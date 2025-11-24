@@ -1,3 +1,4 @@
+use crate::forward;
 use crate::parsing::{Turn, parse_input};
 use aoc_helper::direction::Direction;
 
@@ -17,7 +18,7 @@ pub fn process(_input: &str) -> usize {
                 dir = dir.turn_right();
             }
         }
-        coord = dir.forward(coord, i);
+        coord = forward(dir, coord, i);
     }
 
     (coord.0.abs() + coord.1.abs()).try_into().unwrap()

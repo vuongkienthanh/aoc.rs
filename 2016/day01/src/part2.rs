@@ -1,3 +1,4 @@
+use crate::forward;
 use crate::parsing::{Turn, parse_input};
 use aoc_helper::direction::Direction;
 use std::collections::HashSet;
@@ -20,7 +21,7 @@ pub fn process(_input: &str) -> usize {
                 dir = dir.turn_right();
             }
         }
-        let new_coord = dir.forward(coord, i);
+        let new_coord = forward(dir, coord, i);
         match dir {
             Direction::Up => {
                 for row in new_coord.0..coord.0 {
