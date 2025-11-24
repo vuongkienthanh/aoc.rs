@@ -1,18 +1,29 @@
-#[allow(unused_imports)]
-// use aoc_helper::nom::parse_number;
+use aoc_helper::nom::parse_number;
 use nom::{
-    bytes::complete::tag,
-    character::complete::{alpha1, line_ending},
-    multi::separated_list1,
-    sequence::{delimited, preceded, separated_pair, terminated},
-    IResult, Parser,
+    IResult, Parser, bytes::complete::tag, character::complete::line_ending, multi::separated_list1,
 };
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
 
-type Item = usize;
+#[derive(Debug)]
+pub struct Item {
+    pub modulus: usize,
+    pub rem: usize,
+}
 
 fn parse_line(input: &str) -> IResult<&str, Item> {
-    todo!()
+    (
+        tag("Disc #"),
+        parse_number,
+        tag(" has "),
+        parse_number,
+        tag(" positions; at time=0, it is at position "),
+        parse_number,
+        tag("."),
+    )
+        .map(|(_, a, _, b, _, c, _)| Item {
+            modulus: b,
+            rem: b - ((a + c) % b),
+        })
+        .parse(input)
 }
 
 pub fn parse_input(input: &str) -> IResult<&str, Vec<Item>> {
