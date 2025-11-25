@@ -16,16 +16,14 @@ fn count_safe_tiles(input: &str, rows: usize) -> usize {
     for _ in 0..rows - 1 {
         let imaginary_row = (((1u128 << len) | last_row) << 1) | 1;
         let mut new_row = 0u128;
-        for i in 1..len + 1 {
+        for i in 0..len {
             new_row <<= 1;
-            let right = (imaginary_row & (1 << (i - 1))) >> (i - 1);
-            let center = (imaginary_row & (1 << i)) >> i;
-            let left = (imaginary_row & (1 << (i + 1))) >> (i + 1);
+            let triplet = (imaginary_row & (0b111 << i)) >> i;
             // if not is_trap
-            if !((left == 0 && center == 0 && right == 1)
-                || (left == 1 && center == 0 && right == 0)
-                || (left == 0 && center == 1 && right == 1)
-                || (left == 1 && center == 1 && right == 0))
+            if !((triplet == 0b001)
+                || (triplet == 0b100)
+                || (triplet == 0b011)
+                || (triplet == 0b110))
             {
                 new_row |= 1;
             }
