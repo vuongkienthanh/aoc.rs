@@ -1,29 +1,7 @@
-use crate::parsing::parse_input;
+use crate::{dragon_curve, checksum};
 
-pub fn process(_input: &str) -> usize {
-    let (_rest, input) = parse_input(_input).unwrap();
-    assert!(_rest.is_empty());
-    println!("{input:?}");
-
-    todo!("part1")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
-    }
-    #[rstest]
-    fn test_process_1(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process_2(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+pub fn process(_input: &str) -> String {
+    let a = _input.to_string();
+    let disk = 272;
+    checksum(dragon_curve(a, disk))
 }
