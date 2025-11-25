@@ -5,7 +5,7 @@ pub fn process(_input: &str) -> usize {
     let (_, mut input) = parse_input(_input).unwrap();
     input.push(Item {
         modulus: 11,
-        rem: 11 - (input.len() + 1),
+        rem: 11 - ((input.len() + 1) % 11),
     });
     println!("Chinese Remainder Theorem:");
     for i in &input {
