@@ -1,29 +1,51 @@
-use crate::parsing::parse_input;
+use crate::{DIRECTIONS, md5hash};
+use aoc_helper::grid::adj4;
 
-pub fn process(_input: &str) -> usize {
-    let (_rest, input) = parse_input(_input).unwrap();
-    assert!(_rest.is_empty());
-    println!("{input:?}");
+pub fn process(_input: &str) -> String {
+    let loc = (0, 0);
+    let history = String::new();
+    let mut v = vec![(loc, history)];
 
-    todo!("part1")
+    while !v.is_empty() {
+        let mut new_v = vec![];
+
+        for (loc, history) in v {
+            if loc == (3, 3) {
+                return history;
+            }
+
+            let hex = md5hash(_input, &history);
+            for (new_loc, dn, dir) in adj4(loc, 4, 4)
+                .into_iter()
+                .zip(DIRECTIONS)
+                .filter_map(|(loc, (dn, dir))| loc.map(|p| (p, dn, dir)))
+            {
+                // check is_wall
+                let c = hex.chars().nth(dn).unwrap();
+                if !['b', 'c', 'd', 'e', 'f'].contains(&c) {
+                    continue;
+                }
+                let mut new_history = history.clone();
+                new_history.push(dir);
+                new_v.push((new_loc, new_history));
+            }
+        }
+
+        v = new_v;
+    }
+
+    panic!("no answer")
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
-    }
     #[rstest]
-    fn test_process_1(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process_2(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+    #[case("ihgpwlah", "DDRRRD")]
+    #[case("kglvqrro", "DDUDRLRRUDRD")]
+    #[case("ulqzkmiv", "DRURDRUDDLLDLUURRDULRLDUUDDDRR")]
+    fn test_process(#[case] input: &str, #[case] expected: &str) {
+        assert_eq!(process(input).as_str(), expected);
     }
 }

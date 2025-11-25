@@ -1,7 +1,5 @@
-use crate::parsing::parse_input;
-
+use crate::count_safe_tiles;
 pub fn process(_input: &str) -> usize {
-    let (_, input) = parse_input(_input).unwrap();
-
-    todo!("part2")
+    count_safe_tiles(_input, 400000)
 }
+
