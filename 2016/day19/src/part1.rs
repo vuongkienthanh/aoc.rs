@@ -1,9 +1,9 @@
 pub fn process(_input: &str) -> usize {
     println!("Josephus problem");
-    let mut input = _input.parse::<usize>().unwrap();
-    let bin = format!("{:b}", input);
-    let bin_len = bin.len();
-    (input << 1) ^ (1 << bin_len) | 1
+    let input = _input.parse::<usize>().unwrap();
+    // usize::bin_width is unstable
+    let bin_width = format!("{:b}", input).len();
+    (input << 1) ^ (1 << bin_width) | 1
 }
 #[cfg(test)]
 mod tests {
