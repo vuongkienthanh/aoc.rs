@@ -1,6 +1,6 @@
 use nom::{
-    branch::alt, bytes::complete::tag, character::complete::digit1, combinator::map_res,
-    sequence::preceded, IResult, Parser,
+    IResult, Parser, branch::alt, bytes::complete::tag, character::complete::digit1,
+    combinator::map_res, sequence::preceded,
 };
 
 pub enum Sign {

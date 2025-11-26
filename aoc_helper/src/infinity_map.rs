@@ -2,21 +2,13 @@ pub mod u {
     use crate::adj::{Adj4, Adj8};
     pub type Point = (usize, usize);
     pub fn top(p: Point) -> Option<Point> {
-        if p.0 > 0 {
-            Some((p.0 - 1, p.1))
-        } else {
-            None
-        }
+        if p.0 > 0 { Some((p.0 - 1, p.1)) } else { None }
     }
     pub fn bottom(p: Point) -> Option<Point> {
         Some((p.0 + 1, p.1))
     }
     pub fn left(p: Point) -> Option<Point> {
-        if p.1 > 0 {
-            Some((p.0, p.1 - 1))
-        } else {
-            None
-        }
+        if p.1 > 0 { Some((p.0, p.1 - 1)) } else { None }
     }
     pub fn right(p: Point) -> Option<Point> {
         Some((p.0, p.1 + 1))

@@ -1,18 +1,22 @@
-#[allow(unused_imports)]
-// use aoc_helper::nom::parse_number;
 use nom::{
-    bytes::complete::tag,
-    character::complete::{alpha1, line_ending},
-    multi::separated_list1,
-    sequence::{delimited, preceded, separated_pair, terminated},
     IResult, Parser,
+    bytes::complete::tag,
+    character::complete::{digit1, line_ending},
+    combinator::map_res,
+    multi::separated_list1,
+    sequence::separated_pair,
 };
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
 
-type Item = usize;
+type Item = (u32, u32);
+
+fn parse_addr(input: &str) -> IResult<&str, u32> {
+    map_res(digit1, str::parse).parse(input)
+}
 
 fn parse_line(input: &str) -> IResult<&str, Item> {
-    todo!()
+    let (input, (a, b)) = separated_pair(parse_addr, tag("-"), parse_addr).parse(input)?;
+    assert!(a < b);
+    Ok((input, (a, b)))
 }
 
 pub fn parse_input(input: &str) -> IResult<&str, Vec<Item>> {
