@@ -1,29 +1,27 @@
-use crate::parsing::parse_input;
+use crate::parsing::{Item, parse_input};
 
 pub fn process(_input: &str) -> usize {
     let (_rest, input) = parse_input(_input).unwrap();
+    // println!("{input:?}");
+    // println!("{_rest:?}");
     assert!(_rest.is_empty());
-    println!("{input:?}");
 
-    todo!("part1")
+    let mut ans = 0;
+    for i in 0..input.len() - 1 {
+        for j in i + 1..input.len() {
+            if is_viable(input[i], input[j]) {
+                ans += 1;
+            }
+        }
+    }
+    ans
 }
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
 
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
-    }
-    #[rstest]
-    fn test_process_1(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process_2(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+// compare used and avail
+fn transferable(a: Item, b: Item) -> bool {
+    a.2 > 0 && a.2 <= b.3
+}
+//
+fn is_viable(a: Item, b: Item) -> bool {
+    transferable(a, b) || transferable(b, a)
 }

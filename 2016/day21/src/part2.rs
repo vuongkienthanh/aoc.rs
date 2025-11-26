@@ -41,24 +41,23 @@ pub fn process(_input: &str) -> String {
             Item::RotateLeft(a) => s.rotate_right(a),
             Item::RotateRight(a) => s.rotate_left(a),
             Item::RotateBased(a) => {
-                for r in 1..s.len() {
+                for r in 0..s.len() {
                     let mut maybe = s.clone();
                     maybe.rotate_left(r);
 
-                    let mut trying = maybe.clone();
                     unsafe {
-                        let first_a_index = trying
+                        let first_a_index = maybe
                             .iter()
                             .enumerate()
                             .find_map(|(i, c)| (c == &a).then_some(i))
                             .unwrap_unchecked();
-                        trying.rotate_right(1 + first_a_index);
+                        maybe.rotate_right(1 + first_a_index);
                         if first_a_index >= 4 {
-                            trying.rotate_right(1);
+                            maybe.rotate_right(1);
                         }
                     }
-                    if trying == s {
-                        s = maybe;
+                    if maybe == s {
+                        s.rotate_left(r);
                         break;
                     }
                 }
