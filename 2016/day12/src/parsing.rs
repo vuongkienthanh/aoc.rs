@@ -1,4 +1,4 @@
-use aoc_helper::nom::{Sign, parse_integer, parse_number};
+use aoc_helper::nom::parse_isize;
 use nom::{
     IResult, Parser,
     branch::alt,
@@ -7,22 +7,24 @@ use nom::{
     multi::separated_list1,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum Target {
     Register(usize),
-    Value(usize),
+    Value(isize),
 }
 
 pub type Register = usize;
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum Item {
     cpy(Target, Register),
     inc(Register),
     dec(Register),
-    jnzf(Target, usize),
-    jnzb(Target, usize),
+    jnz(Target, Target),
+    optimized_add_product(Register, Register, Register),
+    optimized_add(Register, Register),
+    none,
 }
 
 fn parse_register(input: &str) -> IResult<&str, usize> {
@@ -45,19 +47,18 @@ fn parse_target_register(input: &str) -> IResult<&str, Target> {
     .parse(input)
 }
 
-fn parse_target(input: &str) -> IResult<&str, Target> {
-    alt((parse_number.map(Target::Value), parse_target_register)).parse(input)
+fn parse_target_value(input: &str) -> IResult<&str, Target> {
+    parse_isize.map(Target::Value).parse(input)
 }
-
+fn parse_target(input: &str) -> IResult<&str, Target> {
+    alt((parse_target_value, parse_target_register)).parse(input)
+}
 fn parse_line(input: &str) -> IResult<&str, Item> {
     alt((
         (tag("cpy "), parse_target, tag(" "), parse_register).map(|(_, a, _, b)| Item::cpy(a, b)),
         (tag("inc "), parse_register).map(|(_, a)| Item::inc(a)),
         (tag("dec "), parse_register).map(|(_, a)| Item::dec(a)),
-        (tag("jnz "), parse_target, tag(" "), parse_integer).map(|(_, a, _, (s, b))| match s {
-            Sign::Positive => Item::jnzf(a, b),
-            Sign::Negative => Item::jnzb(a, b),
-        }),
+        (tag("jnz "), parse_target, tag(" "), parse_target).map(|(_, a, _, b)| Item::jnz(a, b)),
     ))
     .parse(input)
 }

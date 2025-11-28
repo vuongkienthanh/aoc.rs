@@ -1,11 +1,10 @@
-use crate::parsing::{Item, parse_input};
-use aoc_helper::assembly::Computer;
+use crate::Computer;
+use crate::parsing::parse_input;
 
 pub fn process(_input: &str) -> usize {
     let (_, input) = parse_input(_input).unwrap();
-    let mut computer: Computer<4, Item> = Computer::new(input);
-    computer.registers[2] =1;
-    computer.run();
-    computer.registers[0]
-
+    let mut computer: Computer = Computer::new(input);
+    computer.registers[2] = 1;
+    computer.run_loop();
+    computer.registers[0] as usize
 }
