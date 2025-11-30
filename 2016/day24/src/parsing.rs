@@ -8,7 +8,6 @@ pub type G = Grid<Item>;
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum Item {
     Wall,
-    Number(char),
     Space,
     Cross,
 }
@@ -24,7 +23,7 @@ pub fn parse_input(input: &str) -> (Grid<Item>, HashMap<char, Point>) {
                 '.' => v.push(Item::Space),
                 '0'..='9' => {
                     number_locations.insert(c, (i, j));
-                    v.push(Item::Number(c));
+                    v.push(Item::Space);
                 }
                 _ => (),
             }
