@@ -10,3 +10,4 @@ publish.workspace = true
 [dependencies]
 rstest.workspace = true
 grid.workspace = true
+itertools.workspace = true

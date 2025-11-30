@@ -1,6 +1,5 @@
-use crate::adj::adj4;
 use grid::Grid;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 pub type Point = (usize, usize);
 pub type G = Grid<Item>;
@@ -9,11 +8,11 @@ pub type G = Grid<Item>;
 pub enum Item {
     Wall,
     Space,
-    Cross,
+    Number(char),
 }
 
-pub fn parse_input(input: &str) -> (Grid<Item>, HashMap<char, Point>) {
-    let mut number_locations = HashMap::new();
+pub fn parse_input(input: &str) -> (Grid<Item>, BTreeMap<char, Point>) {
+    let mut number_locations = BTreeMap::new();
     let mut ans: Vec<Vec<Item>> = vec![];
     for (i, line) in input.lines().enumerate() {
         let mut v = vec![];
@@ -23,28 +22,12 @@ pub fn parse_input(input: &str) -> (Grid<Item>, HashMap<char, Point>) {
                 '.' => v.push(Item::Space),
                 '0'..='9' => {
                     number_locations.insert(c, (i, j));
-                    v.push(Item::Space);
+                    v.push(Item::Number(c));
                 }
                 _ => (),
             }
         }
         ans.push(v);
     }
-    let mut g: Grid<Item> = ans.into();
-    for i in 0..g.rows() {
-        for j in 0..g.cols() {
-            if g[(i, j)] != Item::Space {
-                continue;
-            }
-            match adj4((i, j))
-                .into_iter()
-                .filter(|x| g[*x] != Item::Wall)
-                .count()
-            {
-                3 | 4 => *g.get_mut(i, j).unwrap() = Item::Cross,
-                _ => (),
-            }
-        }
-    }
-    (g, number_locations)
+    (ans.into(), number_locations)
 }

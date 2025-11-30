@@ -1,18 +1,68 @@
-#[allow(unused_imports)]
-// use aoc_helper::nom::parse_number;
+use aoc_helper::nom::parse_isize;
 use nom::{
-    bytes::complete::tag,
-    character::complete::{alpha1, line_ending},
-    multi::separated_list1,
-    sequence::{delimited, preceded, separated_pair, terminated},
     IResult, Parser,
+    branch::alt,
+    bytes::complete::tag,
+    character::complete::{char, line_ending},
+    multi::separated_list1,
 };
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
 
-type Item = usize;
+#[derive(Debug, Clone, Copy)]
+pub enum Target {
+    Register(usize),
+    Value(isize),
+}
 
+pub type Register = usize;
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy)]
+pub enum Item {
+    cpy(Target, Register),
+    inc(Register),
+    dec(Register),
+    jnz(Target, Target),
+    optimized_add_product(Register, Register, Register),
+    optimized_add(Register, Register),
+    out(Register),
+    none,
+}
+
+fn parse_register(input: &str) -> IResult<&str, usize> {
+    alt((
+        char('a').map(|_| 0),
+        char('b').map(|_| 1),
+        char('c').map(|_| 2),
+        char('d').map(|_| 3),
+    ))
+    .parse(input)
+}
+
+fn parse_target_register(input: &str) -> IResult<&str, Target> {
+    alt((
+        char('a').map(|_| Target::Register(0)),
+        char('b').map(|_| Target::Register(1)),
+        char('c').map(|_| Target::Register(2)),
+        char('d').map(|_| Target::Register(3)),
+    ))
+    .parse(input)
+}
+
+fn parse_target_value(input: &str) -> IResult<&str, Target> {
+    parse_isize.map(Target::Value).parse(input)
+}
+fn parse_target(input: &str) -> IResult<&str, Target> {
+    alt((parse_target_value, parse_target_register)).parse(input)
+}
 fn parse_line(input: &str) -> IResult<&str, Item> {
-    todo!()
+    alt((
+        (tag("cpy "), parse_target, tag(" "), parse_register).map(|(_, a, _, b)| Item::cpy(a, b)),
+        (tag("inc "), parse_register).map(|(_, a)| Item::inc(a)),
+        (tag("dec "), parse_register).map(|(_, a)| Item::dec(a)),
+        (tag("jnz "), parse_target, tag(" "), parse_target).map(|(_, a, _, b)| Item::jnz(a, b)),
+        (tag("out "), parse_register).map(|(_, a)| Item::out(a)),
+    ))
+    .parse(input)
 }
 
 pub fn parse_input(input: &str) -> IResult<&str, Vec<Item>> {

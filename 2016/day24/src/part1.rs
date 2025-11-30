@@ -1,34 +1,35 @@
-use crate::parsing::{Item, Point, parse_input};
-// use crate::walk::{Cache, WalkResult, walk};
-use std::collections::{HashMap, HashSet};
-use crate::walk2::walk;
+use crate::parsing::parse_input;
+use crate::walk;
+use itertools::Itertools;
+use std::collections::BTreeMap;
 
 pub fn process(_input: &str) -> usize {
     let (g, number_locations) = parse_input(_input);
-    // println!("{g:?}");
-    // println!("number_locations: {number_locations:>}");
 
-    // type State = (Vec<Point>, usize);
-    // let mut cache = Cache::new();
-    let mut minmap: HashMap<char, HashMap<char, usize>> = HashMap::new();
-    let keys : Vec<char> = number_locations.keys().copied().collect();
+    let mut pairwise: BTreeMap<char, BTreeMap<char, usize>> = BTreeMap::new();
 
-    for from in keys {
-        minmap.insert( from, walk(from, &g, &number_locations));
+    for from in number_locations.iter().map(|(k, v)| (*k, *v)) {
+        pairwise.insert(from.0, walk(from.1, &g, number_locations.len()));
     }
 
-    println!("{minmap:?}");
-    todo!("itertools")
+    let mut min = usize::MAX;
+    let perm_len = number_locations.len() - 1;
+    for v in number_locations
+        .into_keys()
+        .filter(|x| *x != '0')
+        .permutations(perm_len)
+    {
+        let mut sum = pairwise.get(&'0').unwrap().get(&v[0]).cloned().unwrap();
+        for v2 in v.windows(2) {
+            sum += pairwise.get(&v2[0]).unwrap().get(&v2[1]).cloned().unwrap();
+        }
+
+        min = min.min(sum);
+    }
+
+    min
 }
 
-// fn count_step(v: Vec<(Point, usize)>, cache: &Cache) -> usize {
-//     v.into_iter()
-//         .map(|(p, i)| match cache.get(&p).unwrap()[i] {
-//             WalkResult::DeadEnd | WalkResult::Unknown => panic!("should have walked"),
-//             WalkResult::Dst { step, to: _ } => step,
-//         })
-//         .sum()
-// }
 #[cfg(test)]
 mod tests {
     use super::*;
