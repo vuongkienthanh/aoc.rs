@@ -17,6 +17,12 @@ or `cargo run -- fetch DAY` to download input"#
         Ok(())
     } else {
         let year = env::var("AOC_year").expect("edit in .env file");
+        let year_num = year.parse::<usize>()?;
+        let num_of_day = match year_num {
+            ..2015 => panic!("no puzzle for those years"),
+            2015..2025 => 25,
+            2015.. => 12,
+        };
         let year_path = env::current_dir()?.join(year.clone());
         let action = env::args().nth(1).unwrap();
         match action.as_str() {
@@ -45,9 +51,7 @@ or `cargo run -- fetch DAY` to download input"#
                     };
 
                     // cargo-generate day template
-                    let num_of_day = env::var("AOC_num_of_day")
-                        .expect("edit in .env file")
-                        .parse::<usize>()?;
+
                     for i in 1..=num_of_day {
                         generate(GenerateArgs {
                             name: Some(format!("day{:0>2}", i)),
@@ -68,9 +72,6 @@ or `cargo run -- fetch DAY` to download input"#
                     .expect("Expect DAY")
                     .parse::<usize>()
                     .expect("DAY should be a number");
-                let num_of_day = env::var("AOC_num_of_day")
-                    .expect("edit in .env file")
-                    .parse::<usize>()?;
                 if !(1..=num_of_day).contains(&day) {
                     panic!("DAY should be 1..={}", num_of_day);
                 }
@@ -100,7 +101,7 @@ or `cargo run -- fetch DAY` to download input"#
                 }
                 Ok(())
             }
-            _ => Ok(()),
+            _ => Err("use gen or fetch".into()),
         }
     }
 }
