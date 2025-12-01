@@ -19,3 +19,4 @@ grid = "~1.0.0"
 tinyvec = "~1.10.0"
 micromap = "~0.1.0"
 md5 = "~0.8.0"
+aoc_helper = { path = "../aoc_helper" }

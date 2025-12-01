@@ -33,3 +33,6 @@ micromap = "~0.1.0"
 nom = "~8.0.0"
 rstest = "~0.26.1"
 tinyvec = "~1.10.0"
+
+[workspace.dependencies.aoc_helper]
+path = "../aoc_helper"
