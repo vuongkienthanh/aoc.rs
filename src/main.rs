@@ -23,32 +23,14 @@ or `cargo run -- fetch DAY` to download input"#
             "gen" => {
                 if !year_path.exists() {
                     // make year workspace
+                    println!("creating year folder");
                     fs::create_dir(&year_path)?;
 
                     // copy year workspace cargo.toml & bacon.toml
+                    println!("copying Cargo.toml and bacon.toml");
                     let src = Path::new("year_template");
                     fs::copy(src.join("Cargo.toml"), year_path.join("Cargo.toml"))?;
                     fs::copy(src.join("bacon.toml"), year_path.join("bacon.toml"))?;
-
-                    // copy aoc_helper
-                    let aoc_helper_src = src.join("aoc_helper");
-                    let aoc_helper_dst = year_path.join("aoc_helper");
-                    fs::create_dir(&aoc_helper_dst)?;
-                    fs::copy(
-                        aoc_helper_src.join("Cargo.toml"),
-                        aoc_helper_dst.join("Cargo.toml"),
-                    )?;
-
-                    let aoc_helper_src_src_folder = aoc_helper_src.join("src");
-                    let aoc_helper_dst_src_folder = aoc_helper_dst.join("src");
-                    fs::create_dir(&aoc_helper_dst_src_folder)?;
-                    for f in ["grid.rs", "lib.rs", "nom.rs"] {
-                        fs::copy(
-                            aoc_helper_src_src_folder.join(f),
-                            aoc_helper_dst_src_folder.join(f),
-                        )?;
-                    }
-
 
                     // day template for cargo-generate
                     let day_template = TemplatePath {
