@@ -1,21 +1,14 @@
-#[allow(unused_imports)]
-// use aoc_helper::nom::parse_number;
 use nom::{
-    branch::alt,
-    bytes::complete::tag,
-    character::complete::{alpha1, char, line_ending},
-    multi::separated_list1,
-    sequence::{delimited, preceded, separated_pair, terminated},
     IResult, Parser,
+    character::complete::{char, digit1 },
+    multi::separated_list1,
+    sequence::separated_pair,
 };
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
 
-type Item = usize;
-
-fn parse_line(input: &str) -> IResult<&str, Item> {
-    todo!()
+fn parse_item(input: &str) -> IResult<&str, (&str, &str)> {
+    separated_pair(digit1, char('-'), digit1).parse(input)
 }
 
-pub fn parse_input(input: &str) -> IResult<&str, Vec<Item>> {
-    separated_list1(line_ending, parse_line).parse(input)
+pub fn parse_input(input: &str) -> IResult<&str, Vec<(&str, &str)>> {
+    separated_list1(char(','), parse_item).parse(input)
 }
