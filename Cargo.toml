@@ -19,3 +19,6 @@ cargo-generate = "~0.23"
 [profile.release]
 strip = true
 lto = true
+opt-level = "s"
+codegen-units = 1
+panic = "abort"

@@ -1,48 +1,39 @@
+use crate::multi;
 use crate::parsing::parse_input;
-use crate::{left_bound, right_bound};
 
 pub fn process(_input: &str) -> usize {
     let (_rest, input) = parse_input(_input).unwrap();
-    println!("{input:?}");
+    // println!("{input:?}");
     // println!("{_rest:?}");
     assert!(_rest.is_empty());
 
-    input
-        .into_iter()
-        .map(|(l, r)| (left_bound(l), right_bound(r)))
-        .filter(|((l, _), (r, _))| l <= r)
-        .map(|((l, ll), (r, rl))| {
-            assert_eq!(ll, rl);
-            (l, r, ll, take_left_half(l, ll))
-        })
-        .map(|(l, r, ll, half)| {
-            // println!("l={l} r={r} half={half}");
-            let mut half = half;
-            let mut double = double_the_half(half, ll);
-            while double < l {
-                half += 1;
-                double = double_the_half(half, ll);
-            }
-            let mut sum = 0;
-            while double <= r {
-                // println!("found {double}");
-                sum += double;
-                half += 1;
-                double = double_the_half(half, ll);
-            }
-            sum
-        })
-        .sum()
-}
+    let mut sum = 0;
+    for (left, right) in input {
+        let left_n: usize = left.parse().unwrap();
+        let right_n: usize = right.parse().unwrap();
 
-fn take_left_half(mut a: usize, l: usize) -> usize {
-    for _ in 0..(l / 2) {
-        a /= 10;
+        for len in left.len() as u32..=right.len() as u32 {
+            if !len.is_multiple_of(2) {
+                continue;
+            }
+            let left_bound = 10usize.pow(len - 1).max(left_n);
+            let right_bound = (10usize.pow(len) - 1).min(right_n);
+
+            let part_len = len / 2;
+            let num = 10usize.pow(part_len - 1);
+            for j in 0.. {
+                let expand = multi(num + j, part_len, 2);
+                if expand < left_bound {
+                    continue;
+                }
+                if expand > right_bound {
+                    break;
+                }
+                sum += expand
+            }
+        }
     }
-    a
-}
-fn double_the_half(a: usize, l: usize) -> usize {
-    a * 10usize.pow(l as u32 / 2) + a
+    sum
 }
 
 #[cfg(test)]
@@ -57,18 +48,5 @@ mod tests {
     #[rstest]
     fn test_process_(fixture: &str) {
         assert_eq!(process(fixture), 1227775554);
-    }
-
-    #[rstest]
-    #[case(54, 2, 5)]
-    #[case(1234, 4, 12)]
-    fn test_take_left_half(#[case] input: usize, #[case] len: usize, #[case] expect: usize) {
-        assert_eq!(take_left_half(input, len), expect);
-    }
-    #[rstest]
-    #[case(54, 4, 5454)]
-    #[case(1234, 8, 12341234)]
-    fn test_double_the_half(#[case] input: usize, #[case] len: usize, #[case] expect: usize) {
-        assert_eq!(double_the_half(input, len), expect);
     }
 }
