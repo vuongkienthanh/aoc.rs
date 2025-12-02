@@ -1,9 +1,10 @@
 #[allow(unused_imports)]
-// use aoc_helper::nom::parse_number;
+// use aoc_helper::nom::parse_signed_usize;
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::{alpha1, char, line_ending},
+    character::complete::{self, alpha1, char, line_ending},
+    combinator::all_consuming,
     multi::separated_list1,
     sequence::{delimited, preceded, separated_pair, terminated},
     IResult, Parser,
@@ -16,6 +17,9 @@ fn parse_line(input: &str) -> IResult<&str, Item> {
     todo!()
 }
 
-pub fn parse_input(input: &str) -> IResult<&str, Vec<Item>> {
-    separated_list1(line_ending, parse_line).parse(input)
+pub fn parse_input(input: &str) -> Vec<Item> {
+    all_consuming(separated_list1(line_ending, parse_line))
+        .parse(input)
+        .unwrap()
+        .1
 }

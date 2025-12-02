@@ -1,6 +1,6 @@
 use nom::{
     IResult, Parser,
-    character::complete::{char, digit1 },
+    character::complete::{char, digit1},
     multi::separated_list1,
     sequence::separated_pair,
 };
