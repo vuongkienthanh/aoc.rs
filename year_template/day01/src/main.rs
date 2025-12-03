@@ -1,3 +1,3 @@
-fn main() -> usize {
+fn main() {
     todo!("dummy")
 }
