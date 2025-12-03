@@ -3,7 +3,6 @@ use nom::{
     branch::alt,
     bytes::complete::{tag, take_until},
     character::complete::{digit1, line_ending},
-    combinator::map_res,
     sequence::{preceded, terminated},
 };
 // https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
