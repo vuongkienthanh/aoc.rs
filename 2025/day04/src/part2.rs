@@ -10,7 +10,7 @@ pub fn process(_input: &str) -> usize {
 
     let mut removed = 0;
     loop {
-        let mut this_time_removed = false;
+        let mut this_time_removed = 0;
         for i in 0..grid.rows() {
             for j in 0..grid.cols() {
                 if grid[(i, j)] == '.' {
@@ -24,13 +24,14 @@ pub fn process(_input: &str) -> usize {
                     < 4
                 {
                     grid[(i, j)] = '.';
-                    removed += 1;
-                    this_time_removed = true;
+                    this_time_removed += 1;
                 }
             }
         }
-        if !this_time_removed {
+        if this_time_removed == 0 {
             break;
+        } else {
+            removed += this_time_removed;
         }
     }
 
