@@ -9,29 +9,35 @@ pub fn process(_input: &str) -> usize {
         .into();
 
     let mut removed = 0;
+    let mut rolls: Vec<(usize, usize)> = grid
+        .indexed_iter()
+        .filter(|(_, e)| e == &&'@')
+        .map(|(i, _)| i)
+        .collect();
+
     loop {
         let mut this_time_removed = 0;
-        for i in 0..grid.rows() {
-            for j in 0..grid.cols() {
-                if grid[(i, j)] == '.' {
-                    continue;
-                }
-                if adj8((i, j), grid.rows(), grid.cols())
-                    .into_iter()
-                    .flatten()
-                    .filter(|p| grid[*p] == '@')
-                    .count()
-                    < 4
-                {
-                    grid[(i, j)] = '.';
-                    this_time_removed += 1;
-                }
+        let mut new_rolls = vec![];
+        for r in rolls {
+            if adj8(r, grid.rows(), grid.cols())
+                .into_iter()
+                .flatten()
+                .filter(|p| grid[*p] == '@')
+                .count()
+                < 4
+            {
+                grid[r] = '.';
+                this_time_removed += 1;
+            } else {
+                new_rolls.push(r)
             }
         }
+
         if this_time_removed == 0 {
             break;
         } else {
             removed += this_time_removed;
+            rolls = new_rolls;
         }
     }
 
