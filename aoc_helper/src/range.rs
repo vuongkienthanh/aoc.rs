@@ -28,9 +28,11 @@ where
         let mut merged = false;
         let mut new_ans = vec![];
         while let Some(j) = ans.pop() {
-            if !merged && let Some(k) = merge_two_ranges(*i, j) {
+            if let Some(k) = merge_two_ranges(*i, j) {
                 merged = true;
                 new_ans.push(k);
+                new_ans.extend(ans);
+                break;
             } else {
                 new_ans.push(j)
             }
