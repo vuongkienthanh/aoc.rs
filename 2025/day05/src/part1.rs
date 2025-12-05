@@ -1,10 +1,11 @@
 use crate::parsing::parse_input;
+use aoc_helper::range::merge;
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
+    let (ranges, item) = parse_input(_input);
+    let ranges = merge(ranges);
+    item.into_iter().filter(|x| ranges.iter().any(|(a,b)| a<= x && x <=b) ).count()
 
-    todo!("part1")
 }
 #[cfg(test)]
 mod tests {
@@ -13,16 +14,21 @@ mod tests {
 
     #[fixture]
     pub fn fixture() -> &'static str {
-        r#""#
+        r#"3-5
+10-14
+16-20
+12-18
+
+1
+5
+8
+11
+17
+32"#
     }
     #[rstest]
     fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
+        assert_eq!(process(fixture), 3);
     }
 
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
 }
