@@ -1,5 +1,8 @@
+//! This module provides function to works with ranges represented as a tuple of (integer, integer)
+
 use num_traits::{One, PrimInt};
 
+/// merge 2 ranges together, if success return the merged range, otherwise return None
 pub fn merge_two_ranges<T>(a: (T, T), b: (T, T)) -> Option<(T, T)>
 where
     T: PrimInt + One,
@@ -19,6 +22,7 @@ where
     None
 }
 
+/// merge all ranges in `input`
 pub fn merge<T>(mut input: Vec<(T, T)>) -> Vec<(T, T)>
 where
     T: PrimInt + One,

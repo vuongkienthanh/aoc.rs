@@ -1,3 +1,5 @@
+//! Directions with some methods
+
 #[derive(Debug, Clone, Copy)]
 pub enum Direction {
     Up,

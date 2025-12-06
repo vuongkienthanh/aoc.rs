@@ -1,3 +1,10 @@
+//! `adj4`, `adj8` to get adjacent of a point in a Coordinate System
+//!
+//! provide 3 flavors for adj functions:
+//! - `naive`: to work with usize or isize without check, may panic.
+//! - `grid`: to work in grid based puzzle, add checks to grid borders.
+//! - `checked_u`: to work with usize but add checks.
+
 pub mod grid {
     pub type Point = (usize, usize);
 
