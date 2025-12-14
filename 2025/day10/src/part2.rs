@@ -1,127 +1,66 @@
 use crate::parsing::parse_input;
-// use rayon::prelude::*;
 use fxhash::FxHashMap;
 use itertools::Itertools;
-type Cache = FxHashMap<usize, Vec<Vec<usize>>>;
+use rayon::prelude::*;
 
-fn f(buttons: Vec<usize>, mut target: Vec<usize>, cache: &mut Cache) -> Option<usize> {
-    println!("target = {target:?}");
+type Cache = FxHashMap<Vec<usize>, usize>;
+
+fn f(target: Vec<usize>, patterns: &Vec<(Vec<usize>, usize)>, cache: &mut Cache) -> usize {
     if target.iter().all(|x| *x == 0) {
-        return Some(0);
+        return 0;
     }
-    let odds: usize = target.iter().enumerate().fold(0, |mut acc, (i, ele)| {
-        if !ele.is_multiple_of(2) {
-            acc |= 1 << i;
-        }
-        acc
-    });
-    println!("odd {odds:b}");
-    if odds == 0 {
-        for ele in target.iter_mut() {
-            *ele /= 2;
-        }
-        return f(buttons, target, cache).map(|x| x * 2);
+    if let Some(x) = cache.get(&target) {
+        return *x;
     }
-    let patterns = if let Some(x) = cache.get(&odds) {
-        x.clone()
-    } else {
-        let mut patterns: Vec<Vec<usize>> = vec![];
-        let mut i = 1;
-        loop {
-            for comb in buttons.iter().combinations(i) {
-                let mut bulbs = 0;
-                for b in &comb {
-                    bulbs ^= *b;
-                }
 
-                if bulbs == odds {
-                    patterns.push(comb.into_iter().cloned().collect());
-                }
-            }
-            i += 1;
-            if i > buttons.len() {
-                break;
-            }
+    let mut min = 1_000_000;
+    for (will_increase, button_count) in patterns {
+        if target
+            .iter()
+            .zip(will_increase)
+            .all(|(a, b)| a >= b && a % 2 == b % 2)
+        {
+            let new_target: Vec<usize> = target
+                .iter()
+                .zip(will_increase)
+                .map(|(a, b)| (a - b) / 2)
+                .collect();
+            min = min.min(button_count + 2 * f(new_target, patterns, cache))
         }
-        cache.insert(odds, patterns.clone());
-        patterns
-    };
-    if patterns.is_empty() {
-        println!("no pattern found");
-        return None;
     }
-    for buttons_used in &patterns {
-        println!("pattern found: {buttons_used:?} ");
-    }
-    let mut min = usize::MAX;
-    'p: for buttons_used in patterns {
-        let mut target = target.clone();
-        let buttons_used_len = buttons_used.len();
-
-        print!("{buttons_used:?}:  ");
-        for b in &buttons_used {
-            print!(" {b:b}");
-        }
-        println!();
-
-        for mut b in buttons_used {
-            let mut i = 0;
-            while b  >0 {
-                if (b & 1) == 1 {
-                    match target[i].checked_sub(1) {
-                        Some(x) => target[i] = x,
-                        None => continue 'p,
-                    }
-                }
-                i += 1;
-                b >>= 1;
-            }
-        }
-        println!("after buttons_used = {target:?}");
-
-        assert!(target.iter().all(|x| x.is_multiple_of(2)));
-        for ele in target.iter_mut() {
-            *ele /= 2;
-        }
-        println!("before min = {min}");
-        if let Some(m) = f(buttons.clone(), target, cache) {
-            min = min.min(buttons_used_len + 2 * m);
-        }
-        println!("after min = {min}");
-    }
-    println!("found min afterall patterns= {min}");
-
-    if min == usize::MAX { None } else { Some(min) }
+    cache.insert(target, min);
+    min
 }
 
-fn solve(buttons: Vec<usize>, target: Vec<usize>) -> usize {
+fn solve(buttons: Vec<Vec<usize>>, target: Vec<usize>) -> usize {
+    let mut all_patterns: Vec<(Vec<usize>, usize)> = vec![];
+    for button_count in 0..=buttons.len() {
+        for comb in buttons.iter().combinations(button_count) {
+            let mut will_increase = vec![0; target.len()];
+            for button in comb {
+                for col in button {
+                    will_increase[*col] += 1;
+                }
+            }
+            all_patterns.push((will_increase, button_count));
+        }
+    }
     let mut cache = Cache::default();
 
-    f(buttons, target, &mut cache).expect("should have answer")
+    f(target, &all_patterns, &mut cache)
 }
 
 pub fn process(_input: &str) -> usize {
     let input = parse_input(_input);
     input
-        // .into_par_iter()
-        .into_iter()
+        .into_par_iter()
+        // .into_iter()
         .enumerate()
-        .skip(13)
-        .take(1)
+        // .skip(13)
+        // .take(1)
         .map(|(input_row, (_, buttons, target))| {
-            let buttons: Vec<usize> = buttons
-                .into_iter()
-                .map(|x| {
-                    let mut ans = 0;
-                    for c in x {
-                        ans |= 1 << c;
-                    }
-                    ans
-                })
-                .collect();
-
             let ans = solve(buttons, target);
-            println!("done row{input_row}");
+            println!("done row{input_row} {ans}");
             ans
         })
         .sum::<usize>()
