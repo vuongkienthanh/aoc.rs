@@ -54,10 +54,7 @@ pub fn process(_input: &str) -> usize {
     let input = parse_input(_input);
     input
         .into_par_iter()
-        // .into_iter()
         .enumerate()
-        // .skip(13)
-        // .take(1)
         .map(|(input_row, (_, buttons, target))| {
             let ans = solve(buttons, target);
             println!("done row{input_row} {ans}");
