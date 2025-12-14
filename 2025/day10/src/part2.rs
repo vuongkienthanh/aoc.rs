@@ -1,9 +1,104 @@
 use crate::parsing::parse_input;
-use crate::*;
-use aoc_helper::combinations::partition_sum;
-use fxhash::FxHashSet as Set;
-use rayon::prelude::*;
-use std::collections::VecDeque;
+// use rayon::prelude::*;
+use fxhash::FxHashMap;
+use itertools::Itertools;
+type Cache = FxHashMap<usize, Vec<Vec<usize>>>;
+
+fn f(buttons: Vec<usize>, mut target: Vec<usize>, cache: &mut Cache) -> Option<usize> {
+    println!("target = {target:?}");
+    if target.iter().all(|x| *x == 0) {
+        return Some(0);
+    }
+    let odds: usize = target.iter().enumerate().fold(0, |mut acc, (i, ele)| {
+        if !ele.is_multiple_of(2) {
+            acc |= 1 << i;
+        }
+        acc
+    });
+    println!("odd {odds:b}");
+    if odds == 0 {
+        for ele in target.iter_mut() {
+            *ele /= 2;
+        }
+        return f(buttons, target, cache).map(|x| x * 2);
+    }
+    let patterns = if let Some(x) = cache.get(&odds) {
+        x.clone()
+    } else {
+        let mut patterns: Vec<Vec<usize>> = vec![];
+        let mut i = 1;
+        loop {
+            for comb in buttons.iter().combinations(i) {
+                let mut bulbs = 0;
+                for b in &comb {
+                    bulbs ^= *b;
+                }
+
+                if bulbs == odds {
+                    patterns.push(comb.into_iter().cloned().collect());
+                }
+            }
+            i += 1;
+            if i > buttons.len() {
+                break;
+            }
+        }
+        cache.insert(odds, patterns.clone());
+        patterns
+    };
+    if patterns.is_empty() {
+        println!("no pattern found");
+        return None;
+    }
+    for buttons_used in &patterns {
+        println!("pattern found: {buttons_used:?} ");
+    }
+    let mut min = usize::MAX;
+    'p: for buttons_used in patterns {
+        let mut target = target.clone();
+        let buttons_used_len = buttons_used.len();
+
+        print!("{buttons_used:?}:  ");
+        for b in &buttons_used {
+            print!(" {b:b}");
+        }
+        println!();
+
+        for mut b in buttons_used {
+            let mut i = 0;
+            while b  >0 {
+                if (b & 1) == 1 {
+                    match target[i].checked_sub(1) {
+                        Some(x) => target[i] = x,
+                        None => continue 'p,
+                    }
+                }
+                i += 1;
+                b >>= 1;
+            }
+        }
+        println!("after buttons_used = {target:?}");
+
+        assert!(target.iter().all(|x| x.is_multiple_of(2)));
+        for ele in target.iter_mut() {
+            *ele /= 2;
+        }
+        println!("before min = {min}");
+        if let Some(m) = f(buttons.clone(), target, cache) {
+            min = min.min(buttons_used_len + 2 * m);
+        }
+        println!("after min = {min}");
+    }
+    println!("found min afterall patterns= {min}");
+
+    if min == usize::MAX { None } else { Some(min) }
+}
+
+fn solve(buttons: Vec<usize>, target: Vec<usize>) -> usize {
+    let mut cache = Cache::default();
+
+    f(buttons, target, &mut cache).expect("should have answer")
+}
 
 pub fn process(_input: &str) -> usize {
     let input = parse_input(_input);
@@ -11,104 +106,23 @@ pub fn process(_input: &str) -> usize {
         // .into_par_iter()
         .into_iter()
         .enumerate()
-        // .skip(3)
-        // .take(1)
-        .map(move |(tc, (_, buttons, target))| {
-            let btn_len = buttons.len();
-            // let target_len = target.len();
-            let result: Vec<Option<usize>> = vec![None; btn_len];
-            let mut matrix = create_matrix(buttons, target);
-            // println!("initial matrix: {matrix:?}");
-            expand(&mut matrix, btn_len);
-            minify(&mut matrix);
-            // expand(&mut matrix, btn_len);
-            // println!("after expanded: {matrix:?}");
-
-            // println!(
-            //     "x = {} in {}",
-            //     matrix.iter().map(|(x, _)| x.len()).sum::<usize>(),
-            //     btn_len * target_len
-            // );
-
-            let mut min = usize::MAX;
-            let mut queue = VecDeque::new();
-            queue.push_back((matrix, result));
-
-            while let Some((mut matrix, result)) = queue.pop_front() {
-                println!(
-                    "matrix: {matrix:?}  result={result:?} in queue: {}",
-                    queue.len()
-                );
-                // finish this combination
-                if result.iter().all(|x| x.is_some()) {
-                    min = min.min(result.into_iter().flatten().sum());
-                    continue;
-                }
-
-                let (last_row, total) = matrix.pop().unwrap();
-                let need = last_row.len();
-                // println!("last_row = {last_row:?} need={need} total={total}");
-
-                let combinations = partition_sum(total, need);
-                // let mut set = Set::default();
-
-                'left: for comb in combinations.iter() {
-                    let mut new_matrix = matrix.clone();
-                    let mut new_result = result.clone();
-                    for (col, value) in last_row.iter().zip(comb) {
-                        for (row, t) in new_matrix.iter_mut() {
-                            if row.contains(col) {
-                                match t.checked_sub(*value) {
-                                    Some(new_t) => {
-                                        *t = new_t;
-                                        row.retain(|x| x != col);
-                                    }
-                                    None => {
-                                        // println!("push failed");
-                                        continue 'left;
-                                    }
-                                }
-                            }
-                        }
-                        new_result[*col] = Some(*value);
+        .skip(13)
+        .take(1)
+        .map(|(input_row, (_, buttons, target))| {
+            let buttons: Vec<usize> = buttons
+                .into_iter()
+                .map(|x| {
+                    let mut ans = 0;
+                    for c in x {
+                        ans |= 1 << c;
                     }
-                    if minify(&mut new_matrix) {
-                        // println!("push succeed");
-                        // set.insert((new_matrix, new_result));
-                        queue.push_back((new_matrix, new_result))
-                    }
-                }
-                // 'right: for comb in combinations.iter().rev() {
-                //     let mut new_matrix = matrix.clone();
-                //     let mut new_result = result.clone();
-                //     for (col, value) in last_row.iter().zip(comb) {
-                //         for (row, t) in new_matrix.iter_mut() {
-                //             if row.contains(col) {
-                //                 match t.checked_sub(*value) {
-                //                     Some(new_t) => {
-                //                         *t = new_t;
-                //                         row.retain(|x| x != col);
-                //                     }
-                //                     None => {
-                //                         // println!("push failed");
-                //                         break 'right;
-                //                     }
-                //                 }
-                //             }
-                //         }
-                //         new_result[*col] = Some(*value);
-                //     }
-                //     if minify(&mut new_matrix) {
-                //         // println!("push succeed");
-                //         set.insert((new_matrix, new_result));
-                //     }
-                // }
-                // queue.extend(set.into_iter());
-            }
-            println!("done row {tc} :found min = {min}");
-            println!("===============================================");
-            min
-            // 0
+                    ans
+                })
+                .collect();
+
+            let ans = solve(buttons, target);
+            println!("done row{input_row}");
+            ans
         })
         .sum::<usize>()
 }

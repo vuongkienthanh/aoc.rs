@@ -13,11 +13,9 @@ fn parse_bulbs(input: &str) -> IResult<&str, usize> {
     delimited(char('['), take_while(|x| x == '.' || x == '#'), char(']'))
         .map(|x: &str| {
             let mut ans = 0;
-            for c in x.chars().rev() {
-                match c {
-                    '.' => ans <<= 1,
-                    '#' => ans = (ans << 1) | 1,
-                    _ => (),
+            for (i, c) in x.char_indices() {
+                if c == '#' {
+                    ans |= 1 << i
                 }
             }
             ans
