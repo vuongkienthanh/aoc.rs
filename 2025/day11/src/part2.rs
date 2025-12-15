@@ -2,7 +2,7 @@ use crate::create_map;
 use crate::parsing::parse_input;
 use fxhash::FxHashMap;
 
-type Cache<'a> = FxHashMap<&'a str, usize>;
+type Cache<'a> = FxHashMap<(&'a str, bool, bool), usize>;
 type Map<'a> = FxHashMap<&'a str, Vec<&'a str>>;
 
 pub fn process(_input: &str) -> usize {
@@ -14,7 +14,6 @@ pub fn process(_input: &str) -> usize {
     solve(("svr", false, false), &input, &mut cache)
 }
 fn solve<'a>(node: (&'a str, bool, bool), input: &Map<'a>, cache: &mut Cache<'a>) -> usize {
-    println!("on node {node:?}");
     if node.0 == "out" {
         if node.1 && node.2 {
             return 1;
@@ -27,13 +26,12 @@ fn solve<'a>(node: (&'a str, bool, bool), input: &Map<'a>, cache: &mut Cache<'a>
         let dac = node.1 || *dst == "dac";
         let fft = node.2 || *dst == "fft";
         let x = cache
-            .get(dst)
+            .get(&(dst, dac, fft))
             .cloned()
             .unwrap_or_else(|| solve((dst, dac, fft), input, cache));
-        println!("{dst} {x}");
         ans += x;
     }
-    cache.insert(node.0, ans);
+    cache.insert(node, ans);
     ans
 }
 
