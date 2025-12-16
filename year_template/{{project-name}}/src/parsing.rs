@@ -3,7 +3,7 @@
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::{self, alpha1, char, line_ending},
+    character::complete::{self, alpha1, line_ending},
     combinator::all_consuming,
     multi::separated_list1,
     sequence::{delimited, preceded, separated_pair, terminated},

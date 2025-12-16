@@ -1,28 +1,20 @@
 use crate::parsing::parse_input;
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
+    let (blocks, input) = parse_input(_input);
 
-    todo!("part1")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
-    }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    input
+        .into_iter()
+        .enumerate()
+        .filter(|(i, (size, pieces))| {
+            let area = size.0 * size.1;
+            let needed_area = pieces
+                .into_iter()
+                .zip(blocks.iter())
+                .map(|(a, b)| a * *b)
+                .sum();
+            println!("puzzle {i} = {area} when need {needed_area}");
+            area >= needed_area
+        })
+        .count()
 }
