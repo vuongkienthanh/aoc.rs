@@ -32,19 +32,6 @@ pub fn parse_start(input: Span) -> IResult<Span, usize> {
 }
 
 pub fn parse_splitters(input: Span) -> IResult<Span, Vec<usize>> {
-    // let (input, current_line) = take_while(|x| x == '.' || x == '^').parse(input)?;
-    // let (mut current_line, _) = parse_space.parse(current_line)?;
-    // let mut ans = vec![];
-    // while !current_line.is_empty() {
-    //     let (rest_of_line, pos) = position(current_line)?;
-    //     ans.push(pos.get_column());
-    //     let (rest_of_line, _) = char('^').parse(rest_of_line)?;
-    //     let (rest_of_line, _) = parse_space.parse(rest_of_line)?;
-    //     current_line = rest_of_line;
-    // }
-    // let (input, _) = (line_ending, parse_space).parse(input)?;
-    // Ok((input, ans))
-    // let (mut input, _) = parse_space.parse(current_line)?;
     let mut ans = vec![];
     let (mut input, _) = parse_space(input)?;
     loop {

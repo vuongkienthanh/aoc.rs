@@ -1,9 +1,7 @@
 use crate::parsing::parse_input;
 
 pub fn process(_input: &str) -> usize {
-    let (_, input) = parse_input(_input).unwrap();
-
-    input
+    parse_input(_input)
         .into_iter()
         .fold((0, 50), |(mut count, mut loc), x| {
             // when at zero and turn left, don't increase count

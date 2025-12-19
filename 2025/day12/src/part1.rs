@@ -9,7 +9,7 @@ pub fn process(_input: &str) -> usize {
         .filter(|(i, (size, pieces))| {
             let area = size.0 * size.1;
             let needed_area = pieces
-                .into_iter()
+                .iter()
                 .zip(blocks.iter())
                 .map(|(a, b)| a * *b)
                 .sum();
