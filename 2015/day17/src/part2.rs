@@ -22,8 +22,8 @@ fn count_all_combinations(containers: Vec<usize>, liters: usize) -> usize {
             let missing_volume = liters - current_volume;
             let last_index = used_indices.last().copied().unwrap();
 
-            for i in (last_index + 1)..containers.len() {
-                match containers[i].cmp(&missing_volume) {
+            for (i, item) in containers.iter().enumerate().skip(last_index + 1) {
+                match item.cmp(&missing_volume) {
                     Greater => (),
                     Equal => {
                         let current_len = used_indices.len() + 1;

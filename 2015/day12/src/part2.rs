@@ -1,5 +1,6 @@
 use crate::parsing::parse_input;
 use serde_json::Value;
+
 pub fn process(_input: &str) -> isize {
     let input = parse_input(_input);
     count_number(input)
@@ -9,12 +10,12 @@ fn count_number(input: Value) -> isize {
     match input {
         Value::Null | Value::Bool(_) | Value::String(_) => 0,
         Value::Number(n) => n.as_i64().expect("should be a valid json number") as isize,
-        Value::Array(v) => v.into_iter().map(|ele| count_number(ele)).sum(),
+        Value::Array(v) => v.into_iter().map(count_number).sum(),
         Value::Object(m) => {
-            if m.values().any(|v| v == &"red") {
+            if m.values().any(|v| v == "red") {
                 0
             } else {
-                m.into_values().map(|ele| count_number(ele)).sum()
+                m.into_values().map(count_number).sum()
             }
         }
     }

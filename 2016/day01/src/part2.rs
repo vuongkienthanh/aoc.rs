@@ -4,7 +4,7 @@ use aoc_helper::direction::Direction;
 use std::collections::HashSet;
 
 pub fn process(_input: &str) -> usize {
-    let (_, input) = parse_input(_input).unwrap();
+    let input = parse_input(_input);
 
     let mut seen: HashSet<(isize, isize)> = HashSet::new();
 

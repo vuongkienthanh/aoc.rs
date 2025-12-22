@@ -1,5 +1,5 @@
 use crate::parsing::parse_grid;
-use aoc_helper::grid::adj8;
+use aoc_helper::adj::grid::adj8;
 use grid::Grid;
 pub fn process(_input: &str) -> usize {
     count(steps(parse_grid(_input), 100))
@@ -10,24 +10,24 @@ fn steps(mut grid: Grid<usize>, n: usize) -> Grid<usize> {
     let cols = grid.cols();
     for _ in 0..n {
         let mut new_grid = grid.clone();
-        for ((i, j), ele) in grid.indexed_iter() {
+        for (coord, ele) in grid.indexed_iter() {
             match ele {
                 1 => {
-                    let adj = adj8(i, j, rows, cols)
+                    let adj = adj8(coord, rows, cols)
                         .into_iter()
                         .filter(|c| c.is_some_and(|x| grid[x] == 1))
                         .count();
                     if adj != 2 && adj != 3 {
-                        new_grid[(i, j)] = 0;
+                        new_grid[coord] = 0;
                     }
                 }
                 0 => {
-                    let adj = adj8(i, j, rows, cols)
+                    let adj = adj8(coord, rows, cols)
                         .into_iter()
                         .filter(|c| c.is_some_and(|x| grid[x] == 1))
                         .count();
                     if adj == 3 {
-                        new_grid[(i, j)] = 1;
+                        new_grid[coord] = 1;
                     }
                 }
                 _ => (),

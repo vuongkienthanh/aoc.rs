@@ -101,7 +101,7 @@ fn run_instructions<'a>(
                     process_wires_and_pending_gates(target, wires, pending_gates);
                 } else {
                     pending_gates.push_back(PendingGate {
-                        target: target,
+                        target,
                         missing: vec![k],
                         ops: GateOp::Assign,
                     })
@@ -117,7 +117,7 @@ fn run_instructions<'a>(
                     process_wires_and_pending_gates(target, wires, pending_gates);
                 } else {
                     pending_gates.push_back(PendingGate {
-                        target: target,
+                        target,
                         missing: vec![k],
                         ops: GateOp::And(*x),
                     })
@@ -130,18 +130,18 @@ fn run_instructions<'a>(
                         process_wires_and_pending_gates(target, wires, pending_gates);
                     }
                     (Some(x), None) => pending_gates.push_back(PendingGate {
-                        target: target,
+                        target,
                         missing: vec![k2],
                         ops: GateOp::And(x),
                     }),
                     (None, Some(x)) => pending_gates.push_back(PendingGate {
-                        target: target,
+                        target,
                         missing: vec![k1],
                         ops: GateOp::And(x),
                     }),
                     (None, None) => {
                         pending_gates.push_back(PendingGate {
-                            target: target,
+                            target,
                             missing: vec![k1, k2],
                             ops: GateOp::AndMissingBoth,
                         });
@@ -158,7 +158,7 @@ fn run_instructions<'a>(
                     process_wires_and_pending_gates(target, wires, pending_gates);
                 } else {
                     pending_gates.push_back(PendingGate {
-                        target: target,
+                        target,
                         missing: vec![k],
                         ops: GateOp::Or(*x),
                     })
@@ -171,18 +171,18 @@ fn run_instructions<'a>(
                         process_wires_and_pending_gates(target, wires, pending_gates);
                     }
                     (Some(x), None) => pending_gates.push_back(PendingGate {
-                        target: target,
+                        target,
                         missing: vec![k2],
                         ops: GateOp::Or(x),
                     }),
                     (None, Some(x)) => pending_gates.push_back(PendingGate {
-                        target: target,
+                        target,
                         missing: vec![k1],
                         ops: GateOp::Or(x),
                     }),
                     (None, None) => {
                         pending_gates.push_back(PendingGate {
-                            target: target,
+                            target,
                             missing: vec![k1, k2],
                             ops: GateOp::OrMissingBoth,
                         });
@@ -195,7 +195,7 @@ fn run_instructions<'a>(
                     process_wires_and_pending_gates(target, wires, pending_gates);
                 } else {
                     pending_gates.push_back(PendingGate {
-                        target: target,
+                        target,
                         missing: vec![k],
                         ops: GateOp::Lshift(*x),
                     })
@@ -207,7 +207,7 @@ fn run_instructions<'a>(
                     process_wires_and_pending_gates(target, wires, pending_gates);
                 } else {
                     pending_gates.push_back(PendingGate {
-                        target: target,
+                        target,
                         missing: vec![k],
                         ops: GateOp::Rshift(*x),
                     })
@@ -219,7 +219,7 @@ fn run_instructions<'a>(
                     process_wires_and_pending_gates(target, wires, pending_gates);
                 } else {
                     pending_gates.push_back(PendingGate {
-                        target: target,
+                        target,
                         missing: vec![k],
                         ops: GateOp::Not,
                     })

@@ -2,8 +2,7 @@ use crate::parsing::parse_input;
 use std::collections::{HashMap, HashSet};
 
 pub fn process(_input: &str) -> usize {
-    let (_rest, (map, molecules)) = parse_input(_input).unwrap();
-    assert!(_rest.is_empty());
+    let (map, molecules) = parse_input(_input);
     let cmap = compress_map(map);
     distinct(cmap, molecules)
 }

@@ -90,7 +90,7 @@ pub fn process(_input: &str, size: usize) -> String {
         }
     }
 
-    unreachable!("should have an ans")
+    panic!("should have an answer")
 }
 #[cfg(test)]
 mod tests {

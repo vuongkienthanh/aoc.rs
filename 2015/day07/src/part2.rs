@@ -2,7 +2,7 @@ use crate::parsing::{Operation, parse_input};
 use crate::{Gates, Wires, process_wires_and_pending_gates, run_instructions};
 
 pub fn process(_input: &str) -> usize {
-    let (_, mut instructions) = parse_input(_input).expect("parse succeed");
+    let mut instructions = parse_input(_input);
     let mut wires = Wires::new();
     let mut pending_gates = Gates::new();
     run_instructions(&instructions, &mut wires, &mut pending_gates);
@@ -14,10 +14,7 @@ pub fn process(_input: &str) -> usize {
     wires.insert("b", a_val);
     process_wires_and_pending_gates("b", &mut wires, &mut pending_gates);
 
-    instructions.retain(|i| match i {
-        Operation::Assign(_, "b") => false,
-        _ => true,
-    });
+    instructions.retain(|i| !matches!(i, Operation::Assign(_, "b")));
 
     run_instructions(&instructions, &mut wires, &mut pending_gates);
     wires.remove(&"a").unwrap() as usize

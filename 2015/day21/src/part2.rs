@@ -2,7 +2,7 @@ use crate::parsing::parse_input;
 use crate::{ARMORS, Character, WEAPONS, battle, equipments_cost, ring_combinations};
 
 pub fn process(_input: &str) -> usize {
-    let (_, input) = parse_input(_input).unwrap();
+    let input = parse_input(_input);
     let boss = Character::boss(input.0, input.1, input.2);
 
     let mut ans = 0;

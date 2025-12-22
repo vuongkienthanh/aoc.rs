@@ -2,7 +2,6 @@ pub mod parsing;
 pub mod part1;
 pub mod part2;
 
-
 type Quantities = Vec<usize>;
 const MAX: usize = 100;
 
@@ -29,7 +28,7 @@ fn build_all_combinations(max_len: usize) -> Vec<Quantities> {
             }
         }
 
-        ret.extend(new_ret.into_iter());
+        ret.extend(new_ret);
         build(max_len, cur_len + 1, ret);
     }
 
@@ -39,7 +38,7 @@ fn build_all_combinations(max_len: usize) -> Vec<Quantities> {
     ret
 }
 
-fn score(quantities: &Quantities, ingredients: &Vec<[isize; 5]>) -> usize {
+fn score(quantities: &Quantities, ingredients: &[[isize; 5]]) -> usize {
     assert_eq!(quantities.len(), ingredients.len());
     let property_scores = quantities
         .iter()
@@ -61,8 +60,8 @@ fn score(quantities: &Quantities, ingredients: &Vec<[isize; 5]>) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::parsing::parse_input;
+    use super::*;
     use rstest::*;
     #[fixture]
     pub fn fixture() -> &'static str {
@@ -71,7 +70,7 @@ Cinnamon: capacity 2, durability 3, flavor -2, texture -1, calories 3"#
     }
     #[rstest]
     fn test_score(fixture: &str) {
-        let (_, input) = parse_input(fixture).unwrap();
+        let input = parse_input(fixture);
         let quantities = vec![44, 56];
         assert_eq!(score(&quantities, &input), 62842880);
     }

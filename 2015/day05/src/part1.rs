@@ -1,4 +1,5 @@
 const VOWELS: [char; 5] = ['a', 'e', 'u', 'i', 'o'];
+
 pub fn is_nice(s: &str) -> bool {
     !s.contains("ab")
         && !s.contains("cd")
@@ -14,6 +15,7 @@ pub fn is_nice(s: &str) -> bool {
 pub fn process(_input: &str) -> usize {
     _input.lines().filter(|x| is_nice(x)).count()
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;

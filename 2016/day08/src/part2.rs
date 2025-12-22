@@ -2,7 +2,7 @@ use crate::parsing::parse_input;
 use crate::{COLS, ROWS, swipe};
 
 pub fn process(_input: &str) -> usize {
-    let (_, input) = parse_input(_input).unwrap();
+    let input = parse_input(_input);
 
     let mut screen = [[0; COLS]; ROWS];
 

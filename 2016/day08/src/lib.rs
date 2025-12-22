@@ -9,7 +9,9 @@ const COLS: usize = 50;
 fn swipe(screen: &mut [[usize; COLS]; ROWS], input: Vec<Action>) {
     for action in input {
         match action {
-            Action::Rect(wide, tall) => {
+            Action::Rect(wide, tall) =>
+            {
+                #[allow(clippy::needless_range_loop)]
                 for i in 0..tall {
                     for j in 0..wide {
                         screen[i][j] = 1;
@@ -22,11 +24,8 @@ fn swipe(screen: &mut [[usize; COLS]; ROWS], input: Vec<Action>) {
                     if screen[row][col] == 1 {
                         new_pixels[(col + by) % COLS] = 1;
                     }
-                    screen[row][col] = 0;
                 }
-                for col in 0..COLS {
-                    screen[row][col] = new_pixels[col];
-                }
+                screen[row].copy_from_slice(&new_pixels);
             }
             Action::RotateCol(col, by) => {
                 let mut new_pixels = [0; ROWS];
@@ -34,7 +33,6 @@ fn swipe(screen: &mut [[usize; COLS]; ROWS], input: Vec<Action>) {
                     if screen[row][col] == 1 {
                         new_pixels[(row + by) % ROWS] = 1;
                     }
-                    screen[row][col] = 0;
                 }
                 for row in 0..ROWS {
                     screen[row][col] = new_pixels[row];

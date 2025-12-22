@@ -1,13 +1,14 @@
 use crate::parsing::{Target, parse_input};
 use crate::{Bot, factory};
-use std::collections::{HashMap, HashSet};
+use fxhash::{FxHashMap as Map, FxHashSet as Set};
+
 
 pub fn process(_input: &str) -> usize {
-    let (_, input) = parse_input(_input).unwrap();
+    let input = parse_input(_input);
 
     let mut factory = factory(input);
     let mut ans = 1;
-    let mut seen = HashSet::new();
+    let mut seen = Set::default();
 
     for bot_number in factory.keys().cloned().collect::<Vec<_>>() {
         resolve_bot(bot_number, &mut factory, &mut ans, &mut seen);
@@ -17,9 +18,9 @@ pub fn process(_input: &str) -> usize {
 
 fn resolve_bot(
     bot_number: usize,
-    factory: &mut HashMap<usize, Bot>,
+    factory: &mut Map<usize, Bot>,
     ans: &mut usize,
-    seen: &mut HashSet<usize>,
+    seen: &mut Set<usize>,
 ) {
     let b = factory.get(&bot_number).unwrap();
     if b.chips.len() == 2 {

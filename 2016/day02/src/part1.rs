@@ -5,9 +5,7 @@ const COLS: usize = 3;
 const GRID: [[usize; 3]; 3] = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
 
 pub fn process(_input: &str) -> usize {
-    let (_rest, input) = parse_input(_input).unwrap();
-    assert!(_rest.is_empty());
-    // println!("{input:?}");
+    let input = parse_input(_input);
 
     let mut coord = (1, 1);
     let mut ans = 0;

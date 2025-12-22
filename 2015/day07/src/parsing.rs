@@ -2,8 +2,8 @@ use nom::{
     IResult, Parser,
     branch::alt,
     bytes::complete::tag,
-    character::complete::{alpha1, digit1, line_ending},
-    combinator::map_res,
+    character::complete::{self, alpha1, line_ending},
+    combinator::all_consuming,
     multi::separated_list1,
     sequence::{preceded, separated_pair},
 };
@@ -25,11 +25,7 @@ pub enum Operation<'a> {
 }
 
 fn parse_operand<'a>(input: &'a str) -> IResult<&'a str, Operand<'a>> {
-    alt((
-        digit1.map(|x: &str| Operand::Value(x.parse::<u16>().unwrap())),
-        alpha1.map(|x: &str| Operand::Name(x)),
-    ))
-    .parse(input)
+    alt((complete::u16.map(Operand::Value), alpha1.map(Operand::Name))).parse(input)
 }
 
 fn parse_assign<'a>(input: &'a str) -> IResult<&'a str, Operation<'a>> {
@@ -57,7 +53,7 @@ fn parse_or<'a>(input: &'a str) -> IResult<&'a str, Operation<'a>> {
 }
 fn parse_lshift<'a>(input: &'a str) -> IResult<&'a str, Operation<'a>> {
     separated_pair(
-        separated_pair(alpha1, tag(" LSHIFT "), map_res(digit1, str::parse)),
+        separated_pair(alpha1, tag(" LSHIFT "), complete::u16),
         tag(" -> "),
         alpha1,
     )
@@ -66,7 +62,7 @@ fn parse_lshift<'a>(input: &'a str) -> IResult<&'a str, Operation<'a>> {
 }
 fn parse_rshift<'a>(input: &'a str) -> IResult<&'a str, Operation<'a>> {
     separated_pair(
-        separated_pair(alpha1, tag(" RSHIFT "), map_res(digit1, str::parse)),
+        separated_pair(alpha1, tag(" RSHIFT "), complete::u16),
         tag(" -> "),
         alpha1,
     )
@@ -90,6 +86,9 @@ fn parse_line<'a>(input: &'a str) -> IResult<&'a str, Operation<'a>> {
     ))
     .parse(input)
 }
-pub fn parse_input<'a>(input: &'a str) -> IResult<&'a str, Vec<Operation<'a>>> {
-    separated_list1(line_ending, parse_line).parse(input)
+pub fn parse_input<'a>(input: &'a str) -> Vec<Operation<'a>> {
+    all_consuming(separated_list1(line_ending, parse_line))
+        .parse(input)
+        .unwrap()
+        .1
 }

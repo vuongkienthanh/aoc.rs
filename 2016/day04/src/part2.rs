@@ -1,7 +1,7 @@
 use crate::parsing::parse_input;
 
 pub fn process(_input: &str) -> usize {
-    let (_, input) = parse_input(_input).unwrap();
+    let input = parse_input(_input);
 
     for (name, sector, _) in input {
         let d = decrypt(name, sector);
@@ -15,10 +15,10 @@ pub fn process(_input: &str) -> usize {
 
 fn decrypt(name: &str, sector: usize) -> String {
     let times = (sector % 26) as u8;
-    name.chars()
+    name.bytes()
         .map(|c| match c {
-            '-' => ' ',
-            'a'..='z' => (((c as u8 - 'a' as u8 + times) % 26) + 'a' as u8) as char,
+            b'-' => ' ',
+            b'a'..=b'z' => (((c - b'a' + times) % 26) + b'a') as char,
             _ => panic!("should be 'a'..='z' and '-'"),
         })
         .collect()

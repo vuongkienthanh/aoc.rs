@@ -2,8 +2,7 @@ use crate::parsing::parse_input;
 use crate::{ARMORS, Character, WEAPONS, battle, equipments_cost, ring_combinations};
 
 pub fn process(_input: &str) -> usize {
-    let (_rest, input) = parse_input(_input).unwrap();
-    assert!(_rest.is_empty());
+    let input = parse_input(_input);
     let boss = Character::boss(input.0, input.1, input.2);
 
     let mut ans = usize::MAX;
@@ -36,6 +35,6 @@ mod tests {
             atk: 7,
             def: 2,
         };
-        assert_eq!(battle(hero, boss), true);
+        assert!(battle(hero, boss));
     }
 }

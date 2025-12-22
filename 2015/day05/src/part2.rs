@@ -8,9 +8,11 @@ pub fn is_nice(s: &str) -> bool {
         k.insert(i) && k.insert(i + 1) && k.len() == 4
     }) && ((0..origin.len() - 2).any(|i| origin[i] == origin[i + 2]))
 }
+
 pub fn process(_input: &str) -> usize {
     _input.lines().filter(|x| is_nice(x)).count()
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;

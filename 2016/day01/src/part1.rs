@@ -3,9 +3,7 @@ use crate::parsing::{Turn, parse_input};
 use aoc_helper::direction::Direction;
 
 pub fn process(_input: &str) -> usize {
-    let (_rest, input) = parse_input(_input).unwrap();
-    assert!(_rest.is_empty());
-    println!("{input:?}");
+    let input = parse_input(_input);
 
     let mut coord = (0isize, 0isize);
     let mut dir = Direction::Up;

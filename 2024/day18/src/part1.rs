@@ -85,7 +85,7 @@ pub fn process(_input: &str, size: usize, count: usize) -> usize {
             }
         }
     }
-    panic!("should return ans")
+    panic!("should have an answer")
 }
 #[cfg(test)]
 mod tests {

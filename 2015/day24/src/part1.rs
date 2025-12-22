@@ -16,5 +16,5 @@ pub fn process(_input: &str) -> usize {
             }
         }
     }
-    panic!("no answer")
+    panic!("should have an answer")
 }

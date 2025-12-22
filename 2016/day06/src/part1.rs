@@ -1,23 +1,22 @@
-use micromap::Map;
-
 pub fn process(_input: &str) -> String {
     _input
         .lines()
-        .fold(Vec::<Map<char, usize, 26>>::new(), |mut acc, line| {
-            for (i, c) in line.char_indices() {
-                if let Some(m) = acc.get_mut(i) {
-                    *m.entry(c).or_default() += 1;
+        .fold(Vec::<[usize; 26]>::new(), |mut acc, line| {
+            for (i, c) in line.bytes().enumerate() {
+                if let Some(column) = acc.get_mut(i) {
+                    *column.get_mut((c - b'a') as usize).unwrap() += 1;
                 } else {
-                    let mut m = Map::new();
-                    m.insert(c, 1);
-                    acc.push(m);
+                    let mut column = [0; 26];
+                    *column.get_mut((c - b'a') as usize).unwrap() += 1;
+                    acc.push(column)
                 }
             }
             acc
         })
         .into_iter()
-        .map(|m| {
-            m.into_iter()
+        .map(|column| {
+            ('a'..='z')
+                .zip(column)
                 .max_by_key(|(_, x)| *x)
                 .map(|(c, _)| c)
                 .unwrap()

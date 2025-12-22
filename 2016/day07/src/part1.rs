@@ -1,9 +1,7 @@
 use crate::parsing::{Bracket, parse_input};
 
 pub fn process(_input: &str) -> usize {
-    let (_rest, input) = parse_input(_input).unwrap();
-    // println!("{input:?}");
-    assert!(_rest.is_empty());
+    let input = parse_input(_input);
 
     input.into_iter().filter(|x| is_TLS_supported(x)).count()
 }

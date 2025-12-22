@@ -3,7 +3,7 @@ use crate::parsing::parse_input;
 const TIME: usize = 2503;
 
 pub fn process(_input: &str) -> usize {
-    let (_rest, input) = parse_input(_input).unwrap();
+    let input = parse_input(_input);
     let num_of_reindeers = input.len();
     let mut scores = vec![0; num_of_reindeers];
     let mut distances_traveled = vec![0; num_of_reindeers];

@@ -1,10 +1,8 @@
 use crate::parsing::parse_input;
 use crate::{build_all_combinations, score};
 
-
 pub fn process(_input: &str) -> usize {
-    let (_rest, input) = parse_input(_input).unwrap();
-    assert!(_rest.is_empty());
+    let input = parse_input(_input);
     build_all_combinations(input.len())
         .iter()
         .map(|v| score(v, &input))

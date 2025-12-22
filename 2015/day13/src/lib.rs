@@ -65,7 +65,7 @@ David would gain 41 happiness units by sitting next to Carol."#
     }
     #[rstest]
     fn test_calculate_happiness(fixture: &str) {
-        let (_, graph) = parse_input(fixture).unwrap();
+        let graph = parse_input(fixture);
         assert_eq!(
             calculate_happiness(&["Alice", "Bob", "Carol", "David"], &graph),
             330

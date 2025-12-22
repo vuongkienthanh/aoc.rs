@@ -16,16 +16,6 @@ struct Hero {
     used_mana: usize,
     def: usize,
 }
-impl Hero {
-    fn new(hp: usize, mana: usize) -> Self {
-        Self {
-            hp,
-            mana,
-            used_mana: 0,
-            def: 0,
-        }
-    }
-}
 #[derive(Debug, Clone, Copy)]
 enum Spell {
     MagicMissile(usize),
@@ -42,6 +32,7 @@ const SPELLS: [Spell; 5] = [
     Spell::Recharge(229),
 ];
 
+#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 #[derive(Eq, PartialEq, Debug)]
 enum IsHeroWin {
     YES,

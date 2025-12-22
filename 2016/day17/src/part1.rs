@@ -34,7 +34,7 @@ pub fn process(_input: &str) -> String {
         v = new_v;
     }
 
-    panic!("no answer")
+    panic!("should have an answer")
 }
 
 #[cfg(test)]

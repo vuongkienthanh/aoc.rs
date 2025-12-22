@@ -2,7 +2,7 @@ use crate::parsing::parse_input;
 use std::collections::BinaryHeap;
 
 pub fn process(_input: &str) -> usize {
-    let (_, (map, molecules)) = parse_input(_input).unwrap();
+    let (map, molecules) = parse_input(_input);
     let cmap = reverse_map(map);
     find_min(cmap, molecules)
 }
@@ -38,12 +38,12 @@ fn find_min(cmap: Vec<(Vec<&str>, &str)>, molecules: Vec<&str>) -> usize {
             return steps;
         }
         for (from, to) in &cmap {
-            for new_molecules in compress_molecules2(molecules.clone(), from, to) {
+            for new_molecules in compress_molecules(molecules.clone(), from, to) {
                 heap.push((steps + 1, new_molecules));
             }
         }
     }
-    panic!("no answer")
+    panic!("should have an answer")
 }
 
 #[cfg(test)]
@@ -84,7 +84,7 @@ O => HH"#,
         #[case] to: &str,
         #[case] x: Vec<Vec<&str>>,
     ) {
-        let a = compress_molecules2(s, &from, to);
+        let a = compress_molecules(s, &from, to);
         assert_eq!(a, x);
     }
 }

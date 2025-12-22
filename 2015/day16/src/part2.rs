@@ -8,7 +8,7 @@ const GOLDFISH: usize = 6;
 const REST: [usize; 6] = [0, 2, 4, 5, 8, 9];
 
 pub fn process(_input: &str) -> usize {
-    let (_, mut aunt_list) = parse_input(_input).unwrap();
+    let mut aunt_list = parse_input(_input);
 
     while let Some((aunt, prop)) = aunt_list.pop() {
         if [CATS, TREES].into_iter().all(|i| match prop[i] {
@@ -25,5 +25,5 @@ pub fn process(_input: &str) -> usize {
         }
     }
 
-    panic!("can't find answer")
+    panic!("should have an answer")
 }

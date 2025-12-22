@@ -9,4 +9,3 @@ publish.workspace = true
 
 [dependencies]
 rstest.workspace = true
-micromap.workspace = true

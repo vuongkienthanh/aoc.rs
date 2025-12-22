@@ -7,12 +7,12 @@ pub fn process(_input: &str) -> String {
         let hex = format!("{:x}", digest);
         if hex.starts_with("00000") {
             let sixth = hex.chars().nth(5).unwrap();
-            if let Some(position) = sixth.to_digit(10) {
-                if (0..8).contains(&position) {
-                    let p = position as usize;
-                    if ans[p] == '*' {
-                        ans[p] = hex.chars().nth(6).unwrap();
-                    }
+            if let Some(position) = sixth.to_digit(10)
+                && (0..8).contains(&position)
+            {
+                let p = position as usize;
+                if ans[p] == '*' {
+                    ans[p] = hex.chars().nth(6).unwrap();
                 }
             }
         }

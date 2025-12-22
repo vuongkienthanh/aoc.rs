@@ -3,8 +3,7 @@ use crate::parsing::parse_input;
 const TIME: usize = 2503;
 
 pub fn process(_input: &str) -> usize {
-    let (_rest, input) = parse_input(_input).unwrap();
-    assert!(_rest.is_empty());
+    let input = parse_input(_input);
 
     input
         .into_iter()

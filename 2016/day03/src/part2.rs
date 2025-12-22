@@ -2,7 +2,7 @@ use crate::is_triangle;
 use crate::parsing::parse_input;
 
 pub fn process(_input: &str) -> usize {
-    let (_, input) = parse_input(_input).unwrap();
+    let input = parse_input(_input);
 
     let mut i = input.into_iter();
     let mut ans = 0;

@@ -5,6 +5,7 @@ pub fn process(_input: &str) -> usize {
     println!("{input:?}");
 
     todo!("part1")
+    panic!("should have an answer")
 }
 #[cfg(test)]
 mod tests {

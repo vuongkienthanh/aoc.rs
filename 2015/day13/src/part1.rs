@@ -2,8 +2,7 @@ use crate::parsing::parse_input;
 use crate::{build_all_combinations, calculate_happiness};
 
 pub fn process(_input: &str) -> isize {
-    let (_rest, graph) = parse_input(_input).expect("parse succeed");
-    assert!(_rest.is_empty());
+    let graph = parse_input(_input);
 
     let names = graph.keys().cloned().collect::<Vec<_>>();
 

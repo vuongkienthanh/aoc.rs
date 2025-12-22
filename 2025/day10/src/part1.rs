@@ -32,7 +32,7 @@ pub fn process(_input: &str) -> usize {
                 }
                 i += 1;
                 if i > buttons.len() {
-                    panic!("can't find combo");
+                    panic!("should have an answer");
                 }
             }
         })

@@ -1,15 +1,21 @@
-use aoc_helper::nom::parse_number;
 use nom::{
     IResult, Parser,
     bytes::complete::tag,
-    character::complete::line_ending,
-    sequence::{preceded, terminated},
+    character::complete::{self, line_ending},
+    combinator::all_consuming,
+    sequence::{preceded, separated_pair},
 };
 
-pub fn parse_input(input: &str) -> IResult<&str, (usize, usize)> {
-    (
-        terminated(preceded(tag("Hit Points: "), parse_number), line_ending),
-        preceded(tag("Damage: "), parse_number),
-    )
+fn parse_hp(input: &str) -> IResult<&str, usize> {
+    preceded(tag("Hit Points: "), complete::usize).parse(input)
+}
+fn parse_atk(input: &str) -> IResult<&str, usize> {
+    preceded(tag("Damage: "), complete::usize).parse(input)
+}
+
+pub fn parse_input(input: &str) -> (usize, usize) {
+    all_consuming(separated_pair(parse_hp, line_ending, parse_atk))
         .parse(input)
+        .unwrap()
+        .1
 }

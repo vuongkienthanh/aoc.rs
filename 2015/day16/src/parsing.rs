@@ -2,17 +2,13 @@ use nom::{
     IResult, Parser,
     branch::alt,
     bytes::complete::tag,
-    character::complete::{digit1, line_ending},
-    combinator::map_res,
+    character::complete::{self, line_ending},
+    combinator::all_consuming,
     multi::separated_list1,
 };
 
 type Aunt = (usize, [Option<usize>; 10]);
 type Index = usize;
-
-fn parse_number(input: &str) -> IResult<&str, usize> {
-    map_res(digit1, str::parse).parse(input)
-}
 
 fn parse_item(input: &str) -> IResult<&str, (Index, usize)> {
     (
@@ -28,7 +24,7 @@ fn parse_item(input: &str) -> IResult<&str, (Index, usize)> {
             tag("cars: ").map(|_| 8),
             tag("perfumes: ").map(|_| 9),
         )),
-        parse_number,
+        complete::usize,
     )
         .parse(input)
 }
@@ -36,7 +32,7 @@ fn parse_item(input: &str) -> IResult<&str, (Index, usize)> {
 fn parse_line(input: &str) -> IResult<&str, Aunt> {
     (
         tag("Sue "),
-        parse_number,
+        complete::usize,
         tag(": "),
         parse_item,
         tag(", "),
@@ -53,6 +49,9 @@ fn parse_line(input: &str) -> IResult<&str, Aunt> {
         })
         .parse(input)
 }
-pub fn parse_input(input: &str) -> IResult<&str, Vec<Aunt>> {
-    separated_list1(line_ending, parse_line).parse(input)
+pub fn parse_input(input: &str) -> Vec<Aunt> {
+    all_consuming(separated_list1(line_ending, parse_line))
+        .parse(input)
+        .unwrap()
+        .1
 }

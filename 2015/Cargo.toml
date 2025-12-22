@@ -26,7 +26,6 @@ members = [
     "day23",
     "day24",
     "day25",
-    "aoc_helper",
 ]
 resolver = "3"
 
@@ -44,3 +43,5 @@ itertools = "~0.14"
 nom = "~8.0.0"
 rstest = "~0.26.1"
 grid = "~1.0.0"
+micromap = "0.1.0"
+aoc_helper = { path = "../aoc_helper" }

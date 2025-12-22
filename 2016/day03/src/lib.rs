@@ -1,8 +1,8 @@
+pub mod parsing;
 pub mod part1;
 pub mod part2;
-pub mod parsing;
 
-pub fn is_triangle((a, b, c) : (usize, usize, usize)) -> bool {
+pub fn is_triangle((a, b, c): (usize, usize, usize)) -> bool {
     (a + b) > c && (a + c) > b && (b + c) > a
 }
 #[cfg(test)]
@@ -11,6 +11,6 @@ mod tests {
 
     #[test]
     fn test_is_triangle() {
-        assert_eq!(is_triangle(5, 10, 25), false);
+        assert!(!is_triangle((5, 10, 25)));
     }
 }

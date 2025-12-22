@@ -2,7 +2,7 @@ use nom::{
     IResult, Parser,
     bytes::complete::{tag, take, take_while},
     character::complete::{alpha1, line_ending},
-    combinator::recognize,
+    combinator::{all_consuming, recognize},
     multi::{many1, separated_list1},
     sequence::separated_pair,
 };
@@ -25,8 +25,10 @@ pub fn parse_map(input: &str) -> IResult<&str, Vec<(&str, Vec<&str>)>> {
     separated_list1(line_ending, parse_line).parse(input)
 }
 
-pub fn parse_input(input: &str) -> IResult<&str, (Vec<(&str, Vec<&str>)>, Vec<&str>)> {
-    (parse_map, many1(line_ending), parse_molecules)
-        .map(|(m, _, v)| (m, v))
+#[allow(clippy::type_complexity)]
+pub fn parse_input(input: &str) -> (Vec<(&str, Vec<&str>)>, Vec<&str>) {
+    all_consuming((parse_map, many1(line_ending), parse_molecules).map(|(m, _, v)| (m, v)))
         .parse(input)
+        .unwrap()
+        .1
 }

@@ -15,11 +15,11 @@ fn third_requirement(input: &str) -> bool {
     let mut cs = input.chars().peekable();
     let mut pair_count = 0;
     while let Some(c1) = cs.next() {
-        if let Some(c2) = cs.peek() {
-            if c1 == *c2 {
-                pair_count += 1;
-                cs.next().unwrap();
-            }
+        if let Some(c2) = cs.peek()
+            && c1 == *c2
+        {
+            pair_count += 1;
+            cs.next().unwrap();
         }
     }
 

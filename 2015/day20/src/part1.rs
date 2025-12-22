@@ -11,5 +11,5 @@ pub fn process(_input: &str) -> usize {
             arr[house] += (elf + 1) * 10;
         }
     }
-    panic!("no answer")
+    panic!("should have an answer")
 }

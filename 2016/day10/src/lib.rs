@@ -2,8 +2,8 @@ pub mod parsing;
 pub mod part1;
 pub mod part2;
 use crate::parsing::{Input, Target};
-use std::collections::HashMap;
 use tinyvec::ArrayVec;
+use fxhash::FxHashMap as Map;
 
 #[derive(Debug, Default, Clone)]
 struct Bot {
@@ -12,8 +12,8 @@ struct Bot {
     high_target: Target,
 }
 
-fn factory(input: Vec<Input>) -> HashMap<usize, Bot> {
-    let mut ans = HashMap::new();
+fn factory(input: Vec<Input>) -> Map<usize, Bot> {
+    let mut ans = Map::default();
     for i in input {
         match i {
             Input::Init(value, bot_number) => {

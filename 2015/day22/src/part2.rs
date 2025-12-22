@@ -2,7 +2,7 @@ use crate::parsing::parse_input;
 use crate::{Battle, Boss, Hero, IsHeroWin, SPELLS};
 use std::collections::BinaryHeap;
 pub fn process(_input: &str) -> usize {
-    let (_rest, (hp, atk)) = parse_input(_input).unwrap();
+    let (hp, atk) = parse_input(_input);
     find_least_mana(hp, atk)
 }
 fn find_least_mana(hp: usize, atk: usize) -> usize {
@@ -31,5 +31,5 @@ fn find_least_mana(hp: usize, atk: usize) -> usize {
         }
     }
 
-    panic!("no answer")
+    panic!("should have an answer")
 }

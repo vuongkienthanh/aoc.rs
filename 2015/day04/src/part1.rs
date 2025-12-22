@@ -1,5 +1,3 @@
-use md5;
-
 pub fn process(_input: &str) -> usize {
     for i in 0..usize::MAX {
         let inp = format!("{}{}", _input, i);

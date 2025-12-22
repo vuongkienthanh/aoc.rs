@@ -15,7 +15,7 @@ pub fn process(_input: &str) -> usize {
             return points[a].0 * points[b].0;
         }
     }
-    panic!("no answer")
+    panic!("should have an answer")
 }
 #[cfg(test)]
 mod tests {

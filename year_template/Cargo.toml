@@ -21,3 +21,4 @@ md5 = "~0.8.0"
 aoc_helper = { path = "../aoc_helper" }
 rstest = "~0.26.1"
 rayon = "1.11.0"
+fxhash = "0.2.1"

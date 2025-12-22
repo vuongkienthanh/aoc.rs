@@ -1,11 +1,9 @@
 use crate::parsing::{Target, parse_input};
 use crate::{Bot, factory};
-use std::collections::HashMap;
+use fxhash::FxHashMap as Map;
 
 pub fn process(_input: &str) -> usize {
-    let (_rest, input) = parse_input(_input).unwrap();
-    assert!(_rest.is_empty());
-    // println!("{input:?}");
+    let input = parse_input(_input);
 
     let mut factory = factory(input);
     let target = (17, 61);
@@ -14,12 +12,12 @@ pub fn process(_input: &str) -> usize {
             return n;
         }
     }
-    panic!("no answer")
+    panic!("should have an answer")
 }
 
 fn resolve_bot(
     bot_number: usize,
-    factory: &mut HashMap<usize, Bot>,
+    factory: &mut Map<usize, Bot>,
     target: (usize, usize),
 ) -> Option<usize> {
     let b = factory.get(&bot_number).unwrap();

@@ -1,7 +1,11 @@
-use aoc_helper::nom::parse_number;
 use nom::{
-    IResult, Parser, branch::alt, bytes::complete::tag, character::complete::line_ending,
-    multi::separated_list1, sequence::preceded,
+    IResult, Parser,
+    branch::alt,
+    bytes::complete::tag,
+    character::complete::{self, line_ending},
+    combinator::all_consuming,
+    multi::separated_list1,
+    sequence::preceded,
 };
 
 #[derive(Debug)]
@@ -21,9 +25,9 @@ type Item = Input;
 fn parse_init_value(input: &str) -> IResult<&str, Input> {
     (
         tag("value "),
-        parse_number,
+        complete::usize,
         tag(" goes to bot "),
-        parse_number,
+        complete::usize,
     )
         .map(|(_, a, _, b)| Input::Init(a, b))
         .parse(input)
@@ -31,7 +35,7 @@ fn parse_init_value(input: &str) -> IResult<&str, Input> {
 fn parse_bot_action(input: &str) -> IResult<&str, Input> {
     (
         tag("bot "),
-        parse_number,
+        complete::usize,
         parse_low_target,
         parse_high_target,
     )
@@ -41,15 +45,15 @@ fn parse_bot_action(input: &str) -> IResult<&str, Input> {
 
 fn parse_low_target(input: &str) -> IResult<&str, Target> {
     alt((
-        preceded(tag(" gives low to output "), parse_number).map(Target::Output),
-        preceded(tag(" gives low to bot "), parse_number).map(Target::Bot),
+        preceded(tag(" gives low to output "), complete::usize).map(Target::Output),
+        preceded(tag(" gives low to bot "), complete::usize).map(Target::Bot),
     ))
     .parse(input)
 }
 fn parse_high_target(input: &str) -> IResult<&str, Target> {
     alt((
-        preceded(tag(" and high to output "), parse_number).map(Target::Output),
-        preceded(tag(" and high to bot "), parse_number).map(Target::Bot),
+        preceded(tag(" and high to output "), complete::usize).map(Target::Output),
+        preceded(tag(" and high to bot "), complete::usize).map(Target::Bot),
     ))
     .parse(input)
 }
@@ -58,6 +62,9 @@ fn parse_line(input: &str) -> IResult<&str, Item> {
     alt((parse_init_value, parse_bot_action)).parse(input)
 }
 
-pub fn parse_input(input: &str) -> IResult<&str, Vec<Item>> {
-    separated_list1(line_ending, parse_line).parse(input)
+pub fn parse_input(input: &str) -> Vec<Item> {
+    all_consuming(separated_list1(line_ending, parse_line))
+        .parse(input)
+        .unwrap()
+        .1
 }

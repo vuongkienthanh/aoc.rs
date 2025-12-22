@@ -1,10 +1,8 @@
 use crate::parsing::parse_input;
-use micromap::Map;
 use std::cmp::Ordering;
 
 pub fn process(_input: &str) -> usize {
-    let (_rest, input) = parse_input(_input).unwrap();
-    assert!(_rest.is_empty());
+    let input = parse_input(_input);
 
     input
         .into_iter()
@@ -13,18 +11,15 @@ pub fn process(_input: &str) -> usize {
 }
 
 fn is_real_room(name: &str, checksum: &str) -> bool {
-    let mut map: Map<char, usize, 26> = Map::new();
-    for c in 'a'..='z' {
-        map.insert(c, 0);
-    }
-    for c in name.chars() {
+    let mut map = [0; 26];
+    for c in name.bytes() {
         match c {
-            '-' => (),
-            'a'..='z' => *map.get_mut(&c).unwrap() += 1,
+            b'-' => (),
+            b'a'..=b'z' => *map.get_mut((c - b'a') as usize).unwrap() += 1,
             _ => panic!("should be 'a'..='z' and '-'"),
         }
     }
-    let mut vec: Vec<(char, usize)> = map.into_iter().collect();
+    let mut vec: Vec<(char, usize)> = ('a'..='z').zip(map).collect();
     vec.sort_unstable_by(|a, b| match b.1.cmp(&a.1) {
         Ordering::Equal => a.0.cmp(&b.0),
         o => o,

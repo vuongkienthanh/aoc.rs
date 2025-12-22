@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+
 pub fn process(_input: &str) -> usize {
     _input
         .chars()

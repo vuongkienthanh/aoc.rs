@@ -4,8 +4,7 @@ use itertools::Itertools;
 use std::collections::VecDeque;
 
 pub fn process(_input: &str) -> usize {
-    let (_rest, mapping) = parse_input(_input).unwrap();
-    assert!(_rest.is_empty());
+    let mapping = parse_input(_input);
     mapping
         .keys()
         .copied()
@@ -17,7 +16,7 @@ pub fn process(_input: &str) -> usize {
         .max()
         .expect("should have an answer")
 }
-fn max_distance<'a>(loc1: &'a str, loc2: &'a str, mapping: &'a Mapping<'a>) -> usize {
+fn max_distance<'a>(loc1: &'a str, loc2: &'a str, mapping: &Mapping<'a>) -> usize {
     let mut routes = VecDeque::from([vec![loc1]]);
     let mut max = usize::MIN;
     while let Some(v) = routes.pop_front() {

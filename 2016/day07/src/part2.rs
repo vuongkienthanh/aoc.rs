@@ -1,8 +1,8 @@
 use crate::parsing::{Bracket, parse_input};
-use std::collections::HashSet;
+use fxhash::FxHashSet as Set;
 
 pub fn process(_input: &str) -> usize {
-    let (_, input) = parse_input(_input).unwrap();
+    let input = parse_input(_input);
 
     input.into_iter().filter(|x| is_SSL_supported(x)).count()
 }
@@ -45,7 +45,7 @@ fn is_SSL_supported<'a>(input: &[Bracket<'a>]) -> bool {
             Bracket::Out(x) => v_out.push(x),
         }
     }
-    let mut all_ABA = HashSet::new();
+    let mut all_ABA = Set::default();
     for b_out in v_out {
         for aba in get_all_ABA(b_out) {
             all_ABA.insert(aba);

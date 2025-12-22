@@ -11,7 +11,7 @@ const GRID: [[char; 5]; 5] = [
 ];
 
 pub fn process(_input: &str) -> String {
-    let (_, input) = parse_input(_input).unwrap();
+    let input = parse_input(_input);
 
     let mut coord = (2, 0);
     let mut ans = String::new();

@@ -1,14 +1,12 @@
 use crate::parsing::parse_input;
 use crate::{build_all_combinations, score};
 
-
 pub fn process(_input: &str) -> usize {
-    let (_rest, input) = parse_input(_input).unwrap();
+    let input = parse_input(_input);
     build_all_combinations(input.len())
         .iter()
         .filter(|v| {
-            v
-                .iter()
+            v.iter()
                 .zip(input.iter())
                 .map(|(q, i)| i[4] * *q as isize)
                 .sum::<isize>()
