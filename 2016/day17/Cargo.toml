@@ -10,4 +10,4 @@ publish.workspace = true
 [dependencies]
 md5.workspace = true
 rstest.workspace = true
-aoc_helper = { path = "../../aoc_helper" }
+aoc_helper.workspace = true

@@ -1,5 +1,5 @@
 use crate::{DIRECTIONS, md5hash};
-use aoc_helper::grid::adj4;
+use aoc_helper::adj::grid::adj4;
 
 pub fn process(_input: &str) -> String {
     let loc = (0, 0);

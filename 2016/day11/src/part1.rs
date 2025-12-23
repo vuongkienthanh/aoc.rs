@@ -3,8 +3,7 @@ use crate::{PairState, State};
 use std::collections::HashSet;
 
 pub fn process(_input: &str) -> usize {
-    let (_rest, input) = parse_input(_input).unwrap();
-    assert!(_rest.is_empty(), "rest={_rest}");
+    let input = parse_input(_input);
 
     let mut heap = Vec::new();
     let mut seen: HashSet<PairState> = HashSet::new();

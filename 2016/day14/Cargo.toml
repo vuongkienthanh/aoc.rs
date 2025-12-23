@@ -10,4 +10,5 @@ publish.workspace = true
 [dependencies]
 rstest.workspace = true
 md5.workspace = true
-rayon = "1.11.0"
+rayon.workspace = true
+fxhash.workspace = true

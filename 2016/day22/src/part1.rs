@@ -1,10 +1,7 @@
 use crate::parsing::{Item, parse_input};
 
 pub fn process(_input: &str) -> usize {
-    let (_rest, input) = parse_input(_input).unwrap();
-    // println!("{input:?}");
-    // println!("{_rest:?}");
-    assert!(_rest.is_empty());
+    let input = parse_input(_input);
 
     let mut ans = 0;
     for i in 0..input.len() - 1 {

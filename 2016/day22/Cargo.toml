@@ -10,4 +10,4 @@ publish.workspace = true
 [dependencies]
 nom.workspace = true
 grid.workspace = true
-aoc_helper = { path = "../../aoc_helper" }
+aoc_helper.workspace = true

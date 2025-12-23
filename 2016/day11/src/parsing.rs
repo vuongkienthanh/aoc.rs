@@ -3,8 +3,9 @@ use nom::{
     branch::alt,
     bytes::complete::tag,
     character::complete::{alpha1, line_ending},
+    combinator::all_consuming,
     multi::separated_list1,
-    sequence::{terminated, delimited, preceded},
+    sequence::{delimited, preceded, terminated},
 };
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -54,6 +55,9 @@ fn parse_line<'a>(input: &'a str) -> IResult<&'a str, Vec<Item<'a>>> {
     preceded(parse_floor_head, parse_all_items).parse(input)
 }
 
-pub fn parse_input<'a>(input: &'a str) -> IResult<&'a str, Vec<Vec<Item<'a>>>> {
-    separated_list1(line_ending, parse_line).parse(input)
+pub fn parse_input<'a>(input: &'a str) -> Vec<Vec<Item<'a>>> {
+    all_consuming(separated_list1(line_ending, parse_line))
+        .parse(input)
+        .unwrap()
+        .1
 }

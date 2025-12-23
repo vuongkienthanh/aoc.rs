@@ -2,12 +2,9 @@ use crate::parsing::{Item, parse_input};
 use std::collections::VecDeque;
 
 pub fn process(_input: &str) -> String {
-    let (_, input) = parse_input(_input).unwrap();
+    let input = parse_input(_input);
     let mut s: VecDeque<char> = "fbgdceah".chars().collect();
     for item in input.into_iter().rev() {
-        // println!("{}", s.iter().collect::<String>());
-        // println!("{:?}", item);
-        // println!();
         match item {
             Item::SwapPosition(a, b) => s.swap(a, b),
             Item::SwapLetter(a, b) => {

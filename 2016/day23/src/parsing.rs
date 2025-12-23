@@ -1,9 +1,9 @@
-use aoc_helper::nom::parse_isize;
 use nom::{
     IResult, Parser,
     branch::alt,
     bytes::complete::tag,
-    character::complete::{char, line_ending},
+    character::complete::{self, char, line_ending},
+    combinator::all_consuming,
     multi::separated_list1,
 };
 
@@ -38,7 +38,7 @@ fn parse_register(input: &str) -> IResult<&str, usize> {
     .parse(input)
 }
 fn parse_target_value(input: &str) -> IResult<&str, Target> {
-    parse_isize.map(Target::Value).parse(input)
+    complete::isize.map(Target::Value).parse(input)
 }
 fn parse_target_register(input: &str) -> IResult<&str, Target> {
     alt((
@@ -64,6 +64,9 @@ fn parse_line(input: &str) -> IResult<&str, Item> {
     .parse(input)
 }
 
-pub fn parse_input(input: &str) -> IResult<&str, Vec<Item>> {
-    separated_list1(line_ending, parse_line).parse(input)
+pub fn parse_input(input: &str) -> Vec<Item> {
+    all_consuming(separated_list1(line_ending, parse_line))
+        .parse(input)
+        .unwrap()
+        .1
 }

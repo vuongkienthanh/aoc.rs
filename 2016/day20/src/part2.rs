@@ -2,7 +2,7 @@ use crate::parsing::parse_input;
 use aoc_helper::range::merge;
 
 pub fn process(_input: &str) -> u32 {
-    let (_, input) = parse_input(_input).unwrap();
+    let input = parse_input(_input);
     let mut input = merge(input);
     input.sort_unstable_by_key(|x| x.0);
 

@@ -11,3 +11,4 @@ publish.workspace = true
 rstest.workspace = true
 grid.workspace = true
 itertools.workspace = true
+aoc_helper.workspace = true

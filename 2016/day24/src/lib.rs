@@ -1,9 +1,8 @@
-pub mod adj;
 pub mod parsing;
 pub mod part1;
 pub mod part2;
 
-use adj::adj4;
+use aoc_helper::adj::naive::adj4;
 use grid::Grid;
 use parsing::{G, Item, Point};
 use std::collections::BTreeMap;

@@ -1,9 +1,9 @@
-use aoc_helper::nom::parse_number;
 use nom::{
     IResult, Parser,
     branch::alt,
     bytes::complete::tag,
-    character::complete::{anychar, line_ending},
+    character::complete::{self, anychar, line_ending},
+    combinator::all_consuming,
     multi::separated_list1,
 };
 
@@ -22,42 +22,42 @@ fn parse_line(input: &str) -> IResult<&str, Item> {
     alt((
         (
             tag("swap position "),
-            parse_number,
+            complete::usize,
             tag(" with position "),
-            parse_number,
+            complete::usize,
         )
             .map(|(_, a, _, b)| Item::SwapPosition(a, b)),
         (tag("swap letter "), anychar, tag(" with letter "), anychar)
             .map(|(_, a, _, b)| Item::SwapLetter(a, b)),
         (
             tag("move position "),
-            parse_number,
+            complete::usize,
             tag(" to position "),
-            parse_number,
+            complete::usize,
         )
             .map(|(_, a, _, b)| Item::MovePosition(a, b)),
         (
             tag("reverse positions "),
-            parse_number,
+            complete::usize,
             tag(" through "),
-            parse_number,
+            complete::usize,
         )
             .map(|(_, a, _, b)| Item::Reverse(a, b)),
         (
             tag("rotate right "),
-            parse_number,
+            complete::usize,
             alt((tag(" steps"), tag(" step"))),
         )
             .map(|(_, a, _)| Item::RotateRight(a)),
         (
             tag("rotate left "),
-            parse_number,
+            complete::usize,
             alt((tag(" steps"), tag(" step"))),
         )
             .map(|(_, a, _)| Item::RotateLeft(a)),
         (
             tag("rotate left "),
-            parse_number,
+            complete::usize,
             alt((tag(" steps"), tag(" step"))),
         )
             .map(|(_, a, _)| Item::RotateLeft(a)),
@@ -66,6 +66,9 @@ fn parse_line(input: &str) -> IResult<&str, Item> {
     .parse(input)
 }
 
-pub fn parse_input(input: &str) -> IResult<&str, Vec<Item>> {
-    separated_list1(line_ending, parse_line).parse(input)
+pub fn parse_input(input: &str) -> Vec<Item> {
+    all_consuming(separated_list1(line_ending, parse_line))
+        .parse(input)
+        .unwrap()
+        .1
 }

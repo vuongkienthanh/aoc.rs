@@ -2,16 +2,9 @@ use crate::parsing::parse_input;
 use aoc_helper::range::merge;
 
 pub fn process(_input: &str) -> u32 {
-    let (_rest, input) = parse_input(_input).unwrap();
-    // println!("{input:?}");
-    assert!(_rest.is_empty());
-
-    println!("before merge len={}", input.len());
+    let input = parse_input(_input);
     let mut input = merge(input);
-    println!("after merge len={}", input.len());
     input.sort_unstable_by_key(|x| x.0);
-    println!("after merge {input:?}");
-
     if input[0].0 > 0 { 0 } else { input[0].1 + 1 }
 }
 

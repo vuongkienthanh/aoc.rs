@@ -9,3 +9,4 @@ publish.workspace = true
 
 [dependencies]
 rstest.workspace = true
+aoc_helper.workspace = true

@@ -4,7 +4,7 @@ use grid::Grid;
 type Point = (usize, usize);
 
 pub fn process(_input: &str) -> usize {
-    let (_, input) = parse_input(_input).unwrap();
+    let input = parse_input(_input);
     let (x, y, _, _) = input.last().cloned().unwrap();
     let rows = x + 1;
     let cols = y + 1;
@@ -37,7 +37,7 @@ pub fn process(_input: &str) -> usize {
         .enumerate()
         .find_map(|(i, row)| {
             row.enumerate()
-                .find_map(|(j, used)| (*used == 0).then(|| (i, j)))
+                .find_map(|(j, used)| (*used == 0).then_some((i, j)))
         })
         .unwrap();
 

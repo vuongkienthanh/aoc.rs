@@ -1,4 +1,5 @@
-use crate::{Coord, adj4, is_wall};
+use crate::{Coord, is_wall};
+use aoc_helper::adj::checked_u::adj4;
 use std::collections::HashSet;
 
 pub fn process(_input: &str) -> usize {
@@ -18,7 +19,7 @@ fn run(input: usize, target: Coord) -> usize {
         let mut new_v = Vec::new();
         step += 1;
         for c in v {
-            for adj in adj4(c).into_iter().filter_map(|x| x) {
+            for adj in adj4(c).into_iter().flatten() {
                 if seen.insert(adj) && !is_wall(input, adj) {
                     if adj == target {
                         return step;

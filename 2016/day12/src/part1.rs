@@ -2,8 +2,7 @@ use crate::Computer;
 use crate::parsing::parse_input;
 
 pub fn process(_input: &str) -> usize {
-    let (_rest, input) = parse_input(_input).unwrap();
-    assert!(_rest.is_empty());
+    let input = parse_input(_input);
     let mut computer: Computer = Computer::new(input);
     computer.run_loop();
     computer.registers[0] as usize

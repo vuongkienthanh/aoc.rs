@@ -1,8 +1,8 @@
 use crate::{find_five, find_three};
-use std::collections::{HashMap, HashSet};
+use fxhash::{FxHashMap as Map, FxHashSet as Set};
 
 pub fn process(_input: &str) -> usize {
-    let mut possible_keys: HashMap<char, HashSet<usize>> = HashMap::new();
+    let mut possible_keys: Map<char, Set<usize>> = Map::default();
     let mut count = 0;
     for i in 0.. {
         let input = format!("{_input}{i}");
@@ -28,7 +28,7 @@ pub fn process(_input: &str) -> usize {
             }
         }
     }
-    panic!("no answer")
+    panic!("should have an answer")
 }
 
 #[cfg(test)]

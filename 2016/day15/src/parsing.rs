@@ -1,22 +1,20 @@
-use aoc_helper::nom::parse_number;
+use aoc_helper::algebra::chinese_remainder_theorem::Item;
 use nom::{
-    IResult, Parser, bytes::complete::tag, character::complete::line_ending, multi::separated_list1,
+    IResult, Parser,
+    bytes::complete::tag,
+    character::complete::{self, line_ending},
+    combinator::all_consuming,
+    multi::separated_list1,
 };
-
-#[derive(Debug)]
-pub struct Item {
-    pub modulus: usize,
-    pub rem: usize,
-}
 
 fn parse_line(input: &str) -> IResult<&str, Item> {
     (
         tag("Disc #"),
-        parse_number,
+        complete::usize,
         tag(" has "),
-        parse_number,
+        complete::usize,
         tag(" positions; at time=0, it is at position "),
-        parse_number,
+        complete::usize,
         tag("."),
     )
         .map(|(_, a, _, b, _, c, _)| Item {
@@ -26,6 +24,9 @@ fn parse_line(input: &str) -> IResult<&str, Item> {
         .parse(input)
 }
 
-pub fn parse_input(input: &str) -> IResult<&str, Vec<Item>> {
-    separated_list1(line_ending, parse_line).parse(input)
+pub fn parse_input(input: &str) -> Vec<Item> {
+    all_consuming(separated_list1(line_ending, parse_line))
+        .parse(input)
+        .unwrap()
+        .1
 }
