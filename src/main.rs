@@ -6,6 +6,7 @@ use std::env;
 use std::fs;
 use std::path::Path;
 use std::str::FromStr;
+use std::sync::Arc;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().expect(".env file not found");
@@ -67,37 +68,53 @@ or `cargo run -- fetch DAY` to download input"#
                 }
             }
             "fetch" => {
-                let day = env::args()
-                    .nth(2)
-                    .expect("Expect DAY")
-                    .parse::<usize>()
-                    .expect("DAY should be a number");
-                if !(1..=num_of_day).contains(&day) {
-                    panic!("DAY should be 1..={}", num_of_day);
-                }
-                let dst = year_path
-                    .join(format!("day{:0>2}", day))
-                    .join("src")
-                    .join("input.txt");
+                let arg = env::args().nth(2).expect("Expect all or DAY");
+
                 let session = env::var("AOC_session")?;
-                let url = Url::from_str("https://adventofcode.com/")?;
-                let get_url = url.join(&format!("{year}/day/{day}/input"))?;
-
+                let base_url = Url::from_str("https://adventofcode.com/")?;
                 let jar = Jar::default();
-                jar.add_cookie_str(&format!("session={session}"), &url);
+                jar.add_cookie_str(&format!("session={session}"), &base_url);
+                let client = Client::builder().cookie_provider(Arc::new(jar)).build()?;
 
-                let response = Client::builder()
-                    .cookie_provider(std::sync::Arc::new(jar))
-                    .build()?
-                    .get(get_url)
-                    .send()?;
-                if response.status().is_success() {
-                    let input = response.text()?;
-                    println!("{}", &input);
-                    fs::write(dst, input)?;
+                if arg == "all" {
+                    for day in 1..=num_of_day {
+                        let dst = year_path
+                            .join(format!("day{:0>2}", day))
+                            .join("src")
+                            .join("input.txt");
+
+                        let url = base_url.join(&format!("{year}/day/{day}/input"))?;
+                        let response = client.get(url).send()?;
+                        if response.status().is_success() {
+                            let input = response.text()?;
+                            fs::write(dst, input)?;
+                            println!("finish download input for day {:0>2}", day);
+                        } else {
+                            let input = response.text()?;
+                            println!("day{:0>2}: {}", day, &input);
+                        }
+                    }
                 } else {
-                    let input = response.text()?;
-                    println!("{}", &input);
+                    let day = arg.parse::<usize>().expect("DAY should be a number");
+                    if !(1..=num_of_day).contains(&day) {
+                        panic!("DAY should be 1..={}", num_of_day);
+                    }
+                    let dst = year_path
+                        .join(format!("day{:0>2}", day))
+                        .join("src")
+                        .join("input.txt");
+
+                    let url = base_url.join(&format!("{year}/day/{day}/input"))?;
+                    let response = client.get(url).send()?;
+
+                    if response.status().is_success() {
+                        let input = response.text()?;
+                        println!("{}", &input);
+                        fs::write(dst, input)?;
+                    } else {
+                        let input = response.text()?;
+                        println!("{}", &input);
+                    }
                 }
                 Ok(())
             }

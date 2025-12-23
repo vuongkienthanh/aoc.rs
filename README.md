@@ -35,6 +35,8 @@ Then use these two commands:
 ## generate template
 ./fetch 1 
 ## fetch day 1 input
+./fetch all 
+## fetch all input for that year
 ```
 
 ## Solve
