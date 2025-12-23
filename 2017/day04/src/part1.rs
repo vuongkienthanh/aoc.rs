@@ -1,29 +1,29 @@
-use crate::parsing::parse_input;
+use fxhash::FxHashSet as Set;
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
-
-    todo!("part1")
-    panic!("should have an answer")
+    _input.lines().filter(|x| is_valid(x)).count()
 }
+
+fn is_valid(input:&str) -> bool {
+    let mut seen = Set::default();
+    for word in input.split_ascii_whitespace() {
+        if !seen.insert(word) {
+            return false
+        }
+    }
+    true
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use rstest::*;
 
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
-    }
     #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+    #[case("aa bb cc dd ee", true)]
+    #[case("aa bb cc dd aa", false)]
+    #[case("aa bb cc dd aaa", true)]
+    fn test_is_valid(#[case] input: &str, #[case] expected: bool) {
+        assert_eq!(is_valid(input), expected);
     }
 }
