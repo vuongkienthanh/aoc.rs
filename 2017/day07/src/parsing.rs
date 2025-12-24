@@ -1,5 +1,3 @@
-#[allow(unused_imports)]
-// use aoc_helper::nom::parse_signed_usize;
 use nom::{
     IResult, Parser,
     branch::alt,
@@ -7,9 +5,8 @@ use nom::{
     character::complete::{self, alpha1, line_ending},
     combinator::all_consuming,
     multi::separated_list1,
-    sequence::{delimited, preceded, separated_pair, terminated},
+    sequence::delimited,
 };
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
 
 #[derive(Debug)]
 pub enum Item<'a> {
