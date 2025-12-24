@@ -21,8 +21,9 @@ need_stdout = true
 allow_warnings = true
 
 [jobs.print_input]
-command = ["cat", "src/input.txt"]
+command = ["batcat", "-p", "src/input.txt"]
 need_stdout = true
+default_watch = false
 
 [keybindings]
 1 = "job:run_p1"

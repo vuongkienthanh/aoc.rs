@@ -12,9 +12,10 @@ AOC_session=my_secret_session_key
 AOC_year=2025
 ```
 
-You also need [`bacon`](https://dystroy.org/bacon/) to help you coding and running jobs.
+You also need [`bacon`](https://dystroy.org/bacon/) and `bat` to help you coding and running jobs.
 ```sh
 cargo install --locked bacon
+sudo apt install bat
 ```
 
 ## Installation
@@ -42,21 +43,3 @@ Then use these two commands:
 ## Solve
 - `cd 2025/day01` for example. Edit `src/part1.rs` and `src/part2.rs` correspondingly.
 - Use `bacon` to help coding and running jobs ( mostly used key `1` `2` `3` `4`).
-
-# Recommended crates
-
-## Parsing
-- [nom](https://crates.io/crates/nom) - combinator parser
-- [nom_locate](https://crates.io/crates/nom_locate) - nom with location
-
-## Graph
-- [petgraph](https://crates.io/crates/petgraph) - graph data structure
-- [pathfinding](https://crates.io/crates/pathfinding) - generic path finding algos
-- [graphviz](https://graphviz.org/documentation/) - graph visualization
-
-## Testing
-- [rstest](https://crates.io/crates/rstest)
-
-## Ultilities
-- [itertools](https://crates.io/crates/itertools)
-- [grid](https://crates.io/crates/grid)
