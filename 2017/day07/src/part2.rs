@@ -4,14 +4,12 @@ use fxhash::FxHashMap as Map;
 
 type NodeMap<'a> = Map<&'a str, Node<'a>>;
 type WeightCache<'a> = Map<&'a str, usize>;
-type BalanceCache<'a> = Map<&'a str, bool>;
 
 pub fn process(_input: &str) -> usize {
     let input = parse_input(_input);
 
     let map = build_map(input);
     let mut weight_cache = WeightCache::default();
-    let mut balance_cache = BalanceCache::default();
 
     // find root
     let mut node = map
@@ -22,7 +20,7 @@ pub fn process(_input: &str) -> usize {
 
     'a: loop {
         if let Some((new_node, new_target_weight)) =
-            find_unbalanced_child(&map, node, &mut weight_cache, &mut balance_cache)
+            find_unbalanced_child(&map, node, &mut weight_cache)
         {
             node = new_node;
             target_weight = new_target_weight;
@@ -54,12 +52,8 @@ fn is_balance<'a>(
     map: &NodeMap<'a>,
     node: &'a str,
     weight_cache: &mut WeightCache<'a>,
-    balance_cache: &mut BalanceCache<'a>,
 ) -> bool {
-    if let Some(b) = balance_cache.get(&node) {
-        *b
-    } else {
-        let b = map
+         map
             .get(&node)
             .unwrap()
             .children
@@ -67,9 +61,7 @@ fn is_balance<'a>(
             .map(|x| get_weight(map, x, weight_cache))
             .collect::<Vec<usize>>()
             .windows(2)
-            .all(|x| x[0] == x[1]);
-        balance_cache.insert(node, b);
-        b
+            .all(|x| x[0] == x[1])
     }
 }
 
@@ -79,17 +71,20 @@ fn find_unbalanced_child<'a>(
     weight_cache: &mut WeightCache<'a>,
     balance_cache: &mut BalanceCache<'a>,
 ) -> Option<(&'a str, usize)> {
-    if is_balance(map, node, weight_cache, balance_cache) {
-        None
-    } else {
+    fn inner<'a>(
+        map: &NodeMap<'a>,
+        node: &'a str,
+        weight_cache: &mut WeightCache<'a>,
+        balance_cache: &mut BalanceCache<'a>,
+    ) -> Option<(&'a str, usize) {
         let children = &map.get(&node).unwrap().children;
         match children.len() {
             2 => match (
                 is_balance(map, children[0], weight_cache, balance_cache),
                 is_balance(map, children[1], weight_cache, balance_cache),
             ) {
-                (false, true) => Some((children[0], get_weight(map, children[1], weight_cache))),
-                (true, false) => Some((children[1], get_weight(map, children[0], weight_cache))),
+                (false, true) => inner(map, children[0], weight_cache, balance_cache),
+                (true, false) => inner(map, children[1], weight_cache, balance_cache),
                 _ => panic!("one tower must be unbalanced"),
             },
             _ => {
@@ -109,6 +104,12 @@ fn find_unbalanced_child<'a>(
                 Some((node, target))
             }
         }
+
+    }
+    if is_balance(map, node, weight_cache, balance_cache) {
+        None
+    } else {
+        inner(map, node, weight_cache, balance_cache)
     }
 }
 #[cfg(test)]
