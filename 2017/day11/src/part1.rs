@@ -1,29 +1,29 @@
-use crate::parsing::parse_input;
-
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
+    #[allow(non_snake_case)]
+    let (mut NS, mut EW) = (0isize, 0isize);
 
-    todo!("part1")
-    panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
+    for d in _input.split(",") {
+        match d {
+            "n" => NS += 1,
+            "s" => NS -= 1,
+            "ne" => {
+                NS += 1;
+                EW += 1;
+            }
+            "nw" => {
+                NS += 1;
+                EW -= 1;
+            }
+            "se" => {
+                NS -= 1;
+                EW += 1;
+            }
+            "sw" => {
+                NS -= 1;
+                EW -= 1;
+            }
+            _ => panic!("unknown direction"),
+        }
     }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    NS.unsigned_abs().max(EW.unsigned_abs())
 }

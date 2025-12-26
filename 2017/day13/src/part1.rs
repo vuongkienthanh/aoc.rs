@@ -1,11 +1,14 @@
-use crate::parsing::parse_input;
-
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
-
-    todo!("part1")
-    panic!("should have an answer")
+    _input
+        .lines()
+        .skip(1)
+        .map(|line| line.split_once(": ").unwrap())
+        .map(|(a, b)| (a.parse::<usize>().unwrap(), b.parse::<usize>().unwrap()))
+        .map(|(a, b)| {
+            let range = (b - 1) * 2;
+            if a.is_multiple_of(range) { a * b } else { 0 }
+        })
+        .sum()
 }
 #[cfg(test)]
 mod tests {
@@ -14,16 +17,13 @@ mod tests {
 
     #[fixture]
     pub fn fixture() -> &'static str {
-        r#""#
+        r#"0: 3
+1: 2
+4: 4
+6: 4"#
     }
     #[rstest]
     fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+        assert_eq!(process(fixture), 24);
     }
 }

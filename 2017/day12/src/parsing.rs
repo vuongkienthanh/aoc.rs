@@ -1,25 +1,34 @@
-#[allow(unused_imports)]
-// use aoc_helper::nom::parse_signed_usize;
+use fxhash::FxHashMap as Map;
+
 use nom::{
-    branch::alt,
+    IResult, Parser,
     bytes::complete::tag,
-    character::complete::{self, alpha1, line_ending},
+    character::complete::{self, line_ending},
     combinator::all_consuming,
     multi::separated_list1,
-    sequence::{delimited, preceded, separated_pair, terminated},
-    IResult, Parser,
+    sequence::separated_pair,
 };
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
 
-type Item = usize;
-
-fn parse_line(input: &str) -> IResult<&str, Item> {
-    todo!()
+fn parse_line(input: &str) -> IResult<&str, (usize, Vec<usize>)> {
+    separated_pair(
+        complete::usize,
+        tag(" <-> "),
+        separated_list1(tag(", "), complete::usize),
+    )
+    .parse(input)
 }
 
-pub fn parse_input(input: &str) -> Vec<Item> {
-    all_consuming(separated_list1(line_ending, parse_line))
+fn parse_map(input: &str) -> IResult<&str, Map<usize, Vec<usize>>> {
+    separated_list1(line_ending, parse_line)
+        .map(|v| {
+            v.into_iter().fold(Map::default(), |mut acc, (i, v)| {
+                acc.insert(i, v);
+                acc
+            })
+        })
         .parse(input)
-        .unwrap()
-        .1
+}
+
+pub fn parse_input(input: &str) -> Map<usize, Vec<usize>> {
+    all_consuming(parse_map).parse(input).unwrap().1
 }

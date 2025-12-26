@@ -1,12 +1,12 @@
-use crate::parsing::parse_input;
+use crate::build_grid;
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
-
-    todo!("part1")
-    panic!("should have an answer")
+    let data = build_grid(_input);
+    data.into_iter()
+        .map(|row| row.into_iter().sum::<usize>())
+        .sum::<usize>()
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -14,16 +14,10 @@ mod tests {
 
     #[fixture]
     pub fn fixture() -> &'static str {
-        r#""#
+        r#"flqrgnkx"#
     }
     #[rstest]
     fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+        assert_eq!(process(fixture), 8108);
     }
 }
