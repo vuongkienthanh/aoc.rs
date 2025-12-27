@@ -37,27 +37,26 @@ fn find_t(a: &Particle, b: &Particle) -> Option<isize> {
 
     for axis in [0, 1, 2] {
         // binomial equation
-        if (a.a[axis] - b.a[axis]) % 2 != 0 {
-            return None;
-        }
-        let coeff_a = (a.a[axis] - b.a[axis]) / 2;
+        let coeff_2a = a.a[axis] - b.a[axis];
         let coeff_b = a.v[axis] - b.v[axis];
         let coeff_c = a.p[axis] - b.p[axis];
 
-        if coeff_a == 0 {
+        if coeff_2a == 0 {
             if coeff_b == 0 {
                 if coeff_c != 0 {
                     return None;
+                } else {
+                    continue;
                 }
             } else {
-                if coeff_c % coeff_b == 0 {
+                if -coeff_c % coeff_b == 0 {
                     t[axis] = Some(-coeff_c / coeff_b);
                 } else {
                     return None;
                 }
             }
         } else {
-            let delta = coeff_b.pow(2u32) - 4 * coeff_a * coeff_c;
+            let delta = coeff_b.pow(2u32) - 2 * coeff_2a * coeff_c;
             if delta < 0 {
                 return None;
             }
@@ -65,14 +64,14 @@ fn find_t(a: &Particle, b: &Particle) -> Option<isize> {
             if delta_sqrt.pow(2u32) != delta {
                 return None;
             }
-            if (-coeff_b + delta_sqrt) % (2 * coeff_a) == 0 {
-                t[axis] = Some((-coeff_b + delta_sqrt) / (2 * coeff_a));
+            if (-coeff_b + delta_sqrt) % coeff_2a == 0 {
+                t[axis] = Some((-coeff_b + delta_sqrt) / coeff_2a);
             } else {
                 return None;
             }
         }
+        println!("axis = {axis} t = {t:?}");
     }
-    println!("t = {t:?}");
     let t: Vec<_> = t.into_iter().flatten().collect();
 
     if t.iter().any(|x| *x < 0) {
