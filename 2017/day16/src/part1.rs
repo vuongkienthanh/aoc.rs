@@ -1,29 +1,9 @@
 use crate::parsing::parse_input;
+use crate::run;
 
-pub fn process(_input: &str) -> usize {
+pub fn process(_input: &str) -> String {
     let input = parse_input(_input);
-    println!("{input:?}");
-
-    todo!("part1")
-    panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
-    }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    let mut dancers: Vec<char> = ('a'..='p').collect();
+    run(&mut dancers, &input);
+    dancers.into_iter().collect()
 }

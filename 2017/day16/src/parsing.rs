@@ -1,24 +1,53 @@
 #[allow(unused_imports)]
-// use aoc_helper::nom::parse_signed_usize;
 use nom::{
+    IResult, Parser,
     branch::alt,
     bytes::complete::tag,
     character::complete::{self, alpha1, line_ending},
     combinator::all_consuming,
     multi::separated_list1,
     sequence::{delimited, preceded, separated_pair, terminated},
-    IResult, Parser,
 };
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
 
-type Item = usize;
+#[derive(Debug)]
+pub enum Item {
+    Spin(usize),
+    Exchange(usize, usize),
+    Partner(char, char),
+}
 
-fn parse_line(input: &str) -> IResult<&str, Item> {
-    todo!()
+fn parse_spin(input: &str) -> IResult<&str, Item> {
+    preceded(complete::char('s'), complete::usize)
+        .map(|x| Item::Spin(x))
+        .parse(input)
+}
+fn parse_exchange(input: &str) -> IResult<&str, Item> {
+    (
+        complete::char('x'),
+        complete::usize,
+        complete::char('/'),
+        complete::usize,
+    )
+        .map(|(_, a, _, b)| Item::Exchange(a, b))
+        .parse(input)
+}
+fn parse_partner(input: &str) -> IResult<&str, Item> {
+    (
+        complete::char('p'),
+        complete::anychar,
+        complete::char('/'),
+        complete::anychar,
+    )
+        .map(|(_, a, _, b)| Item::Partner(a, b))
+        .parse(input)
+}
+
+fn parse_item(input: &str) -> IResult<&str, Item> {
+    alt((parse_spin, parse_exchange, parse_partner)).parse(input)
 }
 
 pub fn parse_input(input: &str) -> Vec<Item> {
-    all_consuming(separated_list1(line_ending, parse_line))
+    all_consuming(separated_list1(complete::char(','), parse_item))
         .parse(input)
         .unwrap()
         .1
