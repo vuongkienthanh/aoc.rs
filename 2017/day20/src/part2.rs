@@ -1,5 +1,6 @@
 use crate::parsing::{Particle, parse_input};
 use fxhash::FxHashSet as Set;
+use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
 pub fn process(_input: &str) -> usize {
@@ -12,16 +13,12 @@ pub fn process(_input: &str) -> usize {
             let pa = input.get(i).unwrap();
             let pb = input.get(j).unwrap();
             if let Some(t) = find_t(pa, pb) {
-                println!("i={i:?} j={j:?} t={t}");
-                t_map.entry(t).or_default().insert(i);
-                t_map.entry(t).or_default().insert(j);
+                t_map.entry(t).or_default().extend([i, j]);
             }
         }
     }
 
     let mut removed: Set<usize> = Set::default();
-
-    println!("t_map = {t_map:?}");
 
     for v in t_map.into_values() {
         let actual_v: Vec<usize> = v.difference(&removed).cloned().collect();
@@ -33,57 +30,66 @@ pub fn process(_input: &str) -> usize {
 }
 
 fn find_t(a: &Particle, b: &Particle) -> Option<isize> {
-    let mut t = [None; 3];
+    let mut t: Vec<Set<isize>> = vec![];
 
+    // binomial equation for discrete
     for axis in [0, 1, 2] {
-        // binomial equation
-        let coeff_2a = a.a[axis] - b.a[axis];
-        let coeff_b = a.v[axis] - b.v[axis];
-        let coeff_c = a.p[axis] - b.p[axis];
+        let coeff_a = a.a[axis] - b.a[axis];
+        let coeff_b = 2 * (a.v[axis] - b.v[axis]) + coeff_a;
+        let coeff_c = 2 * (a.p[axis] - b.p[axis]);
+        let mut ts = Set::default();
 
-        if coeff_2a == 0 {
-            if coeff_b == 0 {
-                if coeff_c != 0 {
-                    return None;
-                } else {
-                    continue;
-                }
-            } else {
-                if -coeff_c % coeff_b == 0 {
-                    t[axis] = Some(-coeff_c / coeff_b);
-                } else {
-                    return None;
+        match (coeff_a, coeff_b, coeff_c) {
+            (0, 0, 0) => {
+                continue;
+            }
+            (0, 0, _) => {
+                return None;
+            }
+            (0, b, c) => {
+                if -c % b == 0 {
+                    ts.insert(-c / b);
                 }
             }
-        } else {
-            let delta = coeff_b.pow(2u32) - 2 * coeff_2a * coeff_c;
-            if delta < 0 {
-                return None;
-            }
-            let delta_sqrt = delta.isqrt();
-            if delta_sqrt.pow(2u32) != delta {
-                return None;
-            }
-            if (-coeff_b + delta_sqrt) % coeff_2a == 0 {
-                t[axis] = Some((-coeff_b + delta_sqrt) / coeff_2a);
-            } else {
-                return None;
+            (a, b, c) => {
+                let delta = b.pow(2u32) - 4 * a * c;
+                match delta.cmp(&0) {
+                    Ordering::Less => {
+                        return None;
+                    }
+                    Ordering::Equal => {
+                        if -b % (2 * a) == 0 {
+                            ts.insert(-b / (2 * a));
+                        }
+                    }
+                    Ordering::Greater => {
+                        let delta_sqrt = delta.isqrt();
+                        if delta_sqrt.pow(2u32) != delta {
+                            // float
+                            return None;
+                        }
+                        if (-b + delta_sqrt) % (2 * a) == 0 {
+                            ts.insert((-b + delta_sqrt) / (2 * a));
+                        }
+                        if (-b - delta_sqrt) % (2 * a) == 0 {
+                            ts.insert((-b - delta_sqrt) / (2 * a));
+                        }
+                    }
+                }
             }
         }
-        println!("axis = {axis} t = {t:?}");
+        ts.retain(|x| *x >= 0);
+        if ts.is_empty() {
+            return None;
+        }
+        t.push(ts);
     }
-    let t: Vec<_> = t.into_iter().flatten().collect();
 
-    if t.iter().any(|x| *x < 0) {
-        return None;
-    }
-    if t.len() == 1 {
-        Some(t[0])
-    } else if t.windows(2).all(|v| v[0] == v[1]) {
-        Some(t[0])
-    } else {
-        None
-    }
+    t.into_iter()
+        .reduce(|acc, e| acc.intersection(&e).cloned().collect::<Set<isize>>())
+        .unwrap()
+        .into_iter()
+        .next()
 }
 #[cfg(test)]
 mod tests {
