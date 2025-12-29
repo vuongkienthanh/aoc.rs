@@ -27,4 +27,13 @@ impl Direction {
             Right => Up,
         }
     }
+    pub fn reverse(&self) -> Self {
+        use Direction::*;
+        match self {
+            Up => Down,
+            Down => Up,
+            Left => Right,
+            Right => Left,
+        }
+    }
 }
