@@ -3,7 +3,6 @@ pub mod part1;
 pub mod part2;
 
 use fxhash::FxHashMap as Map;
-use std::collections::BTreeSet;
 
 fn build_map(input: &[(usize, usize)]) -> Map<usize, Vec<(usize, usize)>> {
     let mut map: Map<usize, Vec<(usize, usize)>> = Map::default();
@@ -17,8 +16,4 @@ fn build_map(input: &[(usize, usize)]) -> Map<usize, Vec<(usize, usize)>> {
 }
 fn build_strength(input: &[(usize, usize)]) -> Vec<usize> {
     input.into_iter().map(|(a, b)| a + b).collect()
-}
-
-fn strength(bridge: &BTreeSet<usize>, str: &[usize]) -> usize {
-    bridge.into_iter().map(|x| str[*x]).sum()
 }

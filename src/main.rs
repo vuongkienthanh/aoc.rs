@@ -52,8 +52,7 @@ or `cargo run -- fetch DAY` to download input"#
                     };
 
                     // cargo-generate day template
-
-                    for i in 1..=num_of_day {
+                    for i in 1..num_of_day {
                         generate(GenerateArgs {
                             name: Some(format!("day{:0>2}", i)),
                             template_path: day_template.clone(),
@@ -61,6 +60,24 @@ or `cargo run -- fetch DAY` to download input"#
                             ..Default::default()
                         })?;
                     }
+                    // last_day
+                    let day_template = TemplatePath {
+                        path: Some(
+                            env::current_dir()?
+                                .join("year_template")
+                                .join("last_day")
+                                .join("{{project-name}}")
+                                .to_string_lossy()
+                                .into_owned(),
+                        ),
+                        ..Default::default()
+                    };
+                    generate(GenerateArgs {
+                        name: Some(format!("day{:0>2}", num_of_day)),
+                        template_path: day_template.clone(),
+                        destination: Some(year_path.clone()),
+                        ..Default::default()
+                    })?;
                     println!("Finish generating template for YEAR {year}");
                     Ok(())
                 } else {

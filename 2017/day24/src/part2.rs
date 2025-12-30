@@ -1,5 +1,5 @@
 use crate::parsing::parse_input;
-use crate::{build_map, build_strength, strength};
+use crate::{build_map, build_strength};
 use fxhash::FxHashSet as Set;
 use std::cmp::Ordering;
 use std::collections::BTreeSet;
@@ -12,42 +12,32 @@ pub fn process(_input: &str) -> usize {
     let mut max_strength = usize::MIN;
     let mut max_length = usize::MIN;
 
-    let mut current: Set<(usize, BTreeSet<usize>)> = Set::default();
-    current.insert((0, BTreeSet::default()));
+    let mut current: Set<(usize, usize, BTreeSet<usize>)> = Set::default();
+    current.insert((0, 0, BTreeSet::default()));
 
     while !current.is_empty() {
         let mut new = Set::default();
 
-        for (need, bridge) in current {
+        for (need, strength, bridge) in current {
+            match bridge.len().cmp(&max_length) {
+                Ordering::Greater => {
+                    max_length = bridge.len();
+                    max_strength = strength;
+                }
+                Ordering::Equal => {
+                    max_strength = max_strength.max(strength);
+                }
+                Ordering::Less => (),
+            }
+
             if let Some(candidates) = map.get(&need) {
                 for (candidate, next_need) in candidates {
                     if !bridge.contains(candidate) {
                         let mut new_bridge = bridge.clone();
                         new_bridge.insert(*candidate);
-                        new.insert((*next_need, new_bridge));
-                    } else {
-                        match bridge.len().cmp(&max_length) {
-                            Ordering::Greater => {
-                                max_length = bridge.len();
-                                max_strength = strength(&bridge, &str);
-                            }
-                            Ordering::Equal => {
-                                max_strength = max_strength.max(strength(&bridge, &str));
-                            }
-                            Ordering::Less => (),
-                        }
+                        let new_strength = strength + str[*candidate];
+                        new.insert((*next_need, new_strength, new_bridge));
                     }
-                }
-            } else {
-                match bridge.len().cmp(&max_length) {
-                    Ordering::Greater => {
-                        max_length = bridge.len();
-                        max_strength = strength(&bridge, &str);
-                    }
-                    Ordering::Equal => {
-                        max_strength = max_strength.max(strength(&bridge, &str));
-                    }
-                    Ordering::Less => (),
                 }
             }
         }
