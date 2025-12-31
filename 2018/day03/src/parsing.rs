@@ -1,20 +1,24 @@
-#[allow(unused_imports)]
-// use aoc_helper::nom::parse_signed_usize;
 use nom::{
-    branch::alt,
+    IResult, Parser,
     bytes::complete::tag,
-    character::complete::{self, alpha1, line_ending},
+    character::complete::{self, line_ending},
     combinator::all_consuming,
     multi::separated_list1,
-    sequence::{delimited, preceded, separated_pair, terminated},
-    IResult, Parser,
+    sequence::{preceded, separated_pair},
 };
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
 
-type Item = usize;
+pub type Item = (usize, usize, usize, usize, usize);
 
 fn parse_line(input: &str) -> IResult<&str, Item> {
-    todo!()
+    (
+        preceded(tag("#"), complete::usize),
+        tag(" @ "),
+        separated_pair(complete::usize, tag(","), complete::usize),
+        tag(": "),
+        separated_pair(complete::usize, tag("x"), complete::usize),
+    )
+        .map(|(idx, _, (col, row), _, (wide, tall))| (idx, row, col, wide, tall))
+        .parse(input)
 }
 
 pub fn parse_input(input: &str) -> Vec<Item> {

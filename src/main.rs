@@ -94,6 +94,7 @@ or `cargo run -- fetch DAY` to download input"#
                 let client = Client::builder().cookie_provider(Arc::new(jar)).build()?;
 
                 if arg == "all" {
+                    println!("start downloading input for year {}", year);
                     for day in 1..=num_of_day {
                         let dst = year_path
                             .join(format!("day{:0>2}", day))
@@ -112,6 +113,7 @@ or `cargo run -- fetch DAY` to download input"#
                         } else {
                             let input = response.text()?;
                             println!("day{:0>2}: {}", day, &input);
+                            break;
                         }
                     }
                 } else {
