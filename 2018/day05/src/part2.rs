@@ -1,25 +1,23 @@
-use std::collections::VecDeque;
-
 pub fn process(_input: &str) -> usize {
     ('a'..='z').map(|c| react(_input, c).len()).min().unwrap()
 }
-fn react(input: &str, rm: char) -> VecDeque<u8> {
-    let mut left: VecDeque<u8> = VecDeque::new();
-    let mut right: VecDeque<u8> = VecDeque::new();
-    right.extend(input.bytes());
+fn react(input: &str, rm: char) -> Vec<u8> {
+    let mut left: Vec<u8> = Vec::new();
+    let mut right: Vec<u8> = Vec::new();
+    right.extend(input.bytes().rev());
     let (rm0, rm1) = (rm as u8, rm as u8 - 32);
 
-    while let Some(r) = right.pop_front() {
+    while let Some(r) = right.pop() {
         if r == rm0 || r == rm1 {
             continue;
         }
-        if let Some(l) = left.pop_back() {
+        if let Some(l) = left.pop() {
             if l.abs_diff(r) != 32 {
-                left.push_back(l);
-                left.push_back(r);
+                left.push(l);
+                left.push(r);
             }
         } else {
-            left.push_back(r);
+            left.push(r);
         }
     }
 
