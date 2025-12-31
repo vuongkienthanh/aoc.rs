@@ -1,12 +1,28 @@
 use crate::parsing::parse_input;
+use crate::{build_map, find_roots};
 
-pub fn process(_input: &str) -> usize {
+pub fn process(_input: &str) -> String {
     let input = parse_input(_input);
-    println!("{input:?}");
+    let map = build_map(input);
 
-    todo!("part1");
-    // panic!("should have an answer")
+    let mut ans: Vec<char> = vec![];
+
+    let mut queue = find_roots(&map);
+    queue.sort_unstable_by(|a, b| b.cmp(a));
+
+    while let Some(c) = queue.pop() {
+        let node = map.get(&c).unwrap();
+        if node.parent.iter().all(|x| ans.contains(x)) {
+            ans.push(c);
+            queue.extend(node.children.iter().cloned());
+            queue.dedup();
+            queue.sort_unstable_by(|a, b| b.cmp(a));
+        }
+    }
+
+    ans.into_iter().collect()
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -14,16 +30,16 @@ mod tests {
 
     #[fixture]
     pub fn fixture() -> &'static str {
-        r#""#
+        r#"Step C must be finished before step A can begin.
+Step C must be finished before step F can begin.
+Step A must be finished before step B can begin.
+Step A must be finished before step D can begin.
+Step B must be finished before step E can begin.
+Step D must be finished before step E can begin.
+Step F must be finished before step E can begin."#
     }
     #[rstest]
     fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+        assert_eq!(process(fixture), "CABDFE");
     }
 }
