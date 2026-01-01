@@ -1,6 +1,6 @@
-use crate::parsing::parse_input;
+use crate::{game, parsing::parse_input};
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    todo!("part2");
+    let (players, max) = parse_input(_input);
+    game(players, max * 100)
 }
