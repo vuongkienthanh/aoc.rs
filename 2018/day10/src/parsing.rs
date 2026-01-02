@@ -1,15 +1,11 @@
-#[allow(unused_imports)]
-// use aoc_helper::nom::parse_signed_usize;
 use nom::{
     IResult, Parser,
-    branch::alt,
     bytes::complete::tag,
-    character::complete::{self, alpha1, line_ending, space0},
+    character::complete::{self, line_ending, space0},
     combinator::all_consuming,
     multi::separated_list1,
-    sequence::{delimited, preceded, separated_pair, terminated},
+    sequence::{delimited, preceded, separated_pair},
 };
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
 
 pub type Point = (isize, isize);
 
