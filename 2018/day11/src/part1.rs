@@ -1,29 +1,36 @@
-use crate::parsing::parse_input;
+use crate::build_grid;
+use aoc_helper::adj::naive::adj8;
 
-pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
-
-    todo!("part1");
-    // panic!("should have an answer")
+pub fn process(_input: &str) -> String {
+    let grid_serial_number: usize = _input.parse().unwrap();
+    let (x, y) = find(grid_serial_number);
+    format!("{x},{y}")
 }
+
+fn find(grid_serial_number: usize) -> (usize, usize) {
+    let grid: [[isize; 300]; 300] = build_grid(grid_serial_number);
+
+    (1..299)
+        .flat_map(|y| (1..299).map(move |x| (x, y)))
+        .max_by_key(|(x, y)| {
+            grid[*y][*x]
+                + adj8((*y, *x))
+                    .into_iter()
+                    .map(|(y, x)| grid[y][x])
+                    .sum::<isize>()
+        })
+        .unwrap()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use rstest::*;
 
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
-    }
     #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+    #[case(18, (33,45))]
+    #[case(42, (21,61))]
+    fn test_find(#[case] grid_serial_number: usize, #[case] expected: (usize, usize)) {
+        assert_eq!(find(grid_serial_number), expected);
     }
 }
