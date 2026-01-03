@@ -1,11 +1,13 @@
-use crate::parsing::parse_input;
+use crate::parsing::{Map, parse_input};
 use std::collections::VecDeque;
 
 pub fn process(_input: &str) -> usize {
-    let (mut plants, map) = parse_input(_input);
+    let (plants, map) = parse_input(_input);
+    run(plants, map, 20)
+}
 
-
-    for _ in 0..20 {
+pub run(mut plants: VecDeque, map: Map, count: usize) -> usize{
+    for _ in 0..count {
         add_padding(&mut plants);
         let mut new_plants = VecDeque::new();
         let mut windows: VecDeque<usize> = (0..5).map(|_| plants.pop_front().unwrap()).collect();
@@ -56,8 +58,7 @@ fn add_padding(plants: &mut VecDeque<usize>) {
         plants.push_back(0);
     }
 }
-// fn remove_padding(plants: &mut VecDeque<usize>) {
-// }
+
 
 #[cfg(test)]
 mod tests {
