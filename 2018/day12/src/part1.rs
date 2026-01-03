@@ -6,13 +6,12 @@ pub fn process(_input: &str) -> usize {
     run(plants, map, 20)
 }
 
-pub run(mut plants: VecDeque, map: Map, count: usize) -> usize{
+pub fn run(mut plants: VecDeque<usize>, map: Map, count: usize) -> usize {
     for _ in 0..count {
         add_padding(&mut plants);
         let mut new_plants = VecDeque::new();
-        let mut windows: VecDeque<usize> = (0..5).map(|_| plants.pop_front().unwrap()).collect();
+        let mut windows: VecDeque<usize> = (0..4).map(|_| plants.pop_front().unwrap()).collect();
         while let Some(p) = plants.pop_front() {
-            windows.pop_front();
             windows.push_back(p);
             let no_plants_loc: Vec<usize> = windows
                 .iter()
@@ -24,6 +23,7 @@ pub run(mut plants: VecDeque, map: Map, count: usize) -> usize{
                 i += 2;
             }
             new_plants.push_back(i);
+            windows.pop_front();
         }
         plants = new_plants;
     }
@@ -45,7 +45,7 @@ fn add_padding(plants: &mut VecDeque<usize>) {
         .enumerate()
         .find_map(|(i, x)| (*x > 1).then_some(i))
         .unwrap();
-    for _ in 0..4usize.saturating_sub(first_plant_loc) {
+    for _ in 0..3usize.saturating_sub(first_plant_loc) {
         plants.push_front(0);
     }
     let last_plant_loc = plants
@@ -54,11 +54,10 @@ fn add_padding(plants: &mut VecDeque<usize>) {
         .enumerate()
         .find_map(|(i, x)| ((x % 2) == 1).then_some(i))
         .unwrap();
-    for _ in 0..4usize.saturating_sub(last_plant_loc) {
+    for _ in 0..3usize.saturating_sub(last_plant_loc) {
         plants.push_back(0);
     }
 }
-
 
 #[cfg(test)]
 mod tests {

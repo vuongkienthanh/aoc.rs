@@ -1,6 +1,6 @@
 //! Directions with some methods
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum Direction {
     Up,
     Down,

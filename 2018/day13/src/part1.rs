@@ -1,29 +1,33 @@
 use crate::parsing::parse_input;
+use crate::step;
 
-pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
-
-    todo!("part1");
-    // panic!("should have an answer")
+pub fn process(_input: &str) -> String {
+    let (row, col) = run(_input);
+    format!("{col},{row}")
 }
+
+fn run(input: &str) -> (usize, usize) {
+    let (map, mut carts) = parse_input(input);
+    loop {
+        let crashes = step(&mut carts, &map);
+        if !crashes.is_empty() {
+            break crashes.into_iter().next().unwrap();
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rstest::*;
 
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
-    }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+    #[test]
+    fn test_step() {
+        let input = r#"/->-\        
+|   |  /----\
+| /-+--+-\  |
+| | |  | v  |
+\-+-/  \-+--/
+  \------/   "#;
+        assert_eq!(run(input), (3, 7));
     }
 }

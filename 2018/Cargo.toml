@@ -38,6 +38,8 @@ edition = "2024"
 rust-version = "1.91.0"
 
 [workspace.dependencies]
+nom_locate = "5.0.0"
+rayon = "1.11.0"
 fxhash = "0.2.1"
 glam = "~0.30.9"
 grid = "~1.0.0"
@@ -45,7 +47,6 @@ itertools = "~0.14"
 md5 = "~0.8.0"
 micromap = "~0.1.0"
 nom = "~8.0.0"
-rayon = "1.11.0"
 rstest = "~0.26.1"
 tinyvec = "~1.10.0"
 

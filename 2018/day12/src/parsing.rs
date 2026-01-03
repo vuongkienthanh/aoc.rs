@@ -16,9 +16,10 @@ fn parse_plants(input: &str) -> IResult<&str, VecDeque<usize>> {
     preceded(
         tag("initial state: "),
         many1(alt((
-        complete::char('.').map(|_| 0),
-        complete::char('#').map(|_| 1),
-    ))))
+            complete::char('.').map(|_| 0),
+            complete::char('#').map(|_| 1),
+        ))),
+    )
     .map(|mut v| {
         v[0] += 2;
         v.into_iter().collect()
@@ -26,7 +27,7 @@ fn parse_plants(input: &str) -> IResult<&str, VecDeque<usize>> {
     .parse(input)
 }
 
-fn parse_map_line(input: &str) -> IResult<&str, Option<(Vec<usize>, isize)>> {
+fn parse_map_line(input: &str) -> IResult<&str, Option<Vec<usize>>> {
     separated_pair(
         count(alt((complete::char('.'), complete::char('#'))), 5),
         tag(" => "),
