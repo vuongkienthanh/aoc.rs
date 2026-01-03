@@ -1,4 +1,4 @@
-use fxhash::FxHashMap;
+use fxhash::FxHashSet;
 use nom::{
     IResult, Parser,
     branch::alt,
@@ -10,7 +10,7 @@ use nom::{
 };
 use std::collections::VecDeque;
 
-pub type Map = FxHashMap<Vec<usize>, isize>;
+pub type Map = FxHashSet<Vec<usize>>;
 
 fn parse_plants(input: &str) -> IResult<&str, VecDeque<usize>> {
     preceded(
@@ -33,18 +33,15 @@ fn parse_map_line(input: &str) -> IResult<&str, Option<(Vec<usize>, isize)>> {
         alt((complete::char('.'), complete::char('#'))),
     )
     .map(|(a, b)| {
-        if a[2] == b {
-            None
-        } else {
-            Some((
+        if b == '#' {
+            Some(
                 a.iter()
                     .enumerate()
-                    .take(2)
-                    .chain(a.iter().enumerate().skip(3))
                     .filter_map(|(i, x)| (x == &'.').then_some(i))
                     .collect(),
-                if b == '.' { -1 } else { 1 },
-            ))
+            )
+        } else {
+            None
         }
     })
     .parse(input)

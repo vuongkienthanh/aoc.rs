@@ -3,10 +3,9 @@ use std::collections::VecDeque;
 
 pub fn process(_input: &str) -> usize {
     let (mut plants, map) = parse_input(_input);
-    println!("{plants:?}");
 
-    for _ in 0..1 {
-        // for _ in 0..20 {
+
+    for _ in 0..20 {
         add_padding(&mut plants);
         let mut new_plants = VecDeque::new();
         let mut windows: VecDeque<usize> = (0..5).map(|_| plants.pop_front().unwrap()).collect();
@@ -18,18 +17,24 @@ pub fn process(_input: &str) -> usize {
                 .enumerate()
                 .filter_map(|(i, x)| (x % 2 == 0).then_some(i))
                 .collect();
-            let current = windows[2];
-            if let Some(i) = map.get(&no_plants_loc) {
-                new_plants.push_back(current.strict_add_signed(*i));
-            } else {
-                new_plants.push_back(current);
+            let mut i = if map.contains(&no_plants_loc) { 1 } else { 0 };
+            if windows[2] > 1 {
+                i += 2;
             }
+            new_plants.push_back(i);
         }
         plants = new_plants;
     }
-    println!("{plants:?}");
-
-    0
+    let right_shift = plants
+        .iter()
+        .enumerate()
+        .find_map(|(i, x)| (*x > 1).then_some(i))
+        .unwrap() as isize;
+    plants
+        .into_iter()
+        .enumerate()
+        .flat_map(|(i, x)| (x % 2 == 1).then_some(i as isize - right_shift))
+        .sum::<isize>() as usize
 }
 
 fn add_padding(plants: &mut VecDeque<usize>) {
@@ -38,7 +43,7 @@ fn add_padding(plants: &mut VecDeque<usize>) {
         .enumerate()
         .find_map(|(i, x)| ((x % 2) == 1).then_some(i))
         .unwrap();
-    for _ in 0..3usize.saturating_sub(first_plant_loc) {
+    for _ in 0..4usize.saturating_sub(first_plant_loc) {
         plants.push_front(0);
     }
     let last_plant_loc = plants
@@ -47,7 +52,7 @@ fn add_padding(plants: &mut VecDeque<usize>) {
         .enumerate()
         .find_map(|(i, x)| ((x % 2) == 1).then_some(i))
         .unwrap();
-    for _ in 0..3usize.saturating_sub(last_plant_loc) {
+    for _ in 0..4usize.saturating_sub(last_plant_loc) {
         plants.push_back(0);
     }
 }
