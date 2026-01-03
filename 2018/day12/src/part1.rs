@@ -41,7 +41,7 @@ fn add_padding(plants: &mut VecDeque<usize>) {
     let first_plant_loc = plants
         .iter()
         .enumerate()
-        .find_map(|(i, x)| ((x % 2) == 1).then_some(i))
+        .find_map(|(i, x)| (*x > 1).then_some(i))
         .unwrap();
     for _ in 0..4usize.saturating_sub(first_plant_loc) {
         plants.push_front(0);
