@@ -49,6 +49,7 @@ fn mov((row, col): Point, map: &mut Map) -> MoveResult {
             if is_finish(&*map) {
                 return MoveResult::NoTarget;
             }
+            let mut targets = vec![];
             let mut seen = Seen::default();
             seen.insert((row, col));
             let mut current: Vec<Vec<Point>> =
@@ -69,22 +70,28 @@ fn mov((row, col): Point, map: &mut Map) -> MoveResult {
                             &Item::Wall => (),
                             y if !y.is_enemy_of(&x) => (),
                             _ => {
-                                let (new_row, new_col) = on_dir(dir, (row, col));
-                                if let Item::Space = map[new_row][new_col] {
-                                    let item = mem::take(&mut map[row][col]);
-                                    map[new_row][new_col] = item;
-                                    break 'a MoveResult::MoveTo((new_row, new_col));
-                                } else {
-                                    break 'a MoveResult::MoveTo((row, col));
-                                }
+                                targets.push((p, dir));
                             }
                         }
                     }
                     new.push(new_v);
                 }
+                if !targets.is_empty() {
+                    targets.sort_unstable();
+                    let ((_, _), dir) = targets.into_iter().next().unwrap();
+                    let (new_row, new_col) = on_dir(dir, (row, col));
+                    if let Item::Space = map[new_row][new_col] {
+                        let item = mem::take(&mut map[row][col]);
+                        map[new_row][new_col] = item;
+                        break 'a MoveResult::MoveTo((new_row, new_col));
+                    } else {
+                        break 'a MoveResult::MoveTo((row, col));
+                    }
+                }
                 if new.iter().all(|x| x.is_empty()) {
                     break 'a MoveResult::MoveTo((row, col));
                 }
+
                 current = new;
             }
         }
@@ -150,7 +157,7 @@ mod tests {
 
     #[test]
     fn test_mov() {
-        let (mut map) = parse_input(
+        let mut map = parse_input(
             r#"#########
 #G..G..G#
 #.......#
