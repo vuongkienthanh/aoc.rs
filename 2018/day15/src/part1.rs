@@ -1,8 +1,9 @@
 use crate::parsing::parse_input;
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
+    let (map, units) = parse_input(_input);
+    println!("{map:?}");
+    println!("{units:?}");
 
     todo!("part1");
     // panic!("should have an answer")
