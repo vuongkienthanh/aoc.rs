@@ -5,59 +5,74 @@ use nom::{
     combinator::all_consuming,
     multi::{many1, separated_list1},
 };
-use nom_locate::LocatedSpan;
-type Span<'a> = LocatedSpan<&'a str>;
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Default, Debug, Eq, PartialEq)]
 pub enum Item {
-    Wall,
+    #[default]
     Space,
-    Goblin,
-    Elf,
+    Wall,
+    Goblin(usize),
+    Elf(usize),
 }
 
-fn parse_item(input: Span) -> IResult<Span, (Item, Option<(usize, usize)>)> {
-    let loc = (input.location_line() as usize, input.get_column());
+impl Item {
+    pub fn is_enemy_of(&self, other: &Item) -> bool {
+        use Item::*;
+        match (self, other) {
+            (Goblin(_), Elf(_)) | (Elf(_), Goblin(_)) => true,
+            _ => false,
+        }
+    }
+    pub fn got_hit(&mut self) {
+        use Item::*;
+        match self {
+            Space | Wall => panic!("should be a unit"),
+            Goblin(x) => match x.checked_sub(3) {
+                None => *self = Item::Space,
+                Some(y) => *self = Item::Goblin(y),
+            },
+            Elf(x) => match x.checked_sub(3) {
+                None => *self = Item::Space,
+                Some(y) => *self = Item::Elf(y),
+            },
+        }
+    }
+    pub fn is_elf(&self) -> bool {
+        if let Item::Elf(_) = self { true } else { false }
+    }
+    pub fn is_goblin(&self) -> bool {
+        if let Item::Goblin(_) = self {
+            true
+        } else {
+            false
+        }
+    }
+    pub fn hp(&self) -> usize {
+        use Item::*;
+        match self {
+            Space | Wall => panic!("should be unit"),
+            Goblin(x) | Elf(x) => *x,
+        }
+    }
+}
+
+fn parse_item(input: &str) -> IResult<&str, Item> {
     alt((
-        complete::char('#').map(|_| (Item::Wall, None)),
-        complete::char('.').map(|_| (Item::Space, None)),
-        complete::char('G').map(|_| (Item::Goblin, Some(loc))),
-        complete::char('E').map(|_| (Item::Elf, Some(loc))),
+        complete::char('#').map(|_| Item::Wall),
+        complete::char('.').map(|_| Item::Space),
+        complete::char('G').map(|_| Item::Goblin(200)),
+        complete::char('E').map(|_| Item::Elf(200)),
     ))
     .parse(input)
 }
 
-fn parse_line(input: Span) -> IResult<Span, (Vec<Item>, Vec<(usize, usize)>)> {
-    let (input, line) = many1(parse_item).parse(input)?;
-    let (line, units) =
-        line.into_iter()
-            .fold((vec![], vec![]), |(mut line, mut units), (item, loc)| {
-                match item {
-                    Item::Wall | Item::Space => line.push(item),
-                    Item::Elf | Item::Goblin => {
-                        line.push(item);
-                        units.push(loc.unwrap());
-                    }
-                }
-                (line, units)
-            });
-    Ok((input, (line, units)))
+fn parse_line(input: &str) -> IResult<&str, Vec<Item>> {
+    many1(parse_item).parse(input)
 }
 
-pub fn parse_input(input: &str) -> (Vec<Vec<Item>>, Vec<((usize, usize), usize)>) {
+pub fn parse_input(input: &str) -> Vec<Vec<Item>> {
     all_consuming(separated_list1(line_ending, parse_line))
-        .parse(Span::new(input))
+        .parse(input)
         .unwrap()
         .1
-        .into_iter()
-        .fold(
-            (vec![], vec![]),
-            |(mut map, mut units), (line, line_units)| {
-                map.push(line);
-                for unit in line_units {
-                    units.push((unit, 200));
-                }
-                (map, units)
-            },
-        )
 }
