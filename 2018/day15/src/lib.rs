@@ -4,6 +4,7 @@ pub mod part2;
 
 use fxhash::{FxHashMap, FxHashSet};
 use parsing::Item;
+use std::collections::VecDeque;
 use std::mem;
 pub type Map = Vec<Vec<Item>>;
 pub type Point = (usize, usize);
@@ -47,7 +48,7 @@ fn mov((row, col): Point, map: &mut Map) -> MoveResult {
             {
                 return MoveResult::At((row, col));
             }
-            let target_space: Vec<Point> = get_units(&*map)
+            let target_space: FxHashSet<Point> = get_units(&*map)
                 .into_iter()
                 .filter(|(r, c)| map[*r][*c].is_enemy_of(&map[row][col]))
                 .flat_map(|p| adj4(p).into_iter())
@@ -56,76 +57,111 @@ fn mov((row, col): Point, map: &mut Map) -> MoveResult {
             if target_space.is_empty() {
                 return MoveResult::At((row, col));
             }
-            // (step, row, col, dir)
-            let mut target = (usize::MAX, usize::MAX, usize::MAX, usize::MAX);
 
-            for (dir, p) in adj4((row, col)).into_iter().enumerate() {
-                let mut seen = Seen::default();
-                seen.insert((row, col));
-                let mut current = vec![p];
-                let mut finish = false;
-                let mut step = 1;
-                while !finish && !current.is_empty() {
-                    let mut new: FxHashSet<Point> = FxHashSet::default();
-                    for c in current {
-                        if matches!(map[c.0][c.1], Item::Space) && seen.insert(c) {
-                            if target_space.contains(&c) {
-                                target = target.min((step, c.0, c.1, dir));
-                                finish = true;
-                            } else {
-                                new.extend(adj4(c));
-                            }
-                        }
+            let mut visiting = VecDeque::from([((row, col), 0)]);
+            let mut meta: FxHashMap<Point, (usize, Option<Point>)> = FxHashMap::default();
+            meta.insert((row, col), (0, None));
+            let mut seen = FxHashSet::default();
+
+            while let Some(((r, c), step)) = visiting.pop_front() {
+                for nb in adj4((r, c))
+                    .into_iter()
+                    .filter(|(r, c)| matches!(map[*r][*c], Item::Space))
+                {
+                    meta.entry(nb)
+                        .and_modify(|x| *x = (*x).min((step + 1, Some((r, c)))))
+                        .or_insert((step + 1, Some((r, c))));
+                    if seen.contains(&nb) {
+                        continue;
                     }
-                    step += 1;
-                    current = new.into_iter().collect();
+                    if !visiting.iter().any(|(p, _)| *p == nb) {
+                        visiting.push_back((nb, step + 1));
+                    }
                 }
+                seen.insert((r, c));
+            }
+            if let Some((step, p)) = meta
+                .iter()
+                .filter(|(p, _)| target_space.contains(p))
+                .map(|(p, (step, _))| (step, p))
+                .min()
+            {
+                let mut closest = p.clone();
+                while meta.get(&closest).unwrap().0 > 1 {
+                    closest = meta.get(&closest).unwrap().1.unwrap();
+                }
+                let item = mem::take(&mut map[row][col]);
+                map[closest.0][closest.1] = item;
+                MoveResult::At(closest)
+            } else {
+                MoveResult::At((row, col))
             }
 
-            if target == (usize::MAX, usize::MAX, usize::MAX, usize::MAX) {
-                println!("{:?} stay {row},{col}", map[row][col]);
-                MoveResult::At((row, col))
-            } else {
-                let (new_row, new_col) = adj4((row, col)).get(target.3).cloned().unwrap();
-                let item = mem::take(&mut map[row][col]);
-                map[new_row][new_col] = item;
-                println!(
-                    "{:?} from {row},{col} to {new_row},{new_col}; target={:?},{},{} in {} steps, dir = {}",
-                    map[new_row][new_col],
-                    map[target.1][target.2],
-                    target.1,
-                    target.2,
-                    target.0,
-                    target.3
-                );
-                MoveResult::At((new_row, new_col))
-            }
+            // for (dir, p) in adj4((row, col)).into_iter().enumerate() {
+            //     let mut seen = Seen::default();
+            //     seen.insert((row, col));
+            //     let mut current = vec![p];
+            //     let mut finish = false;
+            //     let mut step = 1;
+            //     while !finish && !current.is_empty() {
+            //         let mut new: FxHashSet<Point> = FxHashSet::default();
+            //         for c in current {
+            //             if matches!(map[c.0][c.1], Item::Space) && seen.insert(c) {
+            //                 if target_space.contains(&c) {
+            //                     target = target.min((step, c.0, c.1, dir));
+            //                     finish = true;
+            //                 } else {
+            //                     new.extend(adj4(c));
+            //                 }
+            //             }
+            //         }
+            //         step += 1;
+            //         current = new.into_iter().collect();
+            //     }
+            // }
+
+            // if target == (usize::MAX, usize::MAX, usize::MAX, usize::MAX) {
+            //     // println!("{:?} stay {row},{col}", map[row][col]);
+            //     MoveResult::At((row, col))
+            // } else {
+            //     let (new_row, new_col) = adj4((row, col)).get(target.3).cloned().unwrap();
+            //     let item = mem::take(&mut map[row][col]);
+            //     map[new_row][new_col] = item;
+            //     println!(
+            //         "{:?} from {row},{col} to {new_row},{new_col}; target={:?},{},{} in {} steps, dir = {}",
+            //         map[new_row][new_col],
+            //         map[target.1][target.2],
+            //         target.1,
+            //         target.2,
+            //         target.0,
+            //         target.3
+            //     );
+            //     MoveResult::At((new_row, new_col))
+            // }
         }
     }
 }
 
 fn atk((row, col): Point, map: &mut Map) {
     let current = &map[row][col];
-    let mut target = vec![];
+    let mut target = (usize::MAX, usize::MAX, usize::MAX);
     for (r, c) in adj4((row, col)) {
         match map[r][c] {
             Item::Space | Item::Wall => (),
             Item::Goblin(hp) | Item::Elf(hp) => {
                 if map[r][c].is_enemy_of(current) {
-                    target.push((hp, r, c));
+                    target = target.min((hp, r, c));
                 }
             }
         }
     }
-    target.sort_unstable();
-    if let Some((_, r, c)) = target.into_iter().next() {
-        map[r][c].got_hit()
+    if target != (usize::MAX, usize::MAX, usize::MAX) {
+        map[target.1][target.2].got_hit()
     }
 }
 
 fn run_once(map: &mut Map) -> bool {
     let mut units = get_units(&*map);
-    units.sort_unstable();
     let mut finish = false;
     for unit in units {
         match mov(unit, map) {
