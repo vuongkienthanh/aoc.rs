@@ -2,7 +2,7 @@ pub mod parsing;
 pub mod part1;
 pub mod part2;
 
-use fxhash::FxHashSet;
+use fxhash::{FxHashMap, FxHashSet};
 use parsing::Item;
 use std::mem;
 pub type Map = Vec<Vec<Item>>;
@@ -28,71 +28,77 @@ fn get_units(map: &Map) -> Vec<Point> {
 
 pub enum MoveResult {
     DeadCantMove,
-    MoveTo(Point),
+    At(Point),
     NoTarget,
 }
 
-fn on_dir(dir: usize, (row, col): Point) -> Point {
-    match dir {
-        0 => (row - 1, col),
-        1 => (row, col - 1),
-        2 => (row, col + 1),
-        3 => (row + 1, col),
-        _ => panic!("should be 0..4"),
-    }
-}
 fn mov((row, col): Point, map: &mut Map) -> MoveResult {
     match &map[row][col] {
         Item::Space => MoveResult::DeadCantMove,
         Item::Wall => panic!("should not be wall"),
-        x => {
+        _ => {
             if is_finish(&*map) {
                 return MoveResult::NoTarget;
             }
-            let mut targets = vec![];
-            let mut seen = Seen::default();
-            seen.insert((row, col));
-            let mut current: Vec<Vec<Point>> =
-                adj4((row, col)).into_iter().map(|p| vec![p]).collect();
-            'a: loop {
-                let mut new: Vec<Vec<Point>> = vec![];
-                for (dir, v) in current.into_iter().enumerate() {
-                    let mut new_v = vec![];
-                    for p in v {
-                        match &map[p.0][p.1] {
-                            &Item::Space => {
-                                if seen.insert(p) {
-                                    for p2 in adj4(p).into_iter().filter(|x| !seen.contains(x)) {
-                                        new_v.push(p2);
-                                    }
-                                }
-                            }
-                            &Item::Wall => (),
-                            y if !y.is_enemy_of(&x) => (),
-                            _ => {
-                                targets.push((p, dir));
+            // stay
+            if adj4((row, col))
+                .into_iter()
+                .any(|(r, c)| map[r][c].is_enemy_of(&map[row][col]))
+            {
+                return MoveResult::At((row, col));
+            }
+            let target_space: Vec<Point> = get_units(&*map)
+                .into_iter()
+                .filter(|(r, c)| map[*r][*c].is_enemy_of(&map[row][col]))
+                .flat_map(|p| adj4(p).into_iter())
+                .filter(|(r, c)| map[*r][*c] == Item::Space)
+                .collect();
+            if target_space.is_empty() {
+                return MoveResult::At((row, col));
+            }
+            // (step, row, col, dir)
+            let mut target = (usize::MAX, usize::MAX, usize::MAX, usize::MAX);
+
+            for (dir, p) in adj4((row, col)).into_iter().enumerate() {
+                let mut seen = Seen::default();
+                seen.insert((row, col));
+                let mut current = vec![p];
+                let mut finish = false;
+                let mut step = 1;
+                while !finish && !current.is_empty() {
+                    let mut new: FxHashSet<Point> = FxHashSet::default();
+                    for c in current {
+                        if matches!(map[c.0][c.1], Item::Space) && seen.insert(c) {
+                            if target_space.contains(&c) {
+                                target = target.min((step, c.0, c.1, dir));
+                                finish = true;
+                            } else {
+                                new.extend(adj4(c));
                             }
                         }
                     }
-                    new.push(new_v);
+                    step += 1;
+                    current = new.into_iter().collect();
                 }
-                if !targets.is_empty() {
-                    targets.sort_unstable();
-                    let ((_, _), dir) = targets.into_iter().next().unwrap();
-                    let (new_row, new_col) = on_dir(dir, (row, col));
-                    if let Item::Space = map[new_row][new_col] {
-                        let item = mem::take(&mut map[row][col]);
-                        map[new_row][new_col] = item;
-                        break 'a MoveResult::MoveTo((new_row, new_col));
-                    } else {
-                        break 'a MoveResult::MoveTo((row, col));
-                    }
-                }
-                if new.iter().all(|x| x.is_empty()) {
-                    break 'a MoveResult::MoveTo((row, col));
-                }
+            }
 
-                current = new;
+            if target == (usize::MAX, usize::MAX, usize::MAX, usize::MAX) {
+                println!("{:?} stay {row},{col}", map[row][col]);
+                MoveResult::At((row, col))
+            } else {
+                let (new_row, new_col) = adj4((row, col)).get(target.3).cloned().unwrap();
+                let item = mem::take(&mut map[row][col]);
+                map[new_row][new_col] = item;
+                println!(
+                    "{:?} from {row},{col} to {new_row},{new_col}; target={:?},{},{} in {} steps, dir = {}",
+                    map[new_row][new_col],
+                    map[target.1][target.2],
+                    target.1,
+                    target.2,
+                    target.0,
+                    target.3
+                );
+                MoveResult::At((new_row, new_col))
             }
         }
     }
@@ -120,14 +126,18 @@ fn atk((row, col): Point, map: &mut Map) {
 fn run_once(map: &mut Map) -> bool {
     let mut units = get_units(&*map);
     units.sort_unstable();
+    let mut finish = false;
     for unit in units {
         match mov(unit, map) {
             MoveResult::DeadCantMove => (),
-            MoveResult::MoveTo(unit) => atk(unit, map),
-            MoveResult::NoTarget => return true,
+            MoveResult::At((row, col)) => atk((row, col), map),
+            MoveResult::NoTarget => {
+                finish = true;
+                break;
+            }
         }
     }
-    false
+    finish
 }
 
 fn is_finish(map: &Map) -> bool {
@@ -193,6 +203,20 @@ mod tests {
     }
 
     #[test]
+    fn test_mov2() {
+        let mut map = parse_input(
+            r#"#######
+#.E...#
+#.....#
+#...G.#
+#######"#,
+        );
+        mov((1, 2), &mut map);
+        display_map(&map);
+        assert!(matches!(map[1][3], Item::Elf(_)));
+    }
+
+    #[test]
     fn test_atk() {
         let mut map = parse_input(
             r#"#######
@@ -218,6 +242,8 @@ mod tests {
         result_map[2][2] = Item::Goblin(131);
         result_map[3][5] = Item::Goblin(116);
         result_map[4][5] = Item::Elf(113);
+        display_map(&map);
+        display_map(&result_map);
         assert_eq!(map, result_map);
     }
 
