@@ -6,7 +6,7 @@ use nom::{
     multi::{many1, separated_list1},
 };
 
-#[derive(Default, Debug, Eq, PartialEq)]
+#[derive(Default, Debug, PartialEq, Eq, Clone)]
 pub enum Item {
     #[default]
     Space,
@@ -20,19 +20,28 @@ impl Item {
         use Item::*;
         matches!((self, other), (Goblin(_), Elf(_)) | (Elf(_), Goblin(_)))
     }
-    pub fn got_hit(&mut self) {
+    /// return true if dead
+    pub fn got_hit_and_is_dead(&mut self, atk_power: usize) -> bool {
         use Item::*;
+        let mut is_dead = false;
         match self {
             Space | Wall => panic!("should be a unit"),
-            Goblin(x) => match x.checked_sub(3) {
-                None | Some(0) => *self = Item::Space,
+            Goblin(x) => match x.checked_sub(atk_power) {
+                None | Some(0) => {
+                    *self = Item::Space;
+                    is_dead = true;
+                }
                 Some(y) => *self = Item::Goblin(y),
             },
-            Elf(x) => match x.checked_sub(3) {
-                None | Some(0) => *self = Item::Space,
+            Elf(x) => match x.checked_sub(atk_power) {
+                None | Some(0) => {
+                    *self = Item::Space;
+                    is_dead = true;
+                }
                 Some(y) => *self = Item::Elf(y),
             },
         }
+        is_dead
     }
     pub fn is_elf(&self) -> bool {
         matches!(self, Item::Elf(_))
@@ -43,7 +52,7 @@ impl Item {
     pub fn hp(&self) -> usize {
         use Item::*;
         match self {
-            Space | Wall => panic!("should be unit"),
+            Space | Wall => 0,
             Goblin(x) | Elf(x) => *x,
         }
     }
