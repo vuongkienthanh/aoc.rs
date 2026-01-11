@@ -1,29 +1,40 @@
-use crate::parsing::parse_input;
+use crate::parsing::{Item, parse_input};
+use crate::{Computer, OPCODE_LIST};
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
+    let (blocks, _) = parse_input(_input);
 
-    todo!("part1");
-    // panic!("should have an answer")
+    blocks
+        .into_iter()
+        .filter(|(before, [_, a, b, c], after)| check(*before, *after, *a, *b, *c) >= 3)
+        .count()
 }
+fn check(before: Item, after: Item, a: usize, b: usize, c: usize) -> usize {
+    OPCODE_LIST
+        .iter()
+        .filter(|opcode| {
+            let mut comp = Computer::from_arr(before);
+            comp.run(*opcode, a, b, c);
+            comp.registers == after
+        })
+        .count()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parsing::parse_block;
     use rstest::*;
 
     #[fixture]
     pub fn fixture() -> &'static str {
-        r#""#
+        r#"Before: [3, 2, 1, 1]
+9 2 1 2
+After:  [3, 2, 2, 1]"#
     }
     #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+    fn test_check(fixture: &str) {
+        let (_, (before, [_, a, b, c], after)) = parse_block(fixture).unwrap();
+        assert_eq!(check(before, after, a, b, c), 3);
     }
 }
