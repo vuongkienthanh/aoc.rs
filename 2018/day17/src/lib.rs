@@ -3,111 +3,65 @@ pub mod part1;
 pub mod part2;
 use aoc_helper::range::merge;
 use parsing::Item;
-use std::collections::BTreeMap;
 
-pub type Map = BTreeMap<usize, Vec<(usize, usize)>>;
 pub type Point = (usize, usize);
 
-fn build_bases_and_walls(input: Vec<Item>) -> (Map, Map, usize) {
-    let (mut bases, mut walls, max_y) = input.into_iter().fold(
-        (Map::new(), Map::new(), usize::MIN),
-        |(mut bases, mut walls, mut max_y), item| {
-            match item {
-                Item::X(x, r) => {
-                    max_y = max_y.max(r.1);
-                    walls.entry(x).or_default().push(r);
-                    bases.entry(r.0).or_default().push((x, x));
-                }
-                Item::Y(y, r) => {
-                    max_y = max_y.max(y);
-                    bases.entry(y).or_default().push(r);
-                    walls.entry(r.0).or_default().push((y, y));
-                    walls.entry(r.1).or_default().push((y, y));
-                }
-            };
-            (bases, walls, max_y)
+fn build_map(input: Vec<Item>) -> (Vec<Vec<char>>, usize) {
+    let (min_x, max_x, max_y) = input.iter().fold(
+        (usize::MAX, 0, 0),
+        |(min_x, max_x, max_y), item| match item {
+            Item::X(x, (_, b)) => (min_x.min(*x), max_x.max(*x), max_y.max(*b)),
+            Item::Y(y, (a, b)) => (min_x.min(*a), max_x.max(*b), max_y.max(*y)),
         },
     );
-    bases = bases.into_iter().map(|(k, v)| (k, merge(v))).collect();
-    walls = walls.into_iter().map(|(k, v)| (k, merge(v))).collect();
-    (bases, walls, max_y)
-}
-
-fn find_base(spring: Point, bases: &Map) -> Option<(usize, (usize, usize))> {
-    bases.iter().find_map(|(y, v)| {
-        if *y > spring.1 {
-            v.iter()
-                .find_map(|r| (r.0 <= spring.0 && r.1 >= spring.0).then_some((*y, (r.0, r.1))))
-        } else {
-            None
-        }
-    })
-}
-
-fn find_wall(
-    spring: Point,
-    y: usize,
-    (left, right): (usize, usize),
-    walls: &Map,
-) -> (Option<usize>, Option<usize>) {
-    let mut x: Vec<usize> = walls
-        .keys()
-        .filter(|x| **x >= left && **x <= right)
-        .cloned()
-        .collect();
-    let mut left_x: Vec<usize> = x.extract_if(.., |x| *x < spring.0).collect();
-    left_x.reverse();
-    let right_x = x;
-    (
-        left_x
-            .into_iter()
-            .find(|x| walls.get(x).unwrap().iter().any(|v| v.0 <= y && v.1 >= y)),
-        right_x
-            .into_iter()
-            .find(|x| walls.get(x).unwrap().iter().any(|v| v.0 <= y && v.1 >= y)),
-    )
-}
-
-fn display_map(bases: &Map, walls: &Map) {
-    let max_y = bases
-        .keys()
-        .cloned()
-        .chain(walls.values().map(|v| v.iter().map(|r| r.1).max().unwrap()))
-        .max()
-        .unwrap();
-    let min_x = walls
-        .keys()
-        .cloned()
-        .chain(bases.values().map(|v| v.iter().map(|r| r.0).min().unwrap()))
-        .min()
-        .unwrap();
-    let max_x = walls
-        .keys()
-        .cloned()
-        .chain(bases.values().map(|v| v.iter().map(|r| r.1).max().unwrap()))
-        .max()
-        .unwrap();
-
-    let mut map = vec![vec!['.'; max_x - min_x + 1]; max_y + 1];
-    for (y, v) in bases {
-        for r in v {
-            for x in r.0..=r.1 {
-                map[*y][x - min_x] = '#';
+    let mut grid: Vec<Vec<char>> = vec![vec!['.'; max_x - min_x + 1]; max_y + 1];
+    for item in input {
+        match item {
+            Item::X(x, (a, b)) => {
+                for y in a..=b {
+                    grid[y][x - min_x] = '#';
+                }
+            }
+            Item::Y(y, (a, b)) => {
+                for x in a..=b {
+                    grid[y][x - min_x] = '#';
+                }
             }
         }
     }
-    for (x, v) in walls {
-        for r in v {
-            for y in r.0..=r.1 {
-                map[y][x - min_x] = '#';
-            }
-        }
-    }
-
+    (grid, min_x)
+}
+fn display_map(map: &[Vec<char>]) {
     for row in map {
         for cell in row {
             print!("{cell}");
         }
         println!("")
     }
+}
+
+fn find_base(spring: Point, map: &mut [Vec<char>]) -> Option<usize> {
+    if let Some(base) = (spring.1 + 1..map.len()).find(|y| map[*y][spring.0] == '#') {
+        for y2 in spring.1 + 1..base {
+            map[y2][spring.0] = '|';
+        }
+        Some(base)
+    } else {
+        for y2 in spring.1 + 1..map.len() {
+            map[y2][spring.0] = '|';
+        }
+        None
+    }
+}
+
+fn fill_row(spring: Point, y: usize, map: &Map) -> (Option<usize>, Option<usize>) {
+    let width = map.get().unwrap().len();
+    let left_wall = (0..spring.0).rev().find(|x| map[y][*x] == '#');
+    let right_wall = (spring.0 + 1..width).find(|x| map[y][*x] == '#');
+    let left_base = (0..spring.0)
+        .rev()
+        .take_while(|x| ['#', '~'].contains(&map[y + 1][*x])).last().unwrap();
+    let right_base = (spring.0 + 1..width)
+        .rev()
+        .take_while(|x| ['#', '~'].contains(&map[y + 1][*x])).last().unwrap();
 }
