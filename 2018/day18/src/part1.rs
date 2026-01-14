@@ -1,12 +1,13 @@
-use crate::parsing::parse_input;
+use crate::{next, parse, resource_value};
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
-
-    todo!("part1");
-    // panic!("should have an answer")
+    let mut outskirts = parse(_input);
+    for _ in 0..10 {
+        outskirts = next(outskirts);
+    }
+    resource_value(outskirts)
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -14,16 +15,19 @@ mod tests {
 
     #[fixture]
     pub fn fixture() -> &'static str {
-        r#""#
+        r#".#.#...|#.
+.....#|##|
+.|..|...#.
+..|#.....#
+#.#|||#|#|
+...#.||...
+.|....|...
+||...#|.#|
+|.||||..|.
+...#.|..|."#
     }
     #[rstest]
     fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+        assert_eq!(process(fixture), 1147);
     }
 }
