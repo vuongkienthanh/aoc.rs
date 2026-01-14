@@ -1,29 +1,24 @@
 use crate::parsing::parse_input;
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
+    let (depth, target) = parse_input(_input);
+    let mut ero1: Vec<usize> = vec![];
+    let mut ans = 0;
 
-    todo!("part1");
-    // panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
+    for y in 0..target.1 + 1 {
+        let mut ero2 = vec![];
+        for x in 0..target.0 + 1 {
+            let geo = match (x, y) {
+                (0, 0) => 0,
+                loc if loc == target => 0,
+                (x, 0) => x * 16807,
+                (0, y) => y * 48271,
+                (x, _) => ero2.last().unwrap() * ero1[x],
+            };
+            ero2.push((geo + depth) % 20183);
+            ans += ero2.last().unwrap() % 3;
+        }
+        ero1 = ero2;
     }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    ans
 }
