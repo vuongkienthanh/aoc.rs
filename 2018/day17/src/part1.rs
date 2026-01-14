@@ -1,105 +1,36 @@
 use crate::parsing::parse_input;
-use crate::{build_map, display_map, find_base};
+use crate::{Point, build_map, display_map, fill_row, find_base};
+use std::collections::BTreeSet;
 
 pub fn process(_input: &str) -> usize {
     let input = parse_input(_input);
-    let (mut map, min_x) = build_map(input);
-    display_map(&map);
-    let mut springs = vec![(500 - min_x, 0)];
+    let (mut map, min_x, min_y) = build_map(input);
+    let mut seen = BTreeSet::new();
+    let mut springs = vec![(500 - min_x + 1, 0)];
     while !springs.is_empty() {
-        let mut new_springs = vec![];
+        let mut new_springs: Vec<Point> = vec![];
         for spring in springs {
             if let Some(base) = find_base(spring, &mut map) {
-
+                for y in (0..base).rev() {
+                    let found_springs = fill_row(spring.clone(), y, &mut map);
+                    if !found_springs.is_empty() {
+                        for n_spring in found_springs {
+                            if seen.insert(n_spring.clone()) {
+                                new_springs.push(n_spring);
+                            }
+                        }
+                        break;
+                    }
+                }
             }
         }
         springs = new_springs;
     }
-    //     let mut new_springs = vec![];
-    //     for spring in springs {
-    //         if let Some((y, (mut left, mut right))) = find_base(spring, &bases) {
-    //             println!(
-    //                 "at spring {spring:?}: found y={y} ({left},{right}), so add straight flow ={}",
-    //                 y - spring.1 - 1
-    //             );
-    //             ans += y - spring.1 - 1;
-    //             for y in (spring.1..y).rev() {
-    //                 match find_wall(spring, y, (left, right), &walls) {
-    //                     (Some(left_x), Some(right_x)) => {
-    //                         (left, right) = (left_x, right_x);
-    //                         println!(
-    //                             "at y={y}, found ({left_x},{right_x}) so add {}",
-    //                             right - left - 2
-    //                         );
-    //                         ans += right - left - 2;
-    //                     }
-    //                     (Some(left_x), None) => {
-    //                         left = left_x;
-    //                         println!(
-    //                             "at y={y}, found left={left_x}, new_spring at ({},{y}) so add {}",
-    //                             right + 1,
-    //                             right - left,
-    //                         );
-    //                         ans += right - left;
-    //                         if seen.insert((right + 1, y)) {
-    //                             new_springs.push((right + 1, y));
-    //                         }
-    //                         break;
-    //                     }
-    //                     (None, Some(right_x)) => {
-    //                         right = right_x;
-    //                         println!(
-    //                             "at y={y}, found right={right_x}, new_spring at ({},{y}) so add {}",
-    //                             left - 1,
-    //                             right - left,
-    //                         );
-    //                         ans += right - left;
-    //                         if seen.insert((left - 1, y)) {
-    //                             new_springs.push((left - 1, y));
-    //                         }
-    //                         break;
-    //                     }
-    //                     (None, None) => {
-    //                         println!(
-    //                             "at y={y}, found no wall, new_spring at ({},{y}) and ({},{y}) so add {}",
-    //                             left - 1,
-    //                             right + 1,
-    //                             right - left + 2,
-    //                         );
-    //                         ans += right - left + 2;
-    //                         if seen.insert((right + 1, y)) {
-    //                             new_springs.push((right + 1, y));
-    //                         }
-    //                         if seen.insert((left - 1, y)) {
-    //                             new_springs.push((left - 1, y));
-    //                         }
-    //                         break;
-    //                     }
-    //                 }
-    //             }
-    //         } else {
-    //             println!(
-    //                 "at spring {spring:?}: not found y, so add straight flow ={}",
-    //                 max_y - spring.1
-    //             );
-    //             ans += max_y - spring.1;
-    //         }
-    //     }
-    //     springs = new_springs;
-    //     if let Some((_, min_y)) = springs.iter().min_by_key(|(x, y)| *y) {
-    //         bases.retain(|y, _| y >= min_y);
-    //     }
-    //     println!("new_springs={springs:?}");
-    // }
-
     display_map(&map);
-    let ans: usize = map
-        .into_iter()
+    map.into_iter()
+        .skip(min_y)
         .map(|line| line.into_iter().filter(|x| *x == '|' || *x == '~').count())
-        .sum();
-    println!("ans = {ans}");
-
-    todo!("part1");
+        .sum()
 }
 
 #[cfg(test)]
