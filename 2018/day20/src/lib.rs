@@ -19,6 +19,8 @@ pub fn run_seq(actor: Actor, map: &mut Map, items: &[Item]) -> Vec<Actor> {
         }
         actors = new_actors;
     }
+    actors.sort_unstable();
+    actors.dedup();
     actors
 }
 
@@ -47,7 +49,5 @@ fn run(mut actor: Actor, map: &mut Map, item: &Item) -> Vec<Actor> {
             }
         }
     };
-    actors.sort_unstable();
-    actors.dedup();
     actors
 }
