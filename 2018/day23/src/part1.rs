@@ -1,3 +1,4 @@
+use crate::manhattan;
 use crate::parsing::parse_input;
 
 pub fn process(_input: &str) -> usize {
@@ -7,10 +8,6 @@ pub fn process(_input: &str) -> usize {
         .into_iter()
         .filter(|(p, _)| manhattan(*p, origin) <= max_r)
         .count()
-}
-
-fn manhattan(point: (isize, isize, isize), origin: (isize, isize, isize)) -> usize {
-    point.0.abs_diff(origin.0) + point.1.abs_diff(origin.1) + point.2.abs_diff(origin.2)
 }
 
 #[cfg(test)]

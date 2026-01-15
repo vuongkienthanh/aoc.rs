@@ -7,7 +7,7 @@ use nom::{
     sequence::{delimited, preceded, separated_pair},
 };
 
-type Item = ((isize, isize, isize), usize);
+pub type Item = ((isize, isize, isize), usize);
 
 fn parse_line(input: &str) -> IResult<&str, Item> {
     separated_pair(
