@@ -1,6 +1,6 @@
-use crate::parsing::parse_input;
-use crate::{Point, manhattan};
-use itertools::Itertools;
+#![allow(non_snake_case, clippy::assign_op_pattern)]
+use crate::manhattan;
+use crate::parsing::{Item, parse_input};
 use std::cmp::Ordering;
 
 pub fn process(_input: &str) -> usize {
@@ -35,36 +35,70 @@ pub fn process(_input: &str) -> usize {
             .filter_map(|(i, p)| (!to_removed.contains(&i)).then_some(p))
             .collect();
     };
-    // for i in &cluster {
-    //     println!("{i:?}");
-    // }
     println!("cluster len = {:?}", cluster.len());
 
-    // let min_pair = cluster
-    //     .iter()
-    //     .combinations(2)
-    //     .min_by_key(|v| {
-    //         let (p0, r0) = v[0];
-    //         let (p1, r1) = v[1];
-    //         r0 + r1 - manhattan(*p0, *p1)
-    //     })
-    //     .unwrap();
-    // let (min_x, max_x, min_y, max_y, min_z, max_z) = {
-    //     let ((x0, y0, z0), r0) = min_pair[0];
-    //     let ((x1, y1, z1), r1) = min_pair[1];
-    //     (
-    //         (x0.checked_sub_unsigned(*r0).unwrap()).max(x1.checked_sub_unsigned(*r1).unwrap()),
-    //         (x0.checked_add_unsigned(*r0).unwrap()).min(x1.checked_add_unsigned(*r1).unwrap()),
-    //         (y0.checked_sub_unsigned(*r0).unwrap()).max(y1.checked_sub_unsigned(*r1).unwrap()),
-    //         (y0.checked_add_unsigned(*r0).unwrap()).min(y1.checked_add_unsigned(*r1).unwrap()),
-    //         (z0.checked_sub_unsigned(*r0).unwrap()).max(z1.checked_sub_unsigned(*r1).unwrap()),
-    //         (z0.checked_add_unsigned(*r0).unwrap()).min(z1.checked_add_unsigned(*r1).unwrap()),
-    //     )
-    // };
-    // println!("min_pair = {min_pair:?}");
-    // println!("{:?}", (min_x, max_x, min_y, max_y, min_z, max_z));
+    let max_ilog = cluster
+        .iter()
+        .map(|((a, b, c), r)| {
+            [a.unsigned_abs(), b.unsigned_abs(), c.unsigned_abs(), *r]
+                .into_iter()
+                .map(|x| x.ilog10())
+                .max()
+                .unwrap()
+        })
+        .max()
+        .unwrap();
+    println!("max_ilog = {max_ilog:?}");
 
-    let (min_x, max_x, min_y, max_y, min_z, max_z) = cluster.iter().fold(
+    let (mut min_X, mut max_X, mut min_Y, mut max_Y, mut min_Z, mut max_Z) = {
+        let d = max_ilog.saturating_sub(3);
+        println!("precompute min max at d= {d}");
+        let div = 10i32.pow(d) as isize;
+        let new_cluster: Vec<Item> = cluster
+            .iter()
+            .map(|((a, b, c), r)| ((a / div, b / div, c / div), r / div as usize))
+            .collect();
+        let (min_X, max_X, min_Y, max_Y, min_Z, max_Z) = find_min_max_in_cluster(&new_cluster);
+        println!("bgn stats = {min_X} {max_X} {min_Y} {max_Y} {min_Z} {max_Z}");
+        let mm = find_viable_min_max_in_cluster(
+            &new_cluster,
+            d as usize,
+            (min_X, max_X, min_Y, max_Y, min_Z, max_Z),
+        );
+        println!("end stats = {mm:?}\n");
+        mm
+    };
+
+    for d in (0..max_ilog.saturating_sub(3)).rev() {
+        println!("at d= {d}");
+        min_X = min_X * 10;
+        max_X = max_X * 10 + 9;
+        min_Y = min_Y * 10;
+        max_Y = max_Y * 10 + 9;
+        min_Z = min_Z * 10;
+        max_Z = max_Z * 10 + 9;
+        println!("bgn stats = {min_X} {max_X} {min_Y} {max_Y} {min_Z} {max_Z}");
+
+        let div = 10i32.pow(d) as isize;
+        let new_cluster: Vec<Item> = cluster
+            .iter()
+            .map(|((a, b, c), r)| ((a / div, b / div, c / div), r / div as usize))
+            .collect();
+
+        (min_X, max_X, min_Y, max_Y, min_Z, max_Z) = find_viable_min_max_in_cluster(
+            &new_cluster,
+            d as usize,
+            (min_X, max_X, min_Y, max_Y, min_Z, max_Z),
+        );
+        println!("end stats = {min_X} {max_X} {min_Y} {max_Y} {min_Z} {max_Z}");
+        println!();
+    }
+    println!("min_X + min_Y + min_Z");
+    (min_X + min_Y + min_Z) as usize
+}
+
+fn find_min_max_in_cluster(cluster: &[Item]) -> (isize, isize, isize, isize, isize, isize) {
+    cluster.iter().fold(
         (
             isize::MIN,
             isize::MAX,
@@ -73,46 +107,51 @@ pub fn process(_input: &str) -> usize {
             isize::MIN,
             isize::MAX,
         ),
-        |(min_x, max_x, min_y, max_y, min_z, max_z), ((x, y, z), r)| {
+        |(min_x, max_x, min_y, max_y, min_z, max_z), ((a, b, c), r)| {
             (
-                min_x.max(x.checked_sub_unsigned(*r).unwrap()),
-                max_x.min(x.checked_add_unsigned(*r).unwrap()),
-                min_y.max(y.checked_sub_unsigned(*r).unwrap()),
-                max_y.min(y.checked_add_unsigned(*r).unwrap()),
-                min_z.max(z.checked_sub_unsigned(*r).unwrap()),
-                max_z.min(z.checked_add_unsigned(*r).unwrap()),
+                min_x.max(a.checked_sub_unsigned(*r).unwrap()),
+                max_x.min(a.checked_add_unsigned(*r).unwrap()),
+                min_y.max(b.checked_sub_unsigned(*r).unwrap()),
+                max_y.min(b.checked_add_unsigned(*r).unwrap()),
+                min_z.max(c.checked_sub_unsigned(*r).unwrap()),
+                max_z.min(c.checked_add_unsigned(*r).unwrap()),
             )
         },
+    )
+}
+
+fn find_viable_min_max_in_cluster(
+    cluster: &[Item],
+    noise: usize,
+    (min_X, max_X, min_Y, max_Y, min_Z, max_Z): (isize, isize, isize, isize, isize, isize),
+) -> (isize, isize, isize, isize, isize, isize) {
+    let (mut min_x, mut max_x, mut min_y, mut max_y, mut min_z, mut max_z) = (
+        isize::MAX,
+        isize::MIN,
+        isize::MAX,
+        isize::MIN,
+        isize::MAX,
+        isize::MIN,
     );
-    println!("{:?}", (min_x, max_x, min_y, max_y, min_z, max_z));
 
-    let (mut min_z, mut max_z) = (isize::MIN, isize::MAX);
-    let mut ans = usize::MAX;
-    'xi: for x in min_x..=max_x {
-        'yi: for y in min_y..=max_y {
-            for ((a, b, c), r) in &cluster {
-                if *r < a.abs_diff(x) + b.abs_diff(y) {
-                    println!("skip x y  = {x} {y}");
-                    continue 'yi;
+    for x in min_X..=max_X {
+        for y in min_Y..=max_Y {
+            for z in min_Z..=max_Z {
+                // in range of all nodes, with noise
+                if cluster.iter().all(|((a, b, c), r)| {
+                    x.abs_diff(*a) + y.abs_diff(*b) + z.abs_diff(*c) <= *r + noise
+                }) {
+                    min_x = min_x.min(x);
+                    max_x = max_x.max(x);
+                    min_y = min_y.min(y);
+                    max_y = max_y.max(y);
+                    min_z = min_z.min(z);
+                    max_z = max_z.max(z);
                 }
-                // println!("{x} {y} with cluster {a} {b} {c} {r}");
-                // |z-c|
-                let z_c_abs = r - a.abs_diff(x) - b.abs_diff(y);
-                // println!("z_c_abs = {z_c_abs}");
-                min_z = min_z.max(-(z_c_abs as isize) + c);
-                max_z = max_z.min((z_c_abs as isize) + c);
             }
-            println!(" z = [{min_z}, {max_z}]");
-
-            ans = ans.min(
-                x.unsigned_abs()
-                    + y.unsigned_abs()
-                    + min_z.unsigned_abs().min(max_z.unsigned_abs()),
-            );
         }
     }
-    println!("ans= {ans}");
-    panic!("should have an answer")
+    (min_x, max_x, min_y, max_y, min_z, max_z)
 }
 
 #[cfg(test)]
