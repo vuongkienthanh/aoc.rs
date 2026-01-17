@@ -48,11 +48,11 @@ pub fn process(_input: &str) -> usize {
         })
         .max()
         .unwrap();
-    println!("max_ilog = {max_ilog:?}");
+    println!("max_ilog = {max_ilog:?}\n");
 
     let (mut min_X, mut max_X, mut min_Y, mut max_Y, mut min_Z, mut max_Z) = {
         let d = max_ilog.saturating_sub(3);
-        println!("precompute min max at d= {d}");
+        println!("precompute at d= {d}");
         let div = 10i32.pow(d) as isize;
         let new_cluster: Vec<Item> = cluster
             .iter()
@@ -60,13 +60,13 @@ pub fn process(_input: &str) -> usize {
             .collect();
         let (min_X, max_X, min_Y, max_Y, min_Z, max_Z) = find_min_max_in_cluster(&new_cluster);
         println!("bgn stats = {min_X} {max_X} {min_Y} {max_Y} {min_Z} {max_Z}");
-        let mm = find_viable_min_max_in_cluster(
+        let (min_X, max_X, min_Y, max_Y, min_Z, max_Z) = find_viable_min_max_in_cluster(
             &new_cluster,
             d as usize,
             (min_X, max_X, min_Y, max_Y, min_Z, max_Z),
         );
-        println!("end stats = {mm:?}\n");
-        mm
+        println!("end stats = {min_X} {max_X} {min_Y} {max_Y} {min_Z} {max_Z}\n");
+        (min_X, max_X, min_Y, max_Y, min_Z, max_Z)
     };
 
     for d in (0..max_ilog.saturating_sub(3)).rev() {
@@ -93,8 +93,21 @@ pub fn process(_input: &str) -> usize {
         println!("end stats = {min_X} {max_X} {min_Y} {max_Y} {min_Z} {max_Z}");
         println!();
     }
-    println!("min_X + min_Y + min_Z");
-    (min_X + min_Y + min_Z) as usize
+    let mut ans = usize::MAX;
+
+    'i: for x in min_X..=max_X {
+        for y in min_Y..=max_Y {
+            for z in min_Z..=max_Z {
+                if cluster
+                    .iter()
+                    .all(|((a, b, c), r)| x.abs_diff(*a) + y.abs_diff(*b) + z.abs_diff(*c) <= *r)
+                {
+                    ans = ans.min((x + y + z) as usize);
+                }
+            }
+        }
+    }
+    ans
 }
 
 fn find_min_max_in_cluster(cluster: &[Item]) -> (isize, isize, isize, isize, isize, isize) {
