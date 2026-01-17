@@ -9,7 +9,7 @@ pub fn process(_input: &str) -> usize {
     // part 2: 10551367
 
     let (p, cmds) = parse_input(_input);
-    let mut device = Device::new2(p);
+    let mut device = Device::new_with_a(p, 1);
 
     // the last register is found at i=17
     for _i in 0..17 {

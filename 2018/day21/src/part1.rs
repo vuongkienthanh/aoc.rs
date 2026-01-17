@@ -1,29 +1,21 @@
-use crate::parsing::parse_input;
+use day19::Device;
+use day19::parsing::{Opcode, parse_input};
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
+    let (p, cmds) = parse_input(_input);
+    let mut device = Device::new(p);
 
-    todo!("part1");
-    // panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
+    // stop at first eqrr to halt
+    loop {
+        let pointer = device.get_pointer();
+        if let Some((cmd, a, b, c)) = cmds.get(pointer) {
+            if (*cmd, *a, *b, *c) == (Opcode::eqrr, 5, 0, 1) {
+                return device.registers[5];
+            }
+            device.run(cmd, *a, *b, *c);
+        } else {
+            break;
+        }
     }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    panic!("should have an answer")
 }

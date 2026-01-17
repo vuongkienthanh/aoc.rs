@@ -4,27 +4,27 @@ pub mod part2;
 
 use parsing::Opcode;
 
-struct Device {
+pub struct Device {
     p: usize,
-    registers: [usize; 6],
+    pub registers: [usize; 6],
 }
 
 impl Device {
-    fn new(p: usize) -> Self {
+    pub fn new(p: usize) -> Self {
         Device {
             p,
             registers: [0; 6],
         }
     }
-    fn new2(p: usize) -> Self {
+    pub fn new_with_a(p: usize, i: usize) -> Self {
         let mut device = Device::new(p);
-        device.registers[0] = 1;
+        device.registers[0] = i;
         device
     }
-    fn get_pointer(&self) -> usize {
+    pub fn get_pointer(&self) -> usize {
         self.registers[self.p]
     }
-    fn run(&mut self, opcode: &Opcode, a: usize, b: usize, c: usize) {
+    pub fn run(&mut self, opcode: &Opcode, a: usize, b: usize, c: usize) {
         match *opcode {
             Opcode::addr => self.registers[c] = self.registers[a] + self.registers[b],
             Opcode::addi => self.registers[c] = self.registers[a] + b,
@@ -55,12 +55,12 @@ impl Device {
                 }
             }
         }
+        self.registers[self.p] += 1;
     }
     fn run_cmds(&mut self, cmds: &[(Opcode, usize, usize, usize)]) -> bool {
         if let Some((cmd, a, b, c)) = cmds.get(self.get_pointer()) {
             // println!("run cmd {cmd:?} {a} {b} {c}");
             self.run(cmd, *a, *b, *c);
-            self.registers[self.p] += 1;
             false
         } else {
             true

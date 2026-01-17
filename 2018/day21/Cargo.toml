@@ -9,6 +9,7 @@ publish.workspace = true
 
 [dependencies]
 nom.workspace = true
+day19 = { path = "../day19" }
 # aoc_helper.workspace = true
 
 [dev-dependencies]
