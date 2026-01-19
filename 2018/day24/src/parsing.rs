@@ -8,7 +8,7 @@ use nom::{
     sequence::{delimited, preceded, separated_pair},
 };
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DamageType {
     Slashing,
     Radiation,
@@ -17,7 +17,7 @@ pub enum DamageType {
     Cold,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Item {
     pub units: usize,
     pub hp: usize,
@@ -28,29 +28,42 @@ pub struct Item {
     pub initiative: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Team {
     Immune,
     Infection,
 }
-impl Team {
-    pub fn is_enemy(a: &Group, b: &Group) -> bool {
-        matches!(
-            (&a.team, &b.team),
-            (Team::Immune, Team::Infection) | (Team::Infection, Team::Immune),
-        )
-    }
-}
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Group {
     pub team: Team,
-    pub is_alive: bool,
     pub stats: Item,
 }
+
 impl Group {
     pub fn effective_power(&self) -> usize {
         self.stats.units * self.stats.atk
+    }
+
+    pub fn is_enemy_of(&self, b: &Group) -> bool {
+        matches!(
+            (&self.team, &b.team),
+            (Team::Immune, Team::Infection) | (Team::Infection, Team::Immune),
+        )
+    }
+
+    pub fn is_alive(&self) -> bool {
+        self.stats.units > 0
+    }
+
+    pub fn would_deal(&self, target: &Group) -> usize {
+        if target.stats.immune.contains(&self.stats.atk_type) {
+            0
+        } else if target.stats.weakness.contains(&self.stats.atk_type) {
+            self.effective_power() * 2
+        } else {
+            self.effective_power()
+        }
     }
 }
 
@@ -94,7 +107,7 @@ fn parse_weakness_immune(input: &str) -> IResult<&str, (Vec<DamageType>, Vec<Dam
 }
 
 fn parse_item(input: &str) -> IResult<&str, Item> {
-    ((
+    (
         complete::usize,
         tag(" units each with "),
         complete::usize,
@@ -106,7 +119,7 @@ fn parse_item(input: &str) -> IResult<&str, Item> {
         parse_damage_type,
         tag(" damage at initiative "),
         complete::usize,
-    ))
+    )
         .map(
             |(units, _, hp, _, (weakness, immune), _, atk, _, atk_type, _, initiative)| Item {
                 units,
