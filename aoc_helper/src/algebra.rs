@@ -25,4 +25,3 @@ pub fn lcm_vec(nums: &[isize]) -> isize {
 }
 
 pub mod chinese_remainder_theorem;
-pub mod linear_equation_system;
