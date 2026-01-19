@@ -1,29 +1,23 @@
 use crate::parsing::parse_input;
+use fxhash::FxHashMap;
 
 pub fn process(_input: &str) -> usize {
     let input = parse_input(_input);
-    println!("{input:?}");
+    let mut child_map = FxHashMap::default();
 
-    todo!("part1");
-    // panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
-    }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
+    for (a, b) in input {
+        child_map.insert(b, a);
     }
 
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+    let mut ans = 0;
+    let planets: Vec<&str> = child_map.keys().cloned().collect();
+
+    for mut planet in planets {
+        while let Some(child) = child_map.get(&planet) {
+            ans += 1;
+            planet = *child;
+        }
     }
+
+    ans
 }
