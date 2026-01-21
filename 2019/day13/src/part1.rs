@@ -1,29 +1,25 @@
-use crate::parsing::parse_input;
+use crate::{Tile, screen};
+use intcode::{Computer, RunResult, parse};
+use std::collections::BTreeMap;
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
+    let input = parse(_input);
+    let mut comp = Computer::new(input);
+    let mut map = BTreeMap::new();
 
-    todo!("part1");
-    // panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
+    loop {
+        match comp.long_run() {
+            RunResult::Halt => break,
+            RunResult::WaitingInput => panic!("should not have any input"),
+            RunResult::Output(x) => {
+                let y = comp.long_run().output();
+                let tile: Tile = comp.long_run().output().into();
 
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
+                map.insert((x as usize, y as usize), tile);
+            }
+        }
     }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
+    screen(&map);
 
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    map.values().filter(|x| matches!(x, Tile::block)).count()
 }

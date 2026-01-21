@@ -46,6 +46,15 @@ pub enum RunResult {
     Output(i64),
     Halt,
 }
+impl RunResult {
+    pub fn output(self) -> i64 {
+        if let RunResult::Output(i) = self {
+            i
+        } else {
+            panic!("should have output")
+        }
+    }
+}
 
 pub struct Computer {
     pub prog: BTreeMap<usize, i64>,
@@ -64,7 +73,7 @@ impl Computer {
         }
     }
 
-    pub fn append_input(&mut self, input: i64) {
+    pub fn input(&mut self, input: i64) {
         self.input.push_back(input);
     }
 
@@ -106,86 +115,6 @@ impl Computer {
             _ => panic!("unknown mode"),
         }
     }
-
-    // pub fn run(&mut self) -> RunResult {
-    //     let instruction = self.prog[&self.pointer];
-    //     let opcode = instruction % 100;
-    //     let mut modes = instruction / 100;
-    //     match Opcode::from(opcode) {
-    //         Opcode::add => {
-    //             let a = self.get_value(&mut modes, self.pointer + 1);
-    //             let b = self.get_value(&mut modes, self.pointer + 2);
-    //             let c = self.get_loc(&mut modes, self.pointer + 3);
-    //             self.prog.insert(c, a + b);
-    //             self.pointer += 4;
-    //         }
-    //         Opcode::mul => {
-    //             let a = self.get_value(&mut modes, self.pointer + 1);
-    //             let b = self.get_value(&mut modes, self.pointer + 2);
-    //             let c = self.get_loc(&mut modes, self.pointer + 3);
-    //             self.prog.insert(c, a * b);
-    //             self.pointer += 4;
-    //         }
-    //         Opcode::input => {
-    //             let a = self.get_loc(&mut modes, self.pointer + 1);
-    //             self.prog.insert(a, self.input.pop_front().unwrap());
-    //             self.pointer += 2;
-    //         }
-    //         Opcode::output => {
-    //             let a = self.get_value(&mut modes, self.pointer + 1);
-    //             self.pointer += 2;
-    //             return RunResult::Output(a);
-    //         }
-    //         Opcode::jit => {
-    //             let a = self.get_value(&mut modes, self.pointer + 1);
-    //             let b = self.get_value(&mut modes, self.pointer + 2);
-    //             if a != 0 {
-    //                 self.pointer = b as usize;
-    //             } else {
-    //                 self.pointer += 3;
-    //             }
-    //         }
-    //         Opcode::jif => {
-    //             let a = self.get_value(&mut modes, self.pointer + 1);
-    //             let b = self.get_value(&mut modes, self.pointer + 2);
-    //             if a == 0 {
-    //                 self.pointer = b as usize;
-    //             } else {
-    //                 self.pointer += 3;
-    //             }
-    //         }
-    //         Opcode::lt => {
-    //             let a = self.get_value(&mut modes, self.pointer + 1);
-    //             let b = self.get_value(&mut modes, self.pointer + 2);
-    //             let c = self.get_loc(&mut modes, self.pointer + 3);
-    //             if a < b {
-    //                 self.prog.insert(c, 1);
-    //             } else {
-    //                 self.prog.insert(c, 0);
-    //             }
-    //             self.pointer += 4;
-    //         }
-    //         Opcode::eq => {
-    //             let a = self.get_value(&mut modes, self.pointer + 1);
-    //             let b = self.get_value(&mut modes, self.pointer + 2);
-    //             let c = self.get_loc(&mut modes, self.pointer + 3);
-    //             if a == b {
-    //                 self.prog.insert(c, 1);
-    //             } else {
-    //                 self.prog.insert(c, 0);
-    //             }
-    //             self.pointer += 4;
-    //         }
-    //         Opcode::rel => {
-    //             let a = self.get_value(&mut modes, self.pointer + 1);
-    //             self.relative_base = self.relative_base.checked_add_signed(a as isize).unwrap();
-    //             self.pointer += 2;
-    //         }
-    //         Opcode::halt => return RunResult::Halt,
-    //         Opcode::unknown => panic!("unknown opcode"),
-    //     }
-    //     RunResult::Running
-    // }
 
     pub fn long_run(&mut self) -> RunResult {
         loop {

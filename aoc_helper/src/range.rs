@@ -1,4 +1,4 @@
-//! This module provides function to works with ranges represented as a tuple of (integer, usize)
+//! This module provides function to works with ranges represented as a tuple of (usize, usize)
 
 use num_traits::{One, PrimInt};
 

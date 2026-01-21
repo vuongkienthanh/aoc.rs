@@ -8,13 +8,13 @@ pub fn process(_input: &str) -> usize {
     let (mut loc, mut dir) = ((0isize, 0isize), Direction::Up);
     map.insert(loc, 1);
     let mut comp = Computer::new(input);
-    comp.append_input(1);
+    comp.input(1);
 
     loop {
         match comp.long_run() {
             RunResult::Halt => break,
             RunResult::WaitingInput => {
-                comp.append_input(*map.entry(loc).or_default());
+                comp.input(*map.entry(loc).or_default());
             }
             RunResult::Output(paint) => {
                 map.insert(loc, paint);
