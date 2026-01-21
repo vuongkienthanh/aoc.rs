@@ -1,5 +1,5 @@
 use aoc_helper::direction::{Direction, step};
-use intcode::{Computer, parse};
+use intcode::{Computer, RunResult, parse};
 use std::collections::BTreeMap;
 
 pub fn process(_input: &str) -> usize {
@@ -10,23 +10,28 @@ pub fn process(_input: &str) -> usize {
     let mut comp = Computer::new(input);
     comp.append_input(0);
 
-    while let Some(paint) = comp.long_run() {
-        map.insert(loc, paint);
-        let turn = comp.long_run().unwrap();
-        match turn {
-            0 => {
-                dir = dir.turn_left();
-                let (x, y) = step(dir);
-                loc = (loc.0 + x, loc.1 + y);
+    loop {
+        match comp.long_run() {
+            RunResult::Halt => break,
+            RunResult::WaitingInput => {
+                comp.append_input(*map.entry(loc).or_default());
             }
-            1 => {
-                dir = dir.turn_right();
-                let (x, y) = step(dir);
-                loc = (loc.0 + x, loc.1 + y);
+            RunResult::Output(paint) => {
+                map.insert(loc, paint);
+                if let RunResult::Output(turn) = comp.long_run() {
+                    dir = match turn {
+                        0 => dir.turn_left(),
+                        1 => dir.turn_right(),
+                        _ => panic!(),
+                    };
+                    let (x, y) = step(dir);
+                    loc = (loc.0 + x, loc.1 + y);
+                } else {
+                    panic!();
+                }
             }
-            _ => panic!(),
         }
-        comp.append_input(*map.entry(loc).or_default());
     }
+
     map.len()
 }
