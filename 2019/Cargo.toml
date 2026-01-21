@@ -25,6 +25,7 @@ members = [
     "day23",
     "day24",
     "day25",
+    "intcode",
 ]
 resolver = "3"
 
@@ -47,6 +48,7 @@ nom = "~8.0.0"
 rayon = "1.11.0"
 rstest = "~0.26.1"
 tinyvec = "~1.10.0"
+intcode = { path = "./intcode" }
 
 [workspace.dependencies.aoc_helper]
 path = "../aoc_helper"
