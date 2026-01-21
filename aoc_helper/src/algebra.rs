@@ -1,26 +1,39 @@
-pub fn gcd(mut a: isize, mut b: isize) -> isize {
-    while b != 0 {
+use num_traits::{PrimInt, Zero};
+
+pub fn gcd<T>(mut a: T, mut b: T) -> T
+where
+    T: PrimInt + Zero,
+{
+    while b != Zero::zero() {
         let r = a % b;
         a = b;
         b = r;
     }
-    a.abs()
+    a
 }
 
-pub fn lcm(a: isize, b: isize) -> isize {
-    if a == 0 || b == 0 {
-        0
+pub fn lcm<T>(a: T, b: T) -> T
+where
+    T: PrimInt + Zero,
+{
+    if a == Zero::zero() || b == Zero::zero() {
+        Zero::zero()
     } else {
         (a / gcd(a, b)) * b
     }
-    .abs()
 }
 
-pub fn gcd_vec(nums: &[isize]) -> isize {
+pub fn gcd_vec<T>(nums: &[T]) -> T
+where
+    T: PrimInt + Zero,
+{
     nums.iter().copied().reduce(gcd).unwrap()
 }
 
-pub fn lcm_vec(nums: &[isize]) -> isize {
+pub fn lcm_vec<T>(nums: &[T]) -> T
+where
+    T: PrimInt + Zero,
+{
     nums.iter().copied().reduce(lcm).unwrap()
 }
 
