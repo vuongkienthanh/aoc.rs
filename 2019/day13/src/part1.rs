@@ -1,4 +1,4 @@
-use crate::{Tile, screen};
+use crate::Tile;
 use intcode::{Computer, RunResult, parse};
 use std::collections::BTreeMap;
 
@@ -22,4 +22,25 @@ pub fn process(_input: &str) -> usize {
     screen(&map);
 
     map.values().filter(|x| matches!(x, Tile::block)).count()
+}
+
+fn screen(map: &BTreeMap<(usize, usize), Tile>) {
+    let (max_x, max_y) = map.keys().fold((0, 0), |(max_x, max_y), (x, y)| {
+        (max_x.max(*x), max_y.max(*y))
+    });
+    for y in 0..=max_y {
+        for x in 0..=max_x {
+            print!(
+                "{}",
+                match map.get(&(x, y)).unwrap() {
+                    Tile::empty => '.',
+                    Tile::wall => '#',
+                    Tile::block => 'x',
+                    Tile::paddle => '-',
+                    Tile::ball => 'o',
+                }
+            );
+        }
+        println!();
+    }
 }

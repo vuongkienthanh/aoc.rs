@@ -1,27 +1,5 @@
 pub mod part1;
 pub mod part2;
-use std::collections::BTreeMap;
-
-fn screen(map: &BTreeMap<(usize, usize), Tile>) {
-    let (max_x, max_y) = map.keys().fold((0, 0), |(max_x, max_y), (x, y)| {
-        (max_x.max(*x), max_y.max(*y))
-    });
-    for y in 0..=max_y {
-        for x in 0..=max_x {
-            print!(
-                "{}",
-                match map.get(&(x, y)).unwrap() {
-                    Tile::empty => '.',
-                    Tile::wall => '#',
-                    Tile::block => 'x',
-                    Tile::paddle => '-',
-                    Tile::ball => 'o',
-                }
-            );
-        }
-        println!();
-    }
-}
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
