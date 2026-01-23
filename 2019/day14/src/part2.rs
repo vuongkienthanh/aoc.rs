@@ -4,7 +4,6 @@ use crate::part1::need_ore;
 
 pub fn process(_input: &str) -> usize {
     let map = build_map(parse_input(_input));
-    let mut mid = 0;
     let ore_have = 1_000_000_000_000;
 
     let mut low = ore_have / need_ore(1, &map);
@@ -13,11 +12,9 @@ pub fn process(_input: &str) -> usize {
         low = high;
         high = 10 * low;
     }
-    while low < high-1  {
-        println!("low+high = {low} {high}");
-        mid = (low + high) / 2;
+    while low < high - 1 {
+        let mid = (low + high) / 2;
         let ore = need_ore(mid, &map);
-        println!("{mid} = {ore}");
         if ore < ore_have {
             low = mid;
         } else if ore > ore_have {

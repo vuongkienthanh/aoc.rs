@@ -56,6 +56,7 @@ impl RunResult {
     }
 }
 
+#[derive(Clone)]
 pub struct Computer {
     pub prog: BTreeMap<usize, i64>,
     pointer: usize,
