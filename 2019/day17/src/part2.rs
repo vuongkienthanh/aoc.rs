@@ -1,6 +1,6 @@
-use crate::parsing::parse_input;
+use intcode::{parse};
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
+    let input = parse(_input);
     todo!("part2");
 }
