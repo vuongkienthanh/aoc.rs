@@ -4,27 +4,23 @@ pub fn process(_input: &str) -> usize {
     let offset = _input[..7].parse::<usize>().unwrap();
     let input = parse_u8(_input);
 
-    let mut real_input = vec![];
-    for i in offset..input.len() * 10000 {
-        real_input.push(input[i % input.len()]);
-    }
-
-    let mut meta: Vec<usize> = (1..=real_input.len()).collect();
+    let len = input.len() * 10_000 - offset;
+    let mut meta: Vec<usize> = (1..=len).collect();
     for _phase in 3..=100 {
-        for i in 1..meta.len() {
+        for i in 1..len {
             meta[i] = (meta[i - 1] + meta[i]) % 10;
         }
     }
     let mut ans = 0;
     for i in 0..8 {
-        let used_slice = &real_input[i..];
         ans = ans * 10
-            + (used_slice
-                .iter()
+            + (offset + i..input.len() * 10_000)
+                .into_iter()
+                .map(|x| input[x % input.len()])
                 .zip(meta.iter())
-                .map(|(a, b)| *a as usize * *b)
+                .map(|(a, b)| a as usize * *b)
                 .sum::<usize>()
-                % 10);
+                % 10;
     }
     ans
 }
