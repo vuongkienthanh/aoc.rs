@@ -1,7 +1,7 @@
 pub mod part1;
 pub mod part2;
 
-use intcode::{Computer, RunResult, parse};
+use intcode::{Computer, RunResult};
 use std::collections::BTreeSet;
 
 type Point = (usize, usize);
@@ -20,56 +20,49 @@ enum Turn {
     Right(usize),
 }
 
-fn build_map(input: &str) -> (BTreeSet<Point>, (Point, Direction)) {
-    let mut camera = Computer::new(parse(input));
+fn build_map(mut camera: Computer) -> (BTreeSet<Point>, (Point, Direction)) {
     let mut seen = BTreeSet::new();
-    let (mut loc, mut robo, mut dir) = ((0, 0), (0, 0), Direction::Up);
-    loop {
-        let output = if let RunResult::Output(output) = camera.long_run() {
-            output as u8 as char
-        } else {
-            break;
-        };
-        match output {
-            '.' => {
+    let (mut loc, mut robo_loc, mut dir) = ((0, 0), (0, 0), Direction::Up);
+    while let RunResult::Output(output) = camera.long_run() {
+        match output as u8 {
+            b'.' => {
                 loc = (loc.0 + 1, loc.1);
             }
-            '#' => {
+            b'#' => {
                 seen.insert(loc);
                 loc = (loc.0 + 1, loc.1);
             }
-            '^' => {
+            b'^' => {
                 dir = Direction::Up;
-                robo = loc;
+                robo_loc = loc;
                 seen.insert(loc);
                 loc = (loc.0 + 1, loc.1);
             }
-            'v' => {
+            b'v' => {
                 dir = Direction::Down;
-                robo = loc;
+                robo_loc = loc;
                 seen.insert(loc);
                 loc = (loc.0 + 1, loc.1);
             }
-            '<' => {
+            b'<' => {
                 dir = Direction::Left;
-                robo = loc;
+                robo_loc = loc;
                 seen.insert(loc);
                 loc = (loc.0 + 1, loc.1);
             }
-            '>' => {
+            b'>' => {
                 dir = Direction::Right;
-                robo = loc;
+                robo_loc = loc;
                 seen.insert(loc);
                 loc = (loc.0 + 1, loc.1);
             }
-            '\n' => {
+            b'\n' => {
                 loc = (0, loc.1 + 1);
             }
             _ => panic!(),
         }
-        print!("{}", output);
     }
-    (seen, (robo, dir))
+    (seen, (robo_loc, dir))
 }
 
 fn get_path(map: &BTreeSet<Point>, mut robo: (Point, Direction)) -> Vec<Turn> {
@@ -143,82 +136,44 @@ fn get_path(map: &BTreeSet<Point>, mut robo: (Point, Direction)) -> Vec<Turn> {
     ans
 }
 
-fn get_a(path: &[Turn]) -> Vec<Turn> {
-    let mut a = (&path[..2]).to_vec();
-    let mut i = 2;
-    loop {
-        i += 1;
-        let next_a = (&path[..i]).to_vec();
-        if path.windows(i).filter(|c| c == &&next_a).count() > 1 {
-            a = next_a;
-        } else {
-            break;
-        }
-    }
-    a
-}
-
-fn divide_a(path: Vec<Turn>, a: &[Turn]) -> Vec<Vec<Turn>> {
-    let mut ans = vec![];
-    let mut new = vec![];
-    let mut i = 0;
-    loop {
-        if i > path.len() - a.len() {
-            break;
-        }
-        if &path[i..i + a.len()] == a {
-            i += a.len();
-            if !new.is_empty() {
-                ans.push(new);
-                new = vec![];
-            }
-        } else {
-            new.push(path[i].clone());
-            i += 1;
-        }
-    }
-    new.extend(path[i..].iter().cloned());
-
-    if !new.is_empty() {
-        ans.push(new);
-    }
-    ans
-}
-fn get_b_c(path: &[Vec<Turn>]) -> Vec<Turn> {
-    let first_path = path.get(0).unwrap();
-    let mut b = (first_path[..2]).to_vec();
+// assuming first 2 turns is an move function
+// expand it and check if it is still repeat elsewhere, replace it
+fn get_a_b_c(paths: &[Vec<Turn>]) -> Vec<Turn> {
+    let first_path = paths.first().unwrap();
+    let mut v = (first_path[..2]).to_vec();
     let mut i = 2;
     loop {
         i += 1;
         if i > first_path.len() {
             break;
         }
-        let next_b = (first_path[..i]).to_vec();
-        if path
+        let next_v = (first_path[..i]).to_vec();
+        if paths
             .iter()
-            .map(|p| p.windows(i).filter(|c| c == &&next_b).count())
+            .map(|p| p.windows(i).filter(|c| c == &next_v).count())
             .sum::<usize>()
             > 1
         {
-            b = next_b;
+            v = next_v;
         } else {
             break;
         }
     }
-    b
+    v
 }
 
-fn divide_b_c(path: Vec<Vec<Turn>>, b: &[Turn]) -> Vec<Vec<Turn>> {
+// trim out move function
+fn divide_a_b_c(paths: Vec<Vec<Turn>>, v: &[Turn]) -> Vec<Vec<Turn>> {
     let mut ans = vec![];
-    for p in path {
+    for p in paths {
         let mut i = 0;
         let mut new = vec![];
         loop {
-            if i > p.len() - b.len() {
+            if i > p.len() - v.len() {
                 break;
             }
-            if &p[i..i + b.len()] == b {
-                i += b.len();
+            if &p[i..i + v.len()] == v {
+                i += v.len();
                 if !new.is_empty() {
                     ans.push(new);
                     new = vec![];
@@ -244,24 +199,23 @@ fn build_main_function(path: Vec<Turn>, a: &[Turn], b: &[Turn], c: &[Turn]) -> S
         if i >= path.len() {
             break;
         }
-        for (p, c) in [a, b, c].into_iter().zip(['A', 'B', 'C']) {
+        for (p, c) in [a, b, c].into_iter().zip(["A", "B", "C"]) {
             if path[i..i + p.len()] == *p {
                 ans.push(c);
-                ans.push(',');
                 i += p.len();
                 break;
             }
         }
     }
-    ans[..ans.len() - 1].into_iter().collect()
+    ans.join(",")
 }
 
-fn build_move_function(a: &[Turn]) -> String {
+fn build_move_function(v: &[Turn]) -> String {
     let mut ans = vec![];
-    for t in a {
+    for t in v {
         match t {
-            Turn::Left(z) => ans.push(format!("L,{z}")),
-            Turn::Right(z) => ans.push(format!("R,{z}")),
+            Turn::Left(x) => ans.push(format!("L,{x}")),
+            Turn::Right(x) => ans.push(format!("R,{x}")),
         }
     }
     ans.join(",")

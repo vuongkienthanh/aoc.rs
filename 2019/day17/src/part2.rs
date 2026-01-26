@@ -1,19 +1,21 @@
 use crate::{
-    build_main_function, build_map, build_move_function, divide_a, divide_b_c, get_a, get_b_c,
-    get_path,
+    build_main_function, build_map, build_move_function, divide_a_b_c, get_a_b_c, get_path,
 };
 use intcode::{Computer, RunResult, parse};
 
 pub fn process(_input: &str) -> usize {
-    let (map, robo) = build_map(_input);
+    let mut camera = Computer::new(parse(_input));
+    let (map, robo) = build_map(camera.clone());
     let path = get_path(&map, robo);
-    let a = get_a(&path);
-    let rest = divide_a(path.clone(), &a);
-    let b = get_b_c(&rest);
-    let rest = divide_b_c(rest, &b);
-    let c = get_b_c(&rest);
-    let rest = divide_b_c(rest, &c);
-    assert!(rest.is_empty());
+
+    let paths = vec![path.clone()];
+    let a = get_a_b_c(&paths);
+    let paths = divide_a_b_c(paths, &a);
+    let b = get_a_b_c(&paths);
+    let paths = divide_a_b_c(paths, &b);
+    let c = get_a_b_c(&paths);
+    let paths = divide_a_b_c(paths, &c);
+    assert!(paths.is_empty());
 
     let am = build_move_function(&a);
     let bm = build_move_function(&b);
@@ -24,18 +26,15 @@ pub fn process(_input: &str) -> usize {
     println!("B = {bm}");
     println!("C = {cm}");
 
-    let mut camera_input = [main_function, am, bm, cm, "n".to_string()].join("\n");
-    camera_input.push('\n');
-    let mut camera_input_iterator = camera_input.chars();
-    let mut camera = Computer::new(parse(_input));
+    let mut camera_input = [main_function, am, bm, cm].join("\n");
+    camera_input.push_str("\nn\n");
+    let mut camera_input_iterator = camera_input.bytes();
     camera.prog.insert(0, 2);
     let mut ans = 0;
     loop {
         match camera.long_run() {
             RunResult::Halt => break,
-            RunResult::WaitingInput => {
-                camera.input(camera_input_iterator.next().unwrap() as u8 as i64)
-            }
+            RunResult::WaitingInput => camera.input(camera_input_iterator.next().unwrap() as i64),
             RunResult::Output(o) => ans = o,
         }
     }
