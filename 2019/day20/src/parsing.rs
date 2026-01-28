@@ -1,24 +1,27 @@
 use std::collections::BTreeMap;
 
 type Point = (usize, usize);
+type Portal = (char, char);
 
 #[derive(Debug, Clone)]
 pub enum Cell {
     Space,
     Wall,
-    Portal,
+    InnerPortal(Portal),
+    OuterPortal(Portal),
 }
 
-pub fn parse(input: &str) -> (Vec<Vec<Cell>>, BTreeMap<(char, char), Vec<Point>>) {
-    let rows = input.lines().count() - 4;
-    let cols = input.lines().next().unwrap().len() - 4;
-    let mut ans = vec![vec![Cell::Space; cols]; rows];
-    let mut portals: BTreeMap<(char, char), Vec<Point>> = BTreeMap::new();
-
+pub fn parse(input: &str) -> (Vec<Vec<Cell>>, BTreeMap<Portal, Vec<Point>>, Point, Point) {
     let input: Vec<Vec<char>> = input
         .lines()
         .map(|line| line.chars().collect::<Vec<_>>())
         .collect();
+    let rows = input.len() - 4;
+    let cols = input[0].len() - 4;
+    let mut ans = vec![vec![Cell::Wall; cols]; rows];
+    let mut portals: BTreeMap<Portal, Vec<Point>> = BTreeMap::new();
+    let mut start = None;
+    let mut end = None;
 
     for row in 1..rows + 3 {
         for col in 1..cols + 3 {
@@ -30,28 +33,31 @@ pub fn parse(input: &str) -> (Vec<Vec<Cell>>, BTreeMap<(char, char), Vec<Point>>
                 input[row][col + 1],
             );
             if m.is_alphabetic() {
-                if u.is_alphabetic() && d == '.' {
-                    ans[row - 1][col - 2] = Cell::Portal;
-                    portals.entry((u, m)).or_default().push((row - 1, col - 2));
+                let (cc, (r, c)) = if u.is_alphabetic() && d == '.' {
+                    ((u, m), (row - 1, col - 2))
+                } else if u == '.' && d.is_alphabetic() {
+                    ((m, d), (row - 3, col - 2))
+                } else if l.is_alphabetic() && r == '.' {
+                    ((l, m), (row - 2, col - 1))
+                } else if l == '.' && r.is_alphabetic() {
+                    ((m, r), (row - 2, col - 3))
+                } else {
                     continue;
+                };
+                match cc {
+                    ('A', 'A') => start = Some((r, c)),
+                    ('Z', 'Z') => end = Some((r, c)),
+                    _ => {
+                        if r == 0 || c == 0 || r == ans.len() - 1 || c == ans[0].len() - 1 {
+                            ans[r][c] = Cell::OuterPortal(cc);
+                        } else {
+                            ans[r][c] = Cell::InnerPortal(cc);
+                        }
+                        portals.entry(cc).or_default().push((r, c));
+                    }
                 }
-                if u == '.' && d.is_alphabetic() {
-                    ans[row - 3][col - 2] = Cell::Portal;
-                    portals.entry((m, d)).or_default().push((row - 3, col - 2));
-                    continue;
-                }
-                if l.is_alphabetic() && r == '.' {
-                    ans[row - 2][col - 1] = Cell::Portal;
-                    portals.entry((l, m)).or_default().push((row - 2, col - 1));
-                    continue;
-                }
-                if l == '.' && r.is_alphabetic() {
-                    ans[row - 2][col - 3] = Cell::Portal;
-                    portals.entry((m, r)).or_default().push((row - 2, col - 3));
-                    continue;
-                }
-            } else if m == '#' {
-                ans[row - 2][col - 2] = Cell::Wall;
+            } else if m == '.' && matches!(ans[row - 2][col - 2], Cell::Wall) {
+                ans[row - 2][col - 2] = Cell::Space;
             }
         }
     }
@@ -61,11 +67,12 @@ pub fn parse(input: &str) -> (Vec<Vec<Cell>>, BTreeMap<(char, char), Vec<Point>>
     //         match cell {
     //             Cell::Wall => print!("#"),
     //             Cell::Space => print!("."),
-    //             Cell::Portal => print!("p"),
+    //             Cell::OuterPortal(_) => print!("o"),
+    //             Cell::InnerPortal(_) => print!("x"),
     //         }
     //     }
     //     println!();
     // }
 
-    (ans, portals)
+    (ans, portals, start.unwrap(), end.unwrap())
 }
