@@ -1,9 +1,8 @@
-use crate::parsing::parse_input;
+use crate::parsing::parse;
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
-
+    let (map, portals) = parse(_input);
+    println!("{portals:?}");
     todo!("part1");
     // panic!("should have an answer")
 }
@@ -12,17 +11,29 @@ mod tests {
     use super::*;
     use rstest::*;
 
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
-    }
     #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
+    #[case(
+        r#"         A           
+         A           
+  #######.#########  
+  #######.........#  
+  #######.#######.#  
+  #######.#######.#  
+  #######.#######.#  
+  #####  B    ###.#  
+BC...##  C    ###.#  
+  ##.##       ###.#  
+  ##...DE  F  ###.#  
+  #####    G  ###.#  
+  #########.#####.#  
+DE..#######...###.#  
+  #.#########.###.#  
+FG..#########.....#  
+  ###########.#####  
+             Z       
+             Z       "#,
+        23
+    )]
     fn test_process(#[case] input: &str, #[case] expected: usize) {
         assert_eq!(process(input), expected);
     }
