@@ -1,29 +1,22 @@
-use crate::parsing::parse_input;
+use intcode::{Computer, RunResult, parse};
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
+    let mut comp = Computer::new(parse(_input));
 
-    todo!("part1");
-    // panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
+    let springscript = r#"NOT C J 
+AND D J 
+NOT A T 
+OR T J
+WALK
+"#;
 
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
+    for c in springscript.bytes() {
+        comp.input(c as i64);
     }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
+    let mut ans =0;
+    while let RunResult::Output(o) = comp.long_run() {
+        ans = o;
+        print!("{}", o as u8 as char);
     }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    ans as usize
 }
