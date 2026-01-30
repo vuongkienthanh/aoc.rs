@@ -1,20 +1,28 @@
-#[allow(unused_imports)]
-// use aoc_helper::nom::parse_signed_usize;
+use aoc_helper::nom::{Sign, parse_signed_usize};
 use nom::{
+    IResult, Parser,
     branch::alt,
     bytes::complete::tag,
-    character::complete::{self, alpha1, line_ending},
+    character::complete::{self, line_ending},
     combinator::all_consuming,
     multi::separated_list1,
-    sequence::{delimited, preceded, separated_pair, terminated},
-    IResult, Parser,
+    sequence::preceded,
 };
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
 
-type Item = usize;
+#[derive(Debug)]
+pub enum Item {
+    Reverse,
+    Cut(Sign, usize),
+    Deal(usize),
+}
 
 fn parse_line(input: &str) -> IResult<&str, Item> {
-    todo!()
+    alt((
+        tag("deal into new stack").map(|_| Item::Reverse),
+        preceded(tag("cut "), parse_signed_usize).map(|(s, u)| Item::Cut(s, u)),
+        preceded(tag("deal with increment "), complete::usize).map(Item::Deal),
+    ))
+    .parse(input)
 }
 
 pub fn parse_input(input: &str) -> Vec<Item> {
