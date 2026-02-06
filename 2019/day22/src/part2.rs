@@ -13,11 +13,16 @@ pub fn process(_input: &str) -> u128 {
     ((c + ncards - Mb) * inv(Ma, ncards)) % ncards
 }
 
+// deal into new stack: new_pos = -current_pos + deck_size - 1
+// cut: new_pos = current_pos - cut_pos
+// deal with increment: new_pos = increment * current_pos
+// combine with algebra
+// f = a*x+b and g = c*x+d, composition g(f(x)) is c*a*x + c*b + d.
 fn combine_input(input: Vec<Item>, ncards: u128) -> (u128, u128) {
     let (mut a, mut b) = (1isize, 0isize);
     let ncards = ncards as isize;
     for item in input {
-        let (la, lb) = match item {
+        let (c, d) = match item {
             Item::Reverse => (-1, -1),
             Item::Deal(x) => (x as isize, 0),
             Item::Cut(s, u) => match s {
@@ -25,8 +30,8 @@ fn combine_input(input: Vec<Item>, ncards: u128) -> (u128, u128) {
                 Sign::Negative => (1, u as isize),
             },
         };
-        a = (la * a + ncards) % ncards;
-        b = (la * b + lb + ncards) % ncards;
+        a = (c * a + ncards) % ncards;
+        b = (c * b + d + ncards) % ncards;
     }
     (a as u128, b as u128)
 }
