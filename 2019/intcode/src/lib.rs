@@ -78,10 +78,21 @@ impl Computer {
         self.input.push_back(input);
     }
 
-    pub fn command(&mut self, cmd: &str) {
-        for c in cmd.bytes() {
-            self.input(c as i64);
+    pub fn ascii(&mut self, cmd: &str) -> String {
+        if !cmd.is_empty() {
+            for c in cmd.bytes() {
+                self.input(c as i64);
+            }
+            self.input(b'\n' as i64);
         }
+        let mut output = String::new();
+        loop {
+            match self.long_run() {
+                RunResult::Halt | RunResult::WaitingInput => break,
+                RunResult::Output(x) => output.push(x as u8 as char),
+            }
+        }
+        output
     }
 
     pub fn get_value(&self, modes: &mut i64, parameter_pointer: usize) -> i64 {

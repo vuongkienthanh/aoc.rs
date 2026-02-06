@@ -3,66 +3,75 @@ use nom::{
     IResult, Parser,
     branch::alt,
     bytes::complete::{tag, take, take_while},
-    character::complete::{self, alpha1, line_ending, multispace0},
+    character::complete::{alpha1, line_ending},
     combinator::all_consuming,
-    multi::{count, many1, separated_list1},
+    multi::separated_list1,
     sequence::{delimited, preceded, terminated},
 };
-// == Corridor ==                                                                                                                                                                              ▐
-// The metal walls and the metal floor are slightly different colors. Or are they?                                                                                                             ▐
-//                                                                                                                                                                                             ▐
-// Doors here lead:                                                                                                                                                                            ▐
-// - east                                                                                                                                                                                      ▐
-// - south                                                                                                                                                                                     ▐
-// - west                                                                                                                                                                                      ▐
-//                                                                                                                                                                                             ▐
-// Items here:
-// - ornament
-//
-// Command?
-//
-//
 
-fn parse_location(input: &str) -> IResult<&str, &str> {
+fn parse_location(input: &str) -> IResult<&str, String> {
     delimited(
-        (count(line_ending, 3), tag("== ")),
-        take_while(|x| x != '=').map(|x: &str| &x[..x.len() - 1]),
-        (
-            tag("=="),
+        tag("\n\n\n== "),
+        take_while(|x| x != '=').map(|x: &str| x[..x.len() - 1].to_string()),
+        (tag("==\n"), take_while(|x| x != '\n'), tag("\n\n")),
+    )
+    .parse(input)
+}
+fn parse_doors(input: &str) -> IResult<&str, Vec<String>> {
+    delimited(
+        tag("Doors here lead:\n"),
+        separated_list1(
             line_ending,
-            take_while(|x| x != '\n'),
-            line_ending,
-            line_ending,
+            preceded(tag("- "), alpha1.map(|x: &str| x.to_string())),
         ),
+        tag("\n\n"),
     )
     .parse(input)
 }
-fn parse_doors(input: &str) -> IResult<&str, Vec<&str>> {
-    delimited(
-        (tag("Doors here lead:"), line_ending),
-        separated_list1(line_ending, preceded((tag("- ")), alpha1)),
-        (line_ending, line_ending),
-    )
-    .parse(input)
-}
-fn parse_items(input: &str) -> IResult<&str, Vec<&str>> {
+fn parse_items(input: &str) -> IResult<&str, Vec<String>> {
     alt((
         delimited(
-            (tag("Items here:"), line_ending),
-            separated_list1(line_ending, preceded(tag("- "), take_while(|x| x != '\n'))),
-            (line_ending, line_ending),
+            tag("Items here:\n"),
+            separated_list1(
+                line_ending,
+                preceded(
+                    tag("- "),
+                    take_while(|x| x != '\n').map(|x: &str| x.to_string()),
+                ),
+            ),
+            tag("\n\n"),
         ),
         take(0usize).map(|_| vec![]),
     ))
     .parse(input)
 }
-fn parse_block(input: &str) -> IResult<&str, (&str, Vec<&str>, Vec<&str>)> {
-    terminated(
+fn parse_block(input: &str) -> (String, Vec<String>, Vec<String>) {
+    all_consuming(terminated(
         (parse_location, parse_doors, parse_items),
         tag("Command?\n"),
-    )
+    ))
+    .parse(input)
+    .unwrap()
+    .1
+}
+
+fn _parse_inventory(input: &str) -> IResult<&str, Vec<String>> {
+    alt((
+        delimited(
+            tag("\nItems in your inventory:\n"),
+            separated_list1(
+                line_ending,
+                preceded(
+                    tag("- "),
+                    take_while(|x| x != '\n').map(|x: &str| x.to_string()),
+                ),
+            ),
+            tag("\n\nCommand?\n"),
+        ),
+        tag("\nYou aren't carrying any items.\n\nCommand?\n").map(|_| vec![]),
+    ))
     .parse(input)
 }
-fn parse_output(input: &str) -> Vec<(&str, Vec<&str>, Vec<&str>)> {
-    all_consuming(many1(parse_block)).parse(input).unwrap().1
+fn parse_inventory(input: &str) -> Vec<String> {
+    all_consuming(_parse_inventory).parse(input).unwrap().1
 }
