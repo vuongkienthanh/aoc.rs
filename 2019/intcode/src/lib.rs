@@ -78,6 +78,12 @@ impl Computer {
         self.input.push_back(input);
     }
 
+    pub fn command(&mut self, cmd: &str) {
+        for c in cmd.bytes() {
+            self.input(c as i64);
+        }
+    }
+
     pub fn get_value(&self, modes: &mut i64, parameter_pointer: usize) -> i64 {
         let mode = *modes % 10;
         (*modes) /= 10;

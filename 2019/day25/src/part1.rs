@@ -1,29 +1,26 @@
-use crate::parsing::parse_input;
+use crate::{parse_block, parse_output};
+use fxhash::FxHashSet;
+use intcode::{Computer, RunResult, parse};
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
-
-    todo!("part1");
-    // panic!("should have an answer")
+    let input = parse(_input);
+    let mut comp = Computer::new(input);
+    let mut seen: FxHashSet<State> = FxHashSet::default();
+    let mut current = vec![];
+    loop {
+        match comp.long_run() {
+            RunResult::Halt => panic!("should not halt"),
+            RunResult::WaitingInput => break,
+            RunResult::Output(x) => output.push(x as u8 as char),
+        }
+    }
+    let x = parse_output(&output);
+    println!("{x:?}");
+    0
 }
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
 
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
-    }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+struct State<'a> {
+    comp: Computer,
+    loc: &'a str,
+    items: Vec<&'a str>,
 }

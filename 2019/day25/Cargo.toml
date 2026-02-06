@@ -8,8 +8,10 @@ description.workspace = true
 publish.workspace = true
 
 [dependencies]
+intcode.workspace = true
 nom.workspace = true
-# aoc_helper.workspace = true
+fxhash.workspace = true
+
 
 [dev-dependencies]
 rstest.workspace = true
