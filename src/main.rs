@@ -105,14 +105,11 @@ or `cargo run -- fetch DAY` to download input"#
                         let response = client.get(url).send()?;
                         if response.status().is_success() {
                             let input = response.text()?;
-                            if input.trim_end() == "Puzzle inputs differ by user.  Please log in to get your puzzle input." {
-                                return Ok(())
-                            }
                             fs::write(dst, input)?;
                             println!("finish download input for day {:0>2}", day);
                         } else {
                             let input = response.text()?;
-                            println!("day{:0>2}: {}", day, &input);
+                            println!("{}", &input);
                             break;
                         }
                     }
