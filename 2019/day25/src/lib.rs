@@ -28,26 +28,23 @@ fn parse_doors(input: &str) -> IResult<&str, Vec<String>> {
     )
     .parse(input)
 }
-fn parse_items(input: &str) -> IResult<&str, Vec<String>> {
+fn parse_item(input: &str) -> IResult<&str, String> {
     alt((
         delimited(
             tag("Items here:\n"),
-            separated_list1(
-                line_ending,
-                preceded(
-                    tag("- "),
-                    take_while(|x| x != '\n').map(|x: &str| x.to_string()),
-                ),
+            preceded(
+                tag("- "),
+                take_while(|x| x != '\n').map(|x: &str| x.to_string()),
             ),
             tag("\n\n"),
         ),
-        take(0usize).map(|_| vec![]),
+        take(0usize).map(|_| String::new()),
     ))
     .parse(input)
 }
-fn parse_block(input: &str) -> (String, Vec<String>, Vec<String>) {
+fn parse_block(input: &str) -> (String, Vec<String>, String) {
     all_consuming(terminated(
-        (parse_location, parse_doors, parse_items),
+        (parse_location, parse_doors, parse_item),
         tag("Command?\n"),
     ))
     .parse(input)

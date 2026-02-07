@@ -11,7 +11,4 @@ publish.workspace = true
 intcode.workspace = true
 nom.workspace = true
 fxhash.workspace = true
-
-
-[dev-dependencies]
-rstest.workspace = true
+itertools.workspace = true
