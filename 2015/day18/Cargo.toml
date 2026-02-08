@@ -1,0 +1,12 @@
+[package]
+name = "day18"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+description.workspace = true
+publish.workspace = true
+
+[dependencies]
+aoc_helper.workspace = true
+grid.workspace = true

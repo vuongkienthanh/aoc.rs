@@ -1,0 +1,47 @@
+[workspace]
+members = [
+    "day*",
+    "day01",
+    "day02",
+    "day03",
+    "day04",
+    "day05",
+    "day06",
+    "day07",
+    "day08",
+    "day09",
+    "day10",
+    "day11",
+    "day12",
+    "day13",
+    "day14",
+    "day15",
+    "day16",
+    "day17",
+    "day18",
+    "day19",
+    "day20",
+    "day21",
+    "day22",
+    "day23",
+    "day24",
+    "day25",
+]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Vương Kiến Thanh <thanhstardust@outlook.com>"]
+description = "solver for adventofcode.com"
+publish = false
+edition = "2024"
+rust-version = "1.91.0"
+
+[workspace.dependencies]
+glam = "~0.30.9"
+itertools = "~0.14"
+nom = "~8.0.0"
+rstest = "~0.26.1"
+grid = "~1.0.0"
+micromap = "0.1.0"
+aoc_helper = { path = "../aoc_helper" }

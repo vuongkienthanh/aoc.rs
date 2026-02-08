@@ -1,0 +1,24 @@
+[package]
+name = 'aoc'
+version = '0.1.0'
+edition = '2024'
+authors = ["Vương Kiến Thanh <thanhstardust@outlook.com>"]
+rust-version = "1.91.0"
+description = "An Advent Of Code template generator and solver in Rust"
+publish = false
+
+[dependencies]
+dotenvy = "~0.15"
+reqwest = { version = "~0.12", default-features = false, features = [
+    "blocking",
+    "cookies",
+    "native-tls",
+] }
+cargo-generate = "~0.23"
+
+[profile.release]
+strip = true
+lto = true
+opt-level = "s"
+codegen-units = 1
+panic = "abort"

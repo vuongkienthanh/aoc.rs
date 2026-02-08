@@ -1,0 +1,12 @@
+[package]
+name = "day12"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+description.workspace = true
+publish.workspace = true
+
+[dependencies]
+rstest.workspace = true
+serde_json = "1.0.145"
