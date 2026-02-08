@@ -5,12 +5,11 @@ pub fn process(_input: &str) -> usize {
         .map(|line| line.parse::<usize>().unwrap())
         .collect();
     input.sort_unstable();
-    let mut ans = 0;
-    'a: for a in 0..input.len() - 2 {
+    let mut a = 0;
+    let mut b_max = input.len();
+    'a: loop {
         let x = input[a];
-        let b_max = (a + 2..input.len())
-            .rfind(|b| input[*b] + x < 2020)
-            .unwrap();
+        b_max = (a + 2..b_max).rfind(|b| input[*b] + x < 2020).unwrap();
         for b in (a + 2..=b_max).rev() {
             let y = input[b];
             for c in a + 1..b {
@@ -19,12 +18,11 @@ pub fn process(_input: &str) -> usize {
                     Ordering::Less => (),
                     Ordering::Greater => break,
                     Ordering::Equal => {
-                        ans = x * y * z;
-                        break 'a;
+                        break 'a x * y * z;
                     }
                 }
             }
         }
+        a += 1;
     }
-    ans
 }
