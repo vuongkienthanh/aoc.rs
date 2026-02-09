@@ -1,29 +1,46 @@
-use crate::parsing::parse_input;
+use crate::parsing::{Item, parse_input};
+use aoc_helper::adj::grid::adj8;
+use grid::Grid;
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
+    let mut input = Grid::from(parse_input(_input));
 
-    todo!("part1");
-    // panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
-    }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+    loop {
+        let mut new_input = input.clone();
+        for ((i, j), cell) in new_input.indexed_iter_mut() {
+            match cell {
+                Item::Space => (),
+                Item::Empty => {
+                    if adj8((i, j), input.rows(), input.cols())
+                        .into_iter()
+                        .flatten()
+                        .filter(|(r, c)| matches!(input[(*r, *c)], Item::Occupied))
+                        .count()
+                        == 0
+                    {
+                        *cell = Item::Occupied;
+                    }
+                }
+                Item::Occupied => {
+                    if adj8((i, j), input.rows(), input.cols())
+                        .into_iter()
+                        .flatten()
+                        .filter(|(r, c)| matches!(input[(*r, *c)], Item::Occupied))
+                        .count()
+                        >= 4
+                    {
+                        *cell = Item::Empty;
+                    }
+                }
+            }
+        }
+        if new_input == input {
+            break new_input
+                .into_iter()
+                .filter(|x| matches!(x, Item::Occupied))
+                .count();
+        } else {
+            input = new_input
+        }
     }
 }
