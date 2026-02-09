@@ -1,29 +1,15 @@
-use crate::parsing::parse_input;
+use crate::parse;
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
-
-    todo!("part1");
-    // panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
+    let input = parse(_input);
+    let mut ones = 0;
+    let mut threes = 0;
+    for v in input.windows(2) {
+        if v[1] - v[0] == 1 {
+            ones += 1;
+        } else if v[1] - v[0] == 3 {
+            threes += 1;
+        }
     }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    ones * threes
 }
