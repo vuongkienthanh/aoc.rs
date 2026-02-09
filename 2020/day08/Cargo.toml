@@ -9,7 +9,7 @@ publish.workspace = true
 
 [dependencies]
 nom.workspace = true
-# aoc_helper.workspace = true
+fxhash.workspace = true
 
 [dev-dependencies]
 rstest.workspace = true

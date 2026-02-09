@@ -1,29 +1,25 @@
-use crate::parsing::parse_input;
+use crate::parsing::{Item, parse_input};
+use fxhash::FxHashSet;
 
-pub fn process(_input: &str) -> usize {
+pub fn process(_input: &str) -> isize {
     let input = parse_input(_input);
-    println!("{input:?}");
+    let mut seen = FxHashSet::default();
+    let mut i = 0;
+    let mut acc = 0isize;
 
-    todo!("part1");
-    // panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
+    loop {
+        if seen.insert(i) && i < input.len() {
+            match input[i] {
+                Item::nop(_) => i += 1,
+                Item::acc(x) => {
+                    acc += x;
+                    i += 1;
+                }
+                Item::jmp(x) => i = i.checked_add_signed(x).unwrap(),
+            }
+        } else {
+            break;
+        }
     }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    acc
 }
