@@ -1,3 +1,9 @@
 pub mod part1;
 pub mod part2;
-pub mod parsing;
+
+fn parse(input: &str) -> Vec<usize> {
+    input
+        .lines()
+        .map(|line| line.parse::<usize>().unwrap())
+        .collect()
+}
