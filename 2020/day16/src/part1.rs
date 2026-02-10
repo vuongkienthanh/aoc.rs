@@ -1,29 +1,17 @@
 use crate::parsing::parse_input;
+use crate::valid_ranges;
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
-
-    todo!("part1");
-    // panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
-    }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    let (class, _, nearby) = parse_input(_input);
+    let valid_ranges = valid_ranges(&class);
+    nearby
+        .into_iter()
+        .flatten()
+        .filter_map(|x| {
+            valid_ranges
+                .iter()
+                .all(|(a, b)| x < *a || x > *b)
+                .then_some(x)
+        })
+        .sum()
 }
