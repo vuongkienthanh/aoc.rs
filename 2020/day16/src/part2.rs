@@ -6,7 +6,7 @@ pub fn process(_input: &str) -> usize {
     let valid_ranges = valid_ranges(&class);
     nearby.retain(|v| {
         v.iter()
-            .all(|x| valid_ranges.iter().all(|(a, b)| x > a && x < b))
+            .all(|x| valid_ranges.iter().all(|(a, b)| x >= a && x <= b))
     });
 
     let mut possibilities = vec![(0..class.len()).collect::<Vec<_>>(); class.len()];
@@ -40,17 +40,18 @@ pub fn process(_input: &str) -> usize {
             p.retain(|x| !ones.contains(x));
         }
     }
-    let departure: Vec<usize> = class
+    class
         .into_iter()
-        .filter(|(x, _)| x.starts_with("departure"))
         .enumerate()
-        .map(|(i, _)| i)
-        .collect();
-    possibilities
-        .into_iter()
-        .flatten()
-        .enumerate()
-        .filter_map(|(i, x)| departure.contains(&x).then_some(i))
+        .filter_map(|(i, (x, _))| x.starts_with("departure").then_some(i))
+        .map(|i| {
+            possibilities
+                .iter()
+                .flatten()
+                .enumerate()
+                .find_map(|(j, x)| (*x == i).then_some(j))
+                .unwrap()
+        })
         .map(|i| your[i])
         .product()
 }
