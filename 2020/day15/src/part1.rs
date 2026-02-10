@@ -1,29 +1,30 @@
-use crate::parsing::parse_input;
-
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
-
-    todo!("part1");
-    // panic!("should have an answer")
+    find(_input, 2020)
 }
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
 
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
+pub fn find(input: &str, at: usize) -> usize {
+    let mut seen: Vec<_> = vec![None; at];
+    let input: Vec<_> = input
+        .split(",")
+        .map(|x| x.parse::<usize>().unwrap())
+        .collect();
+    for (turn, c) in input.iter().enumerate().take(input.len() - 1) {
+        *seen.get_mut(*c).unwrap() = Some(turn + 1);
     }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
+    let mut last_spoken = input.last().cloned().unwrap();
+
+    for i in input.len() + 1..=at {
+        match seen[last_spoken] {
+            None => {
+                seen[last_spoken] = Some(i - 1);
+                last_spoken = 0;
+            }
+            Some(turn) => {
+                seen[last_spoken] = Some(i - 1);
+                last_spoken = i - 1 - turn;
+            }
+        }
     }
 
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    last_spoken
 }

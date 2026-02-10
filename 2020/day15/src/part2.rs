@@ -1,6 +1,4 @@
-use crate::parsing::parse_input;
-
+use crate::part1::find;
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    todo!("part2");
+    find(_input, 30_000_000)
 }

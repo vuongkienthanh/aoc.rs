@@ -6,10 +6,3 @@ authors.workspace = true
 rust-version.workspace = true
 description.workspace = true
 publish.workspace = true
-
-[dependencies]
-nom.workspace = true
-# aoc_helper.workspace = true
-
-[dev-dependencies]
-rstest.workspace = true
