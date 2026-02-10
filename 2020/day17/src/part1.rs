@@ -1,29 +1,8 @@
-use crate::parsing::parse_input;
-
+use crate::{Point3D, min_max_3d, parse_3d};
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
-
+    let map = parse_3d(_input);
+    let ((min_x, max_x), (min_y, max_y), (min_z, max_z)) = min_max_3d(&map);
+    println!("{map:?}");
+    println!("{min_x} {max_x} {min_y} {max_y} {min_z} {max_z}");
     todo!("part1");
-    // panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
-    }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
 }
