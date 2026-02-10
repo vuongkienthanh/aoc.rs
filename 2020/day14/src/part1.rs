@@ -1,29 +1,31 @@
 use crate::parsing::parse_input;
+use fxhash::FxHashMap;
 
-pub fn process(_input: &str) -> usize {
+pub fn process(_input: &str) -> u64 {
     let input = parse_input(_input);
-    println!("{input:?}");
-
-    todo!("part1");
-    // panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
+    let mut mem = FxHashMap::default();
+    for (mask, v) in input {
+        let (mut zero, mut one) = (0u64, 0u64);
+        for c in mask.bytes() {
+            match c {
+                b'X' => {
+                    zero <<= 1;
+                    one <<= 1;
+                }
+                b'0' => {
+                    zero = (zero << 1) | 1;
+                    one <<= 1;
+                }
+                b'1' => {
+                    zero <<= 1;
+                    one = (one << 1) | 1;
+                }
+                _ => panic!(),
+            }
+        }
+        for (loc, val) in v {
+            mem.insert(loc as usize, ((val | zero) ^ zero) | one);
+        }
     }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    mem.into_values().sum()
 }
