@@ -1,8 +1,77 @@
-use crate::{Point3D, min_max_3d, parse_3d};
+use fxhash::{FxHashSet, FxHashMap};
+
 pub fn process(_input: &str) -> usize {
-    let map = parse_3d(_input);
-    let ((min_x, max_x), (min_y, max_y), (min_z, max_z)) = min_max_3d(&map);
-    println!("{map:?}");
-    println!("{min_x} {max_x} {min_y} {max_y} {min_z} {max_z}");
-    todo!("part1");
+    let mut map = parse(_input);
+
+    for _ in 0..6 {
+        let mut new_map = FxHashSet::default();
+        let mut inactives :FxHashMap<Point, usize> = FxHashMap::default();
+        for active in &map {
+            let mut count =0;
+            for p in adj(*active) {
+                if map.contains(&p) {
+                    count +=1;
+                } else {
+                    *inactives.entry(p).or_default() +=1;
+                }
+
+            }
+            if count == 2 || count == 3 {
+                new_map.insert(*active);
+            }
+        }
+        for (p, v) in inactives {
+            if v == 3 {
+                new_map.insert(p);
+            }
+        }
+        map = new_map;
+    }
+    map.len()
+}
+
+type Point = (isize, isize, isize);
+const ADJ: [Point; 26] = [
+    (-1, -1, -1),
+    (-1, -1, 0),
+    (-1, -1, 1),
+    (-1, 0, -1),
+    (-1, 0, 0),
+    (-1, 0, 1),
+    (-1, 1, -1),
+    (-1, 1, 0),
+    (-1, 1, 1),
+    (0, -1, -1),
+    (0, -1, 0),
+    (0, -1, 1),
+    (0, 0, -1),
+    (0, 0, 1),
+    (0, 1, -1),
+    (0, 1, 0),
+    (0, 1, 1),
+    (1, -1, -1),
+    (1, -1, 0),
+    (1, -1, 1),
+    (1, 0, -1),
+    (1, 0, 0),
+    (1, 0, 1),
+    (1, 1, -1),
+    (1, 1, 0),
+    (1, 1, 1),
+];
+
+fn parse(input: &str) -> FxHashSet<Point> {
+    let mut map = FxHashSet::default();
+    for (y, line) in input.lines().enumerate() {
+        for (x, cell) in line.chars().enumerate() {
+            if cell == '#' {
+                map.insert((x as isize, y as isize, 0));
+            }
+        }
+    }
+    map
+}
+
+fn adj((x, y, z): Point) -> Vec<Point> {
+    ADJ.iter().map(|(a, b, c)| (x + a, y + b, z + c)).collect()
 }
