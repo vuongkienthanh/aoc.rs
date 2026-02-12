@@ -8,7 +8,15 @@ pub fn process(_input: &str) -> usize {
     let rows = input.first().unwrap().1.rows();
     let cols = input.first().unwrap().1.cols();
 
-    let image = build_image(input);
+    let mut image = build_image(input);
+    for row in image.iter_mut() {
+        for (i, grid) in row.iter_mut() {
+            grid.pop_row().unwrap();
+            grid.remove_row(0).unwrap();
+            grid.pop_col().unwrap();
+            grid.remove_col(0).unwrap();
+        }
+    }
     let mut combined = vec![];
 
     for v in image {
@@ -36,8 +44,8 @@ pub fn process(_input: &str) -> usize {
     let target_cols = target.iter().map(|(_, col)| col).max().cloned().unwrap() + 1;
     let target_rows = target.iter().map(|(row, _)| row).max().cloned().unwrap() + 1;
 
-
     for variant in variants(&image) {
+        println!("{} {} ", variant.rows(), variant.cols());
         let mut count = 0;
         for row in 0..variant.rows() - target_rows+1 {
             for col in 0..variant.cols() - target_cols+1 {
@@ -50,7 +58,7 @@ pub fn process(_input: &str) -> usize {
                 }
             }
         }
-            println!("{count}");
+        println!("{count}");
     }
 
     0
