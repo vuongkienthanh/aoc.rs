@@ -9,49 +9,12 @@ use nom::{
     sequence::{delimited, preceded, separated_pair},
 };
 
+pub type Rules = FxHashMap<usize, Rule>;
+
 #[derive(Debug, Clone)]
 pub enum Rule {
     Char(char),
     Or(Vec<Vec<usize>>),
-}
-
-impl Rule {
-    fn is_matched<'a>(
-        &'a self,
-        mut msg: &'a str,
-        rules: &'a FxHashMap<usize, Rule>,
-    ) -> Option<&'a str> {
-        if msg.is_empty() {
-            return None;
-        }
-        match self {
-            Rule::Char(c) => (msg.chars().next().unwrap() == *c).then_some(&msg[1..]),
-            Rule::Or(v) => {
-                let mut ans = None;
-                'a: for chain in v {
-                    let mut msg = msg.clone();
-                    for rule in chain {
-                        let rule = rules.get(&rule).unwrap();
-                        if let Some(s) = rule.is_matched(msg, rules) {
-                            msg = s;
-                        } else {
-                            continue 'a;
-                        }
-                    }
-                    ans = Some(msg);
-                    break;
-                }
-                ans
-            }
-        }
-    }
-    pub fn is_matched_all(&self, msg: &str, rules: &FxHashMap<usize, Rule>) -> bool {
-        if let Some(s) = self.is_matched(msg, rules) {
-            s.is_empty()
-        } else {
-            false
-        }
-    }
 }
 
 fn parse_rule_line(input: &str) -> IResult<&str, (usize, Rule)> {
@@ -91,7 +54,7 @@ fn parse_msg(input: &str) -> IResult<&str, Vec<&str>> {
     .parse(input)
 }
 
-pub fn parse_input(input: &str) -> (FxHashMap<usize, Rule>, Vec<&str>) {
+pub fn parse_input(input: &str) -> (Rules, Vec<&str>) {
     all_consuming((parse_rules, parse_msg))
         .parse(input)
         .unwrap()
