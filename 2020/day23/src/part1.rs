@@ -9,8 +9,8 @@ pub fn process(_input: &str) -> usize {
         let (a, b) = (v[0], v[1]);
         cups_next[a] = b;
     }
-    cups_next[input.last().cloned().unwrap()] = input.first().cloned().unwrap();
-    let mut current_cup = input.first().cloned().unwrap();
+    cups_next[input.last().cloned().unwrap()] = input[0];
+    let mut current_cup = input[0];
 
     for _ in 0..100 {
         let mut pick_up = vec![];
@@ -25,7 +25,7 @@ pub fn process(_input: &str) -> usize {
         }
         cups_next[current_cup] = cups_next[pick_up.last().cloned().unwrap()];
         cups_next[pick_up.last().cloned().unwrap()] = cups_next[dst];
-        cups_next[dst] = pick_up.first().cloned().unwrap();
+        cups_next[dst] = pick_up[0];
 
         current_cup = cups_next[current_cup];
     }
