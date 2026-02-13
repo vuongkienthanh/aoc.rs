@@ -1,29 +1,27 @@
 use crate::parsing::parse_input;
+use std::cmp::Ordering;
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
-
-    todo!("part1");
-    // panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
+    let (mut p1, mut p2) = parse_input(_input);
+    while p1.len() > 0 && p2.len() > 0 {
+        let a = p1.pop_front().unwrap();
+        let b = p2.pop_front().unwrap();
+        match a.cmp(&b) {
+            Ordering::Equal => panic!(),
+            Ordering::Less => {
+                p2.push_back(b);
+                p2.push_back(a);
+            }
+            Ordering::Greater => {
+                p1.push_back(a);
+                p1.push_back(b);
+            }
+        }
     }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    p1.into_iter()
+        .chain(p2)
+        .rev()
+        .enumerate()
+        .map(|(i, n)| n * (i + 1))
+        .sum()
 }

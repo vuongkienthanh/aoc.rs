@@ -1,24 +1,32 @@
-#[allow(unused_imports)]
-// use aoc_helper::nom::parse_signed_usize;
 use nom::{
-    branch::alt,
+    IResult, Parser,
     bytes::complete::tag,
-    character::complete::{self, alpha1, line_ending},
+    character::complete::{self, line_ending},
     combinator::all_consuming,
     multi::separated_list1,
-    sequence::{delimited, preceded, separated_pair, terminated},
-    IResult, Parser,
+    sequence::preceded,
 };
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
+use std::collections::VecDeque;
 
-type Item = usize;
-
-fn parse_line(input: &str) -> IResult<&str, Item> {
-    todo!()
+fn parse_player1(input: &str) -> IResult<&str, VecDeque<usize>> {
+    preceded(
+        tag("Player 1:\n"),
+        separated_list1(line_ending, complete::usize),
+    )
+    .map(|v| VecDeque::from(v))
+    .parse(input)
+}
+fn parse_player2(input: &str) -> IResult<&str, VecDeque<usize>> {
+    preceded(
+        tag("\n\nPlayer 2:\n"),
+        separated_list1(line_ending, complete::usize),
+    )
+    .map(|v| VecDeque::from(v))
+    .parse(input)
 }
 
-pub fn parse_input(input: &str) -> Vec<Item> {
-    all_consuming(separated_list1(line_ending, parse_line))
+pub fn parse_input(input: &str) -> (VecDeque<usize>, VecDeque<usize>) {
+    all_consuming((parse_player1, parse_player2))
         .parse(input)
         .unwrap()
         .1
