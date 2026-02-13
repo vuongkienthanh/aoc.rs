@@ -1,29 +1,22 @@
-use crate::parsing::parse_input;
-
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
+    let input: Vec<_> = _input
+        .lines()
+        .map(|x| x.parse::<usize>().unwrap())
+        .collect();
+    let (card_pk, door_pk) = (input[0], input[1]);
 
-    todo!("part1");
-    // panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
-    }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+    let mut loopsize = 0;
+    let mut value = 1;
+    loop {
+        loopsize += 1;
+        value = value * 7 % 20201227;
+        if value == card_pk {
+            println!("found card_loopsize first= {loopsize}");
+            break (0..loopsize).fold(1, |acc, _| acc * door_pk % 20201227);
+        }
+        if value == door_pk {
+            println!("found door_loopsize first= {loopsize}");
+            break (0..loopsize).fold(1, |acc, _| acc * card_pk % 20201227);
+        }
     }
 }
