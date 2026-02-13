@@ -8,23 +8,15 @@ pub fn process(_input: &str) -> usize {
     let rows = input.first().unwrap().1.rows();
     let cols = input.first().unwrap().1.cols();
 
-    let mut image = build_image(input);
-    for row in image.iter_mut() {
-        for (i, grid) in row.iter_mut() {
-            grid.pop_row().unwrap();
-            grid.remove_row(0).unwrap();
-            grid.pop_col().unwrap();
-            grid.remove_col(0).unwrap();
-        }
-    }
+    let image = build_image(input);
     let mut combined = vec![];
 
     for v in image {
-        for row in 0..rows {
+        for row in 1..rows - 1 {
             let mut combined_row = vec![];
             for (_, grid) in &v {
-                for cell in grid.iter_row(row) {
-                    combined_row.push(*cell);
+                for col in 1..cols - 1 {
+                    combined_row.push(grid[(row, col)]);
                 }
             }
             combined.push(combined_row);
@@ -43,12 +35,12 @@ pub fn process(_input: &str) -> usize {
         .collect();
     let target_cols = target.iter().map(|(_, col)| col).max().cloned().unwrap() + 1;
     let target_rows = target.iter().map(|(row, _)| row).max().cloned().unwrap() + 1;
+    let mut ans = 0;
 
     for variant in variants(&image) {
-        println!("{} {} ", variant.rows(), variant.cols());
         let mut count = 0;
-        for row in 0..variant.rows() - target_rows+1 {
-            for col in 0..variant.cols() - target_cols+1 {
+        for row in 0..variant.rows() - target_rows {
+            for col in 0..variant.cols() - target_cols {
                 if target
                     .iter()
                     .map(|(r, c)| (r + row, c + col))
@@ -58,8 +50,11 @@ pub fn process(_input: &str) -> usize {
                 }
             }
         }
-        println!("{count}");
+        if count > 0 {
+            ans = variant.into_iter().filter(|x| *x == '#').count() - count * 15;
+            break;
+        }
     }
 
-    0
+    ans
 }
