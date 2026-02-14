@@ -1,24 +1,37 @@
-#[allow(unused_imports)]
-// use aoc_helper::nom::parse_signed_usize;
 use nom::{
-    branch::alt,
-    bytes::complete::tag,
-    character::complete::{self, alpha1, line_ending},
-    combinator::all_consuming,
-    multi::separated_list1,
-    sequence::{delimited, preceded, separated_pair, terminated},
     IResult, Parser,
+    bytes::complete::tag,
+    character::complete::{self, line_ending, space0},
+    combinator::all_consuming,
+    multi::{count, separated_list1},
+    sequence::preceded,
 };
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
+use std::convert::TryInto;
 
-type Item = usize;
-
-fn parse_line(input: &str) -> IResult<&str, Item> {
-    todo!()
+fn parse_numbers(input: &str) -> IResult<&str, Vec<u8>> {
+    separated_list1(tag(","), complete::u8).parse(input)
+}
+fn parse_board(input: &str) -> IResult<&str, [u8; 25]> {
+    separated_list1(line_ending, count(preceded(space0, complete::u8), 5))
+        .map(|v| {
+            v.into_iter()
+                .flatten()
+                .collect::<Vec<u8>>()
+                .try_into()
+                .unwrap()
+        })
+        .parse(input)
+}
+fn parse_boards(input: &str) -> IResult<&str, Vec<[u8; 25]>> {
+    preceded(
+        (line_ending, line_ending),
+        separated_list1((line_ending, line_ending), parse_board),
+    )
+    .parse(input)
 }
 
-pub fn parse_input(input: &str) -> Vec<Item> {
-    all_consuming(separated_list1(line_ending, parse_line))
+pub fn parse_input(input: &str) -> (Vec<u8>, Vec<[u8; 25]>) {
+    all_consuming((parse_numbers, parse_boards))
         .parse(input)
         .unwrap()
         .1
