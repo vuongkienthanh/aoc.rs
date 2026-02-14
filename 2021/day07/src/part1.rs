@@ -1,29 +1,11 @@
-use crate::parsing::parse_input;
+use itertools::Itertools;
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
-
-    todo!("part1");
-    // panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
+    let input : Vec<_>= _input.split(",").map(|x| x.parse::<usize>().unwrap()).collect();
+    let (min, max) = input.iter().minmax().into_option().unwrap();
+    let mut ans = usize::MAX;
+    for loc in *min..=*max {
+        ans = ans.min(input.iter().map(|x| x.abs_diff(loc)).sum());
     }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    ans
 }
