@@ -65,6 +65,67 @@ pub mod grid {
             bottom_right(p, rows, cols),
         ]
     }
+    pub fn adj_corners(rows: usize, cols: usize) -> [(Point, [Point; 2]); 4] {
+        [
+            ((0, 0), [(0, 1), (1, 0)]),
+            ((rows - 1, 0), [(rows - 1, 1), (rows - 2, 0)]),
+            ((0, cols - 1), [(0, cols - 2), (1, cols - 1)]),
+            (
+                (rows - 1, cols - 1),
+                [(rows - 2, cols - 1), (rows - 1, cols - 2)],
+            ),
+        ]
+    }
+    pub fn adj_top_edge(_rows: usize, cols: usize) -> Vec<(Point, [Point; 3])> {
+        (1..cols - 1)
+            .map(|c| ((0, c), [(0, c - 1), (0, c + 1), (1, c)]))
+            .collect()
+    }
+    pub fn adj_bottom_edge(rows: usize, cols: usize) -> Vec<(Point, [Point; 3])> {
+        (1..cols - 1)
+            .map(|c| {
+                (
+                    (rows - 1, c),
+                    [(rows - 1, c - 1), (rows - 1, c + 1), (rows - 2, c)],
+                )
+            })
+            .collect()
+    }
+    pub fn adj_left_edge(rows: usize, _cols: usize) -> Vec<(Point, [Point; 3])> {
+        (1..rows - 1)
+            .map(|r| ((r, 0), [(r - 1, 0), (r + 1, 0), (r, 1)]))
+            .collect()
+    }
+    pub fn adj_right_edge(rows: usize, cols: usize) -> Vec<(Point, [Point; 3])> {
+        (1..rows - 1)
+            .map(|r| {
+                (
+                    (r, cols - 1),
+                    [(r - 1, cols - 1), (r + 1, cols - 1), (r, cols - 2)],
+                )
+            })
+            .collect()
+    }
+    pub fn adj_edges(rows: usize, cols: usize) -> Vec<(Point, [Point; 3])> {
+                [
+                    adj_top_edge(rows, cols),
+                    adj_bottom_edge(rows, cols),
+                    adj_left_edge(rows, cols),
+                    adj_right_edge(rows, cols),
+                ]
+                .into_iter()
+                .flatten()
+                .collect()
+            }
+    pub fn adj_inner(rows: usize, cols: usize) -> Vec<(Point, [Point; 4])> {
+        let mut ans = vec![];
+        for r in 1..rows - 1 {
+            for c in 1..cols - 1 {
+                ans.push(((r, c), [(r - 1, c), (r, c - 1), (r, c + 1), (r + 1, c)]));
+            }
+        }
+        ans
+    }
 }
 pub mod checked_u {
     pub type Point = (usize, usize);
