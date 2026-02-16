@@ -1,29 +1,18 @@
 use crate::parsing::parse_input;
+use crate::{Cache, Counter, add_counter, polymerization};
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
-
-    todo!("part1");
-    // panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
+    let (template, map) = parse_input(_input);
+    let mut cache = Cache::default();
+    let mut ans = Counter::default();
+    for w in template.windows(2) {
+        let (a, b) = (w[0], w[1]);
+        let mid = polymerization((a, b, 10), &map, &mut cache);
+        *ans.entry(a).or_default() += 1;
+        add_counter(&mut ans, mid);
     }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    *ans.entry(template.last().cloned().unwrap()).or_default() += 1;
+    let max = ans.values().max().unwrap();
+    let min = ans.values().min().unwrap();
+    max - min
 }
