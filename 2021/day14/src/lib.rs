@@ -7,13 +7,13 @@ use parsing::Map;
 pub type Counter = FxHashMap<char, usize>;
 pub type Cache = FxHashMap<(char, char, usize), Counter>;
 
-fn polymerization(
+fn polymerization<'a>(
     (a, b, i): (char, char, usize),
     map: &Map,
-    cache: &mut Cache,
-) -> FxHashMap<char, usize> {
-    if let Some(mid) = cache.get(&(a, b, i)).cloned() {
-        mid
+    cache: &'a mut Cache,
+) -> &'a FxHashMap<char, usize> {
+    if cache.contains_key(&(a, b, i)) {
+        cache.get(&(a, b, i)).unwrap()
     } else {
         let mut ans = Counter::default();
         let m: char = map.get(&(a, b)).cloned().unwrap();
@@ -23,12 +23,12 @@ fn polymerization(
             add_counter(&mut ans, polymerization((m, b, i - 1), map, cache));
         }
         cache.insert((a, b, i), ans.clone());
-        ans
+        cache.get(&(a, b, i)).unwrap()
     }
 }
 
-fn add_counter(a: &mut Counter, b: Counter) {
+fn add_counter(a: &mut Counter, b: &Counter) {
     for (k, v) in b {
-        *a.entry(k).or_default() += v;
+        *a.entry(*k).or_default() += *v;
     }
 }
