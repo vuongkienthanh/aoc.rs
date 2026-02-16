@@ -1,15 +1,17 @@
+use aoc_helper::adj::grid::adj4;
 use grid::Grid;
-use aoc_helper::adj::grid::{adj_corners, adj_edges, adj_inner, adj4};
 
 pub fn process(_input: &str) -> usize {
-    let input = Grid::from(_input
-        .lines()
-        .map(|line| {
-            line.chars()
-                .map(|x| x.to_digit(10).unwrap() as u8)
-                .collect::<Vec<_>>()
-        })
-        .collect::<Vec<_>>());
+    let input = Grid::from(
+        _input
+            .lines()
+            .map(|line| {
+                line.chars()
+                    .map(|x| x.to_digit(10).unwrap() as u8)
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>(),
+    );
     let rows = input.rows();
     let cols = input.cols();
     let mut seen = Grid::from(vec![vec![false; cols]; rows]);
@@ -51,3 +53,4 @@ fn bfs(mut current: Vec<(usize, usize)>, grid: &Grid<u8>, seen: &mut Grid<bool>)
     }
     ans
 }
+
