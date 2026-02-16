@@ -1,29 +1,18 @@
-use crate::parsing::parse_input;
+use crate::parsing::{F, parse_input};
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
-
-    todo!("part1");
-    // panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
-    }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    let (mut dots, folds) = parse_input(_input);
+    let f = folds.into_iter().next().unwrap();
+    let v: Vec<_> = match f {
+        F::X(u) => dots
+            .extract_if(|(x, _)| *x > u)
+            .map(|(x, y)| (2 * u - x, y))
+            .collect(),
+        F::Y(u) => dots
+            .extract_if(|(_, y)| *y > u)
+            .map(|(x, y)| (x, 2 * u - y))
+            .collect(),
+    };
+    dots.extend(v);
+    dots.len()
 }
