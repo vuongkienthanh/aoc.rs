@@ -1,29 +1,39 @@
-use crate::parsing::parse_input;
+use aoc_helper::adj::grid::adj8;
+use grid::Grid;
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
+    let mut grid = Grid::from(
+        _input
+            .lines()
+            .map(|line| {
+                line.chars()
+                    .map(|x| x.to_digit(10).unwrap() as u8)
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>(),
+    );
+    let mut ans = 0;
 
-    todo!("part1");
-    // panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
+    for _ in 0..100 {
+        grid.iter_mut().for_each(|x| *x += 1);
+        let mut flashed = true;
+        while flashed {
+            flashed = false;
+            for row in 0..10 {
+                for col in 0..10 {
+                    if grid[(row, col)] > 9 {
+                        flashed = true;
+                        ans += 1;
+                        grid[(row, col)] = 0;
+                        for (r, c) in adj8((row, col), 10, 10).into_iter().flatten() {
+                            if grid[(r, c)] != 0 {
+                                grid[(r, c)] += 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    ans
 }

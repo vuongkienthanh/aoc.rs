@@ -1,6 +1,38 @@
-use crate::parsing::parse_input;
+use aoc_helper::adj::grid::adj8;
+use grid::Grid;
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    todo!("part2");
+    let mut grid = Grid::from(
+        _input
+            .lines()
+            .map(|line| {
+                line.chars()
+                    .map(|x| x.to_digit(10).unwrap() as u8)
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>(),
+    );
+    (1..)
+        .find(|_| {
+            grid.iter_mut().for_each(|x| *x += 1);
+            let mut flashed = true;
+            while flashed {
+                flashed = false;
+                for row in 0..10 {
+                    for col in 0..10 {
+                        if grid[(row, col)] > 9 {
+                            flashed = true;
+                            grid[(row, col)] = 0;
+                            for (r, c) in adj8((row, col), 10, 10).into_iter().flatten() {
+                                if grid[(r, c)] != 0 {
+                                    grid[(r, c)] += 1;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            grid.iter().all(|x| *x == 0)
+        })
+        .unwrap()
 }
