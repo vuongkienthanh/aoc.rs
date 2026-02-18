@@ -1,24 +1,65 @@
-#[allow(unused_imports)]
-// use aoc_helper::nom::parse_signed_usize;
 use nom::{
+    IResult, Parser,
     branch::alt,
     bytes::complete::tag,
-    character::complete::{self, alpha1, line_ending},
+    character::complete::{self, line_ending},
     combinator::all_consuming,
     multi::separated_list1,
-    sequence::{delimited, preceded, separated_pair, terminated},
-    IResult, Parser,
+    sequence::{delimited, separated_pair},
 };
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
 
-type Item = usize;
-
-fn parse_line(input: &str) -> IResult<&str, Item> {
-    todo!()
+#[derive(Debug)]
+pub enum Item {
+    Literal(usize),
+    Number(Number),
+}
+#[derive(Debug)]
+pub struct Number {
+    pub left: Box<Item>,
+    pub right: Box<Item>,
 }
 
-pub fn parse_input(input: &str) -> Vec<Item> {
-    all_consuming(separated_list1(line_ending, parse_line))
+impl Number {
+    pub fn explode(&mut self, lvl: usize) -> (usize, usize) {
+        match self.left {
+            Item::Literal(_) => (),
+            Item::Number(ref mut n) => {
+                if lvl < 4 {
+                n.explode(lvl +1);
+                }
+            }
+        }
+        if lvl <4 {
+            self.left.explode(lvl +1);
+            self.right.explode(lvl +1);
+        } else {
+
+        }
+    }
+}
+
+fn parse_item(input: &str) -> IResult<&str, Item> {
+    alt((
+        complete::usize.map(Item::Literal),
+        parse_number.map(Item::Number),
+    ))
+    .parse(input)
+}
+fn parse_number(input: &str) -> IResult<&str, Number> {
+    delimited(
+        tag("["),
+        separated_pair(parse_item, tag(","), parse_item),
+        tag("]"),
+    )
+    .map(|(a, b)| Number {
+        left: Box::new(a),
+        right: Box::new(b),
+    })
+    .parse(input)
+}
+
+pub fn parse_input(input: &str) -> Vec<Number> {
+    all_consuming(separated_list1(line_ending, parse_number))
         .parse(input)
         .unwrap()
         .1
