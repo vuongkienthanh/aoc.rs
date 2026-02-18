@@ -9,3 +9,4 @@ publish.workspace = true
 
 [dependencies]
 nom.workspace = true
+fxhash.workspace = true
