@@ -4,3 +4,5 @@ Cargo.lock
 **/target
 **/input.txt
 **/visualize.gv
+**/flamegraph.svg
+**/perf.data
