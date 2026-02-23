@@ -8,7 +8,7 @@ use nom::{
     sequence::{preceded, separated_pair},
 };
 
-type Range = (isize, isize);
+pub type Range = (isize, isize);
 
 fn parse_line(input: &str) -> IResult<&str, (bool, Range, Range, Range)> {
     (
