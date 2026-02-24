@@ -1,74 +1,29 @@
 use crate::parsing::{Range, parse_input};
+type URange = (usize, usize);
+use fxhash::FxHashMap;
 
 pub fn process(_input: &str) -> usize {
     let input = parse_input(_input);
-    let (xs, ys, zs) = sorted_xyz_stop_points(&input);
+    let (xs, ys, zs) = sorted_stop_points(&input);
+    let input = convert(input, (&xs, &ys, &zs));
+    println!("{input:?}");
     // println!("{xs:?}");
     // println!("{ys:?}");
     // println!("{zs:?}");
-    let (x_score, y_score, z_score) = (score_map(&xs), score_map(&ys), score_map(&zs));
+    // let (x_score, y_score, z_score) = (score_map(&xs), score_map(&ys), score_map(&zs));
     // for (i, x) in x_score.iter().enumerate() {
     //     println!("{i} {x}");
     // }
     println!("{} {} {}", xs.len(), ys.len(), zs.len());
 
-    let mut space = vec![vec![vec![false; zs.len() * 2 - 1]; ys.len() * 2 - 1]; xs.len() * 2 - 1];
+    // let mut space = vec![vec![vec![0; zs.len()]; ys.len()]; xs.len()];
 
-    for (turn, (x0, x1), (y0, y1), (z0, z1)) in input {
-        // println!("{x0}..{x1} {y0}..{y1} {z0}..{z1}");
-        let x0 = xs
-            .iter()
-            .enumerate()
-            .find_map(|(i, x)| (*x == x0).then_some(i * 2))
-            .unwrap();
-        let x1 = xs
-            .iter()
-            .enumerate()
-            .find_map(|(i, x)| (*x == x1).then_some(i * 2))
-            .unwrap();
-        let y0 = ys
-            .iter()
-            .enumerate()
-            .find_map(|(i, y)| (*y == y0).then_some(i * 2))
-            .unwrap();
-        let y1 = ys
-            .iter()
-            .enumerate()
-            .find_map(|(i, y)| (*y == y1).then_some(i * 2))
-            .unwrap();
-        let z0 = zs
-            .iter()
-            .enumerate()
-            .find_map(|(i, z)| (*z == z0).then_some(i * 2))
-            .unwrap();
-        let z1 = zs
-            .iter()
-            .enumerate()
-            .find_map(|(i, z)| (*z == z1).then_some(i * 2))
-            .unwrap();
-        println!("{x0}..{x1} {y0}..{y1} {z0}..{z1}");
-        // space
-        //     .iter_mut()
-        //     .skip(x0)
-        //     .take(x1 - x0 + 1)
-        //     .for_each(|plane| {
-        //         plane
-        //             .iter_mut()
-        //             .skip(y0)
-        //             .take(y1 - y0 + 1)
-        //             .for_each(|line| {
-        //                 line.iter_mut()
-        //                     .skip(z0)
-        //                     .take(z1 - z0 + 1)
-        //                     .for_each(|cell| *cell = turn)
-        //             })
-        //     });
-    }
+    // for (turn, (x0, x1), (y0, y1), (z0, z1)) in input {}
 
     0
 }
 
-fn sorted_xyz_stop_points(
+fn sorted_stop_points(
     input: &Vec<(bool, Range, Range, Range)>,
 ) -> (Vec<isize>, Vec<isize>, Vec<isize>) {
     let (mut xs, mut ys, mut zs) = (vec![], vec![], vec![]);
@@ -87,6 +42,25 @@ fn sorted_xyz_stop_points(
     ys.dedup();
     zs.dedup();
     (xs, ys, zs)
+}
+fn convert(
+    input: Vec<(bool, Range, Range, Range)>,
+    (xs, ys, zs): (&[isize], &[isize], &[isize]),
+) -> Vec<(bool, URange, URange, URange)> {
+    let xmap: FxHashMap<isize, usize> = xs.iter().enumerate().map(|(i, x)| (*x, i)).collect();
+    let ymap: FxHashMap<isize, usize> = ys.iter().enumerate().map(|(i, y)| (*y, i)).collect();
+    let zmap: FxHashMap<isize, usize> = zs.iter().enumerate().map(|(i, z)| (*z, i)).collect();
+    input
+        .into_iter()
+        .map(|(b, (x0, x1), (y0, y1), (z0, z1))| {
+            (
+                b,
+                (xmap[&x0], xmap[&x1]),
+                (ymap[&y0], ymap[&y1]),
+                (zmap[&z0], zmap[&z1]),
+            )
+        })
+        .collect()
 }
 
 fn score_map(s: &[isize]) -> Vec<usize> {

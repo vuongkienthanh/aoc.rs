@@ -1,3 +1,4 @@
+use std::collections::BTreeSet;
 pub type Range = (isize, isize);
 pub type Cube = (Range, Range, Range);
 
@@ -94,4 +95,22 @@ pub fn cut_cube(
     .into_iter()
     .flatten()
     .collect()
+}
+
+pub fn merge(mut cubes: BTreeSet<Cube>) -> BTreeSet<Cube> {
+    let mut v = vec![cubes.pop_last().unwrap()];
+
+    for cube in cubes.into_iter().rev() {
+        for i in 0..v.len() {
+            let big_cube = v[i];
+            if let DivResult::LcontainsR = intersect_cube(big_cube, cube) {
+                continue;
+            } else {
+                v.push(cube);
+                break;
+            }
+        }
+    }
+
+    v.into_iter().collect()
 }
