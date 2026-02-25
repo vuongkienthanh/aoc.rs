@@ -1,79 +1,40 @@
-use crate::parsing::{Range, parse_input};
-type URange = (usize, usize);
-use fxhash::FxHashMap;
+use crate::parsing::parse_input;
+use aoc_helper::cube::{Cube, cut_cube, try_intersect_cube};
 
 pub fn process(_input: &str) -> usize {
     let input = parse_input(_input);
-    let (xs, ys, zs) = sorted_stop_points(&input);
-    let input = convert(input, (&xs, &ys, &zs));
-    println!("{input:?}");
-    // println!("{xs:?}");
-    // println!("{ys:?}");
-    // println!("{zs:?}");
-    // let (x_score, y_score, z_score) = (score_map(&xs), score_map(&ys), score_map(&zs));
-    // for (i, x) in x_score.iter().enumerate() {
-    //     println!("{i} {x}");
-    // }
-    println!("{} {} {}", xs.len(), ys.len(), zs.len());
-
-    // let mut space = vec![vec![vec![0; zs.len()]; ys.len()]; xs.len()];
-
-    // for (turn, (x0, x1), (y0, y1), (z0, z1)) in input {}
-
-    0
-}
-
-fn sorted_stop_points(
-    input: &Vec<(bool, Range, Range, Range)>,
-) -> (Vec<isize>, Vec<isize>, Vec<isize>) {
-    let (mut xs, mut ys, mut zs) = (vec![], vec![], vec![]);
-    for (_, (x0, x1), (y0, y1), (z0, z1)) in input {
-        xs.push(*x0);
-        xs.push(*x1);
-        ys.push(*y0);
-        ys.push(*y1);
-        zs.push(*z0);
-        zs.push(*z1);
+    let mut cubes = vec![];
+    for (turn, cube) in input {
+        if turn {
+            cubes = turn_on(cubes, cube);
+        } else {
+            cubes = turn_off(cubes, cube);
+        }
     }
-    xs.sort_unstable();
-    ys.sort_unstable();
-    zs.sort_unstable();
-    xs.dedup();
-    ys.dedup();
-    zs.dedup();
-    (xs, ys, zs)
-}
-fn convert(
-    input: Vec<(bool, Range, Range, Range)>,
-    (xs, ys, zs): (&[isize], &[isize], &[isize]),
-) -> Vec<(bool, URange, URange, URange)> {
-    let xmap: FxHashMap<isize, usize> = xs.iter().enumerate().map(|(i, x)| (*x, i)).collect();
-    let ymap: FxHashMap<isize, usize> = ys.iter().enumerate().map(|(i, y)| (*y, i)).collect();
-    let zmap: FxHashMap<isize, usize> = zs.iter().enumerate().map(|(i, z)| (*z, i)).collect();
-    input
+
+    cubes
         .into_iter()
-        .map(|(b, (x0, x1), (y0, y1), (z0, z1))| {
-            (
-                b,
-                (xmap[&x0], xmap[&x1]),
-                (ymap[&y0], ymap[&y1]),
-                (zmap[&z0], zmap[&z1]),
-            )
+        .map(|((a0, a1), (b0, b1), (c0, c1))| {
+            (a0.abs_diff(a1) + 1) * (b0.abs_diff(b1) + 1) * (c0.abs_diff(c1) + 1)
         })
-        .collect()
+        .sum()
 }
 
-fn score_map(s: &[isize]) -> Vec<usize> {
-    let mut map = vec![];
-    let mut prev = s.first().cloned().unwrap();
-    map.push(1);
-    for i in &s[1..] {
-        let diff = (i - prev - 1) as usize;
-        map.push(diff);
-        map.push(1);
-        prev = *i;
+pub fn turn_off(cubes: Vec<Cube>, b: Cube) -> Vec<Cube> {
+    let mut new = vec![];
+    for a in cubes {
+        if let Some(intersected_cube) = try_intersect_cube(a, b) {
+            new.extend(cut_cube(a, intersected_cube));
+        } else {
+            new.push(a);
+        }
     }
-    map
+    new
+}
+pub fn turn_on(cubes: Vec<Cube>, b: Cube) -> Vec<Cube> {
+    let mut ans = turn_off(cubes, b);
+    ans.push(b);
+    ans
 }
 
 #[cfg(test)]
@@ -81,8 +42,31 @@ mod tests {
     use super::*;
     use rstest::*;
 
-    #[fixture]
-    pub fn fixture() -> &'static str {
+    #[rstest]
+    #[case(
+        r#"on x=-20..26,y=-36..17,z=-47..7
+on x=-20..33,y=-21..23,z=-26..28
+on x=-22..28,y=-29..23,z=-38..16
+on x=-46..7,y=-6..46,z=-50..-1
+on x=-49..1,y=-3..46,z=-24..28
+on x=2..47,y=-22..22,z=-23..27
+on x=-27..23,y=-28..26,z=-21..29
+on x=-39..5,y=-6..47,z=-3..44
+on x=-30..21,y=-8..43,z=-13..34
+on x=-22..26,y=-27..20,z=-29..19
+off x=-48..-32,y=26..41,z=-47..-37
+on x=-12..35,y=6..50,z=-50..-2
+off x=-48..-32,y=-32..-16,z=-15..-5
+on x=-18..26,y=-33..15,z=-7..46
+off x=-40..-22,y=-38..-28,z=23..41
+on x=-16..35,y=-41..10,z=-47..6
+off x=-32..-23,y=11..30,z=-14..3
+on x=-49..-5,y=-3..45,z=-29..18
+off x=18..30,y=-20..-8,z=-3..13
+on x=-41..9,y=-7..43,z=-33..15"#,
+        590784
+    )]
+    #[case(
         r#"on x=-5..47,y=-31..22,z=-19..33
 on x=-44..5,y=-27..21,z=-14..35
 on x=-49..-1,y=-11..42,z=-10..38
@@ -142,10 +126,10 @@ off x=-37810..49457,y=-71013..-7894,z=-105357..-13188
 off x=-27365..46395,y=31009..98017,z=15428..76570
 off x=-70369..-16548,y=22648..78696,z=-1892..86821
 on x=-53470..21291,y=-120233..-33476,z=-44150..38147
-off x=-93533..-4276,y=-16170..68771,z=-104985..-24507"#
-    }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 2758514936282235);
+off x=-93533..-4276,y=-16170..68771,z=-104985..-24507"#,
+        2758514936282235
+    )]
+    fn test_process_(#[case] input: &str, #[case] expect: usize) {
+        assert_eq!(process(input), expect);
     }
 }

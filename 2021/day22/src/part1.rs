@@ -4,7 +4,7 @@ pub fn process(_input: &str) -> usize {
     let input = parse_input(_input);
     let mut space = vec![vec![vec![false; 101]; 101]; 101];
 
-    for (turn, (x0, x1), (y0, y1), (z0, z1)) in input {
+    for (turn, ((x0, x1), (y0, y1), (z0, z1))) in input {
         let (x0, x1, y0, y1, z0, z1) =
             if x0 > 50 || x1 < -50 || y0 > 50 || y1 < -50 || z0 > 50 || z1 < -50 {
                 continue;
@@ -18,10 +18,10 @@ pub fn process(_input: &str) -> usize {
                     (z1 + 50).min(100) as usize,
                 )
             };
-        for x in x0..=x1 {
-            for y in y0..=y1 {
-                for z in z0..=z1 {
-                    space[x][y][z] = turn;
+        for plane in space.iter_mut().take(x1 + 1).skip(x0) {
+            for row in plane.iter_mut().take(y1 + 1).skip(y0) {
+                for cell in row.iter_mut().take(z1 + 1).skip(z0) {
+                    *cell = turn;
                 }
             }
         }
