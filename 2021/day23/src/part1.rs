@@ -1,10 +1,10 @@
-use crate::{State, available_paths, ignore_rooms, score};
+use crate::State;
 use fxhash::FxHashMap;
 
 pub fn process(_input: &str) -> usize {
     let mut current = vec![State::from(_input)];
     let mut seen: FxHashMap<[u8; 8], usize> = FxHashMap::default();
-    seen.insert(current.first().unwrap().locations.clone(), 0);
+    seen.insert(current.first().unwrap().normalized_locations(), 0);
     let mut ans = usize::MAX;
     while !current.is_empty() {
         let mut new = vec![];
@@ -14,25 +14,23 @@ pub fn process(_input: &str) -> usize {
                 ans = ans.min(state.score);
                 continue;
             }
-            for i in 0..8 {
-                if i == state.last_moved {
-                    continue;
-                }
-                let from = state.locations[i];
-                let ignored = ignore_rooms(i);
-                let iscore = score(i);
-                for (to, step, blockers) in available_paths(from) {
-                    if ignored.contains(&to) {
-                        continue;
+            for next_state in state.next_states() {
+                let normalized = next_state.normalized_locations();
+                if let Some(s) = seen.get(&normalized) {
+                    if next_state.score < *s {
+                        seen.insert(normalized, next_state.score);
+                        new.push(next_state);
                     }
-                    if blockers.into_iter().any(|b| state.locations.contains(&b)) {
-                        continue;
-                    }
+                } else {
+                    seen.insert(normalized, next_state.score);
+                    new.push(next_state);
                 }
             }
         }
 
         current = new;
+        // println!("{current:?}");
+        // break;
     }
     ans
 }
