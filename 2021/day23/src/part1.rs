@@ -29,8 +29,6 @@ pub fn process(_input: &str) -> usize {
         }
 
         current = new;
-        // println!("{current:?}");
-        // break;
     }
     ans
 }

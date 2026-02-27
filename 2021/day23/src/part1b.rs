@@ -1,5 +1,13 @@
+// ####1#1#1#11#
+// #89.0.1.2.34#
+// ###1#3#5#7###
+//   #0#2#4#6#
+//   #########
+
+use fxhash::FxHashMap;
+
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
-pub enum Cell {
+enum Cell {
     A,
     B,
     C,
@@ -17,110 +25,49 @@ impl From<char> for Cell {
         }
     }
 }
-
-fn amphipod_room(cell: &Cell) -> [usize; 2] {
-    match cell {
-        Cell::A => [0, 1],
-        Cell::B => [2, 3],
-        Cell::C => [4, 5],
-        Cell::D => [6, 7],
-        Cell::E => panic!(),
-    }
-}
-
-fn get_movable_from(locations: &[Cell; 15]) -> Vec<usize> {
-    let mut ans = vec![];
-    let mut rs = vec![[9, 8], [13, 14]];
-    if locations[0..2] != [Cell::A, Cell::A] || locations[0..2] != [Cell::A, Cell::E] {
-        rs.push([1, 0]);
-    }
-    if locations[2..4] != [Cell::B, Cell::B] || locations[2..4] != [Cell::B, Cell::E] {
-        rs.push([3, 2]);
-    }
-    if locations[4..6] != [Cell::C, Cell::C] || locations[4..6] != [Cell::C, Cell::E] {
-        rs.push([5, 4]);
-    }
-    if locations[6..8] != [Cell::D, Cell::D] || locations[6..8] != [Cell::D, Cell::E] {
-        rs.push([7, 6]);
-    }
-    for r in rs {
-        if let Some(i) = r.into_iter().find(|x| !matches!(locations[*x], Cell::E)) {
-            ans.push(i);
+impl Cell {
+    fn room(&self) -> [usize; 2] {
+        match self {
+            Cell::A => [1, 0],
+            Cell::B => [3, 2],
+            Cell::C => [5, 4],
+            Cell::D => [7, 6],
+            Cell::E => panic!(),
         }
     }
-    ans.extend(
-        [10, 11, 12]
-            .into_iter()
-            .filter(|x| !matches!(locations[*x], Cell::E)),
-    );
-    ans
-}
-// ####1#1#1#11#
-// #89.0.1.2.34#
-// ###1#3#5#7###
-//   #0#2#4#6#
-//   #########
-
-fn get_movable_to(locations: &[Cell; 15], from: usize) -> Vec<usize> {
-    let mut ans = vec![];
-    match from {
-        0 | 1 => {
-            for r in [vec![8, 9], vec![14, 13, 12, 11, 10]] {
-                if let Some(i) = r.into_iter().find(|x| matches!(locations[*x], Cell::E)) {
-                    ans.push(i);
-                }
-            }
-        }
-        2 | 3 => {
-            for r in [vec![8, 9, 10], vec![14, 13, 12, 11]] {
-                if let Some(i) = r.into_iter().find(|x| matches!(locations[*x], Cell::E)) {
-                    ans.push(i);
-                }
-            }
-        }
-        4 | 5 => {
-            for r in [vec![8, 9, 10, 11], vec![15, 13, 12]] {
-                if let Some(i) = r.into_iter().find(|x| matches!(locations[*x], Cell::E)) {
-                    ans.push(i);
-                }
-            }
-        }
-        6 | 7 => {
-            for r in [vec![8, 9, 10, 11, 12], vec![14, 13]] {
-                if let Some(i) = r.into_iter().find(|x| matches!(locations[*x], Cell::E)) {
-                    ans.push(i);
-                }
-            }
-        }
-        _ => {
-            let amphipod = locations[from];
-            let its_room = amphipod_room(&amphipod);
-            if its_room
-                .iter()
-                .all(|x| locations[*x] == amphipod || locations[*x] == Cell::E)
-            {
-                let room = its_room
-                    .into_iter()
-                    .find(|x| matches!(locations[*x], Cell::E))
-                    .unwrap();
-                let obstacles = obstacle(from, room);
-                if obstacles
-                    .into_iter()
-                    .all(|x| matches!(locations[x], Cell::E))
-                {
-                    ans.push(room);
-                }
-            }
+    fn left(&self) -> Vec<usize> {
+        match self {
+            Cell::A => vec![8, 9],
+            Cell::B => vec![8, 9, 10],
+            Cell::C => vec![8, 9, 10, 11],
+            Cell::D => vec![8, 9, 10, 11, 12],
+            Cell::E => panic!(),
         }
     }
-    ans
+    fn right(&self) -> Vec<usize> {
+        match self {
+            Cell::A => vec![14, 13, 12, 11, 10],
+            Cell::B => vec![14, 13, 12, 11],
+            Cell::C => vec![14, 13, 12],
+            Cell::D => vec![14, 13],
+            Cell::E => panic!(),
+        }
+    }
+    fn score(&self) -> usize {
+        match self {
+            Cell::A => 1,
+            Cell::B => 10,
+            Cell::C => 100,
+            Cell::D => 1000,
+            Cell::E => panic!(),
+        }
+    }
 }
 
 #[derive(Debug)]
-pub struct State {
-    pub locations: [Cell; 15],
-    pub last_moved: usize,
-    pub score: usize,
+struct State {
+    locations: [Cell; 15],
+    score: usize,
 }
 impl From<&str> for State {
     fn from(value: &str) -> State {
@@ -143,13 +90,12 @@ impl From<&str> for State {
         }
         State {
             locations,
-            last_moved: 15,
             score: 0,
         }
     }
 }
 impl State {
-    pub fn is_done(&self) -> bool {
+    fn is_done(&self) -> bool {
         self.locations[0..8]
             == [
                 Cell::A,
@@ -162,6 +108,97 @@ impl State {
                 Cell::D,
             ]
     }
+
+    fn next(&self) -> Vec<State> {
+        let mut ans = vec![];
+        for from in get_from(&self.locations) {
+            for to in get_to(&self.locations, from) {
+                let mut locations = self.locations;
+                locations.swap(from, to);
+                let score = self.score + step(from, to) * locations[to].score();
+                ans.push(State { locations, score });
+            }
+        }
+        ans
+    }
+}
+
+fn get_from(locations: &[Cell; 15]) -> Vec<usize> {
+    let mut ans = vec![];
+    for cell in [Cell::A, Cell::B, Cell::C, Cell::D] {
+        let rooms = cell.room();
+        if rooms
+            .iter()
+            .any(|x| locations[*x] != cell && locations[*x] != Cell::E)
+            && let Some(i) = rooms.into_iter().find(|x| locations[*x] != Cell::E)
+        {
+            ans.push(i);
+        }
+    }
+    for r in [[9, 8], [13, 14]] {
+        if let Some(i) = r.into_iter().find(|x| locations[*x] != Cell::E) {
+            ans.push(i);
+        }
+    }
+    ans.extend(
+        [10, 11, 12]
+            .into_iter()
+            .filter(|x| locations[*x] != Cell::E),
+    );
+    ans
+}
+
+fn get_to(locations: &[Cell; 15], from: usize) -> Vec<usize> {
+    let mut ans = vec![];
+
+    match from {
+        0..8 => {
+            let cell = [Cell::A, Cell::B, Cell::C, Cell::D]
+                .into_iter()
+                .find(|x| x.room().contains(&from))
+                .unwrap();
+            for i in cell
+                .left()
+                .into_iter()
+                .take_while(|x| locations[*x] == Cell::E)
+            {
+                ans.push(i);
+            }
+            for i in cell
+                .right()
+                .into_iter()
+                .take_while(|x| locations[*x] == Cell::E)
+            {
+                ans.push(i);
+            }
+            // if let Some(i) = cell.left().into_iter().find(|x| locations[*x] == Cell::E) {
+            //     ans.push(i);
+            // }
+            // if let Some(i) = cell.right().into_iter().find(|x| locations[*x] == Cell::E) {
+            //     ans.push(i);
+            // }
+        }
+        _ => {
+            let amphipod = locations[from];
+            let rooms = amphipod.room();
+            if rooms
+                .iter()
+                .all(|x| locations[*x] == amphipod || locations[*x] == Cell::E)
+            {
+                let to = rooms
+                    .into_iter()
+                    .rfind(|x| locations[*x] == Cell::E)
+                    .unwrap();
+                if obstacle(from, to)
+                    .into_iter()
+                    .all(|x| locations[x] == Cell::E)
+                {
+                    ans.push(to);
+                }
+            }
+        }
+    }
+    ans
 }
 
 fn step(from: usize, to: usize) -> usize {
@@ -203,5 +240,35 @@ fn obstacle(from: usize, to: usize) -> Vec<usize> {
 }
 
 pub fn process(_input: &str) -> usize {
-    todo!()
+    let mut current = vec![State::from(_input)];
+    let mut seen: FxHashMap<[Cell; 15], usize> = FxHashMap::default();
+    seen.insert(current.first().unwrap().locations, 0);
+    let mut ans = usize::MAX;
+    while !current.is_empty() {
+        let mut new = vec![];
+
+        for state in current {
+            // println!("from state {:?}", state.locations);
+            if state.is_done() {
+                ans = ans.min(state.score);
+                continue;
+            }
+            for next_state in state.next() {
+                if let Some(s) = seen.get(&next_state.locations) {
+                    if next_state.score < *s {
+                        seen.insert(next_state.locations, next_state.score);
+                        // println!("to state {:?}", next_state.locations);
+                        new.push(next_state);
+                    }
+                } else {
+                    seen.insert(next_state.locations, next_state.score);
+                    // println!("to state {:?}", next_state.locations);
+                    new.push(next_state);
+                }
+            }
+        }
+
+        current = new;
+    }
+    ans
 }
