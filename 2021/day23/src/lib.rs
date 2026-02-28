@@ -3,7 +3,7 @@ pub mod part2;
 use fxhash::FxHashMap;
 use std::ops::{Range, RangeInclusive};
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
+#[derive(Eq, PartialEq, Hash, Clone, Copy)]
 enum Cell {
     A,
     B,
@@ -193,6 +193,7 @@ impl<const N: usize> Map<N> {
     }
     fn get_to(&self, locations: &[Cell], from: usize) -> Vec<usize> {
         let mut ans = vec![];
+        // from room to hall
         if let Some(room) = [Cell::A, Cell::B, Cell::C, Cell::D]
             .into_iter()
             .find(|x| self.room(x).contains(&from))
@@ -208,6 +209,7 @@ impl<const N: usize> Map<N> {
                 ans.push(i);
             }
         } else {
+        // from hall to room
             let cell = locations[from];
             if self
                 .room(&cell)
@@ -228,7 +230,6 @@ impl<const N: usize> Map<N> {
     }
 }
 
-#[derive(Debug)]
 struct State<const N: usize> {
     locations: [Cell; N],
     score: usize,

@@ -2,28 +2,23 @@ use crate::parsing::parse_input;
 
 pub fn process(_input: &str) -> usize {
     let input = parse_input(_input);
-    println!("{input:?}");
-
-    todo!("part1");
-    // panic!("should have an answer")
+    for g in input {
+        println!("{g:?}");
+    }
+    todo!()
 }
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
 
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
+fn valid(v: [isize; 14], input: &[(isize, isize, isize)]) -> bool {
+    let mut z = 0;
+    for (i, (a, b, c)) in input.iter().enumerate() {
+        let w = v[i];
+        let mut x = z % 26 + b;
+        z /= a;
+        x = (x != w).into();
+        let mut y = 25 * x + 1;
+        z *= y;
+        y = (w + c) * x;
+        z += y;
     }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    z == 0
 }
