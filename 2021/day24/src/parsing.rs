@@ -6,7 +6,13 @@ use nom::{
     multi::separated_list1,
 };
 
-fn parse_group(input: &str) -> IResult<&str, (isize, isize, isize)> {
+#[derive(Debug)]
+pub enum Group {
+    Div1(isize),
+    Div26(isize),
+}
+
+fn parse_group(input: &str) -> IResult<&str, Group> {
     (
         tag("inp w\nmul x 0\nadd x z\nmod x 26\ndiv z "),
         complete::isize,
@@ -16,11 +22,15 @@ fn parse_group(input: &str) -> IResult<&str, (isize, isize, isize)> {
         complete::isize,
         tag("\nmul y x\nadd z y"),
     )
-        .map(|(_, a, _, b, _, c, _)| (a, b, c))
+        .map(|(_, a, _, b, _, c, _)| match a {
+            1 => Group::Div1(c),
+            26 => Group::Div26(b),
+            _ => panic!(),
+        })
         .parse(input)
 }
 
-pub fn parse_input(input: &str) -> Vec<(isize, isize, isize)> {
+pub fn parse_input(input: &str) -> Vec<Group> {
     all_consuming(separated_list1(line_ending, parse_group))
         .parse(input)
         .unwrap()
