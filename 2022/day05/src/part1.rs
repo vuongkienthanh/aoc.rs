@@ -1,29 +1,15 @@
 use crate::parsing::parse_input;
 
 pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    println!("{input:?}");
-
-    todo!("part1");
-    // panic!("should have an answer")
-}
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::*;
-
-    #[fixture]
-    pub fn fixture() -> &'static str {
-        r#""#
+    let (mut crates, instructions) = parse_input(_input);
+    for (i, from, to) in instructions {
+        for _ in 0..i {
+            let c = crates[from - 1].pop().unwrap();
+            crates[to - 1].push(c);
+        }
     }
-    #[rstest]
-    fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
-    }
+    crates.into_iter().fold(String::new(), |mut acc, mut col| {
+        acc.push(col.pop().unwrap());
+        acc
+    })
 }
