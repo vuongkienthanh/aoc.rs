@@ -44,4 +44,6 @@ nom = "~8.0.0"
 rstest = "~0.26.1"
 grid = "~1.0.0"
 micromap = "0.1.0"
-aoc_helper = { path = "../aoc_helper" }
+
+[workspace.dependencies.aoc_helper]
+path = "../aoc_helper"

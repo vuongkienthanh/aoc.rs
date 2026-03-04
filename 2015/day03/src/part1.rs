@@ -1,10 +1,10 @@
-use std::collections::HashSet;
+use fxhash::FxHashSet;
 
 pub fn process(_input: &str) -> usize {
     _input
         .chars()
         .fold(
-            (HashSet::from([(0, 0)]), (0, 0)),
+            (FxHashSet::from_iter([(0, 0)]), (0, 0)),
             |(mut acc, mut coord), c| {
                 match c {
                     '^' => coord.1 += 1,
@@ -21,6 +21,7 @@ pub fn process(_input: &str) -> usize {
         .0
         .len()
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;

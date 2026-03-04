@@ -20,7 +20,7 @@ pub fn try_intersect_cube((a, b, c): Cube, (x, y, z): Cube) -> Option<Cube> {
     }
 }
 
-/// assume a and b is intersected and a >b
+/// assume a and b is intersected and a > b
 pub fn cut_cube(
     ((a0, a1), (b0, b1), (c0, c1)): Cube,
     ((x0, x1), (y0, y1), (z0, z1)): Cube,

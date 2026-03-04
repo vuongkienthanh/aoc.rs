@@ -14,6 +14,7 @@ pub fn process(_input: &str) -> usize {
         })
         .sum()
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;

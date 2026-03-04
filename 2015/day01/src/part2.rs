@@ -12,6 +12,7 @@ pub fn process(_input: &str) -> usize {
     }
     0
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;

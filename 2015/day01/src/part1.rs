@@ -5,6 +5,7 @@ pub fn process(_input: &str) -> isize {
         _ => acc,
     })
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
