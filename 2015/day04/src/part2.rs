@@ -1,10 +1,10 @@
+use md5::{Digest, Md5};
+
 pub fn process(_input: &str) -> usize {
-    for i in 0..usize::MAX {
-        let inp = format!("{}{}", _input, i);
-        let hex = format!("{:x}", md5::compute(inp.as_bytes()));
-        if hex.starts_with("000000") {
-            return i;
-        }
-    }
-    panic!("should have an answer")
+    (0..usize::MAX)
+        .find(|i| {
+            let d = Md5::digest(format!("{_input}{i}"));
+            d[0..3] == [0, 0, 0]
+        })
+        .unwrap()
 }

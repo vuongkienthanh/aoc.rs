@@ -1,13 +1,14 @@
+use md5::{Digest, Md5};
+
 pub fn process(_input: &str) -> usize {
-    for i in 0..usize::MAX {
-        let inp = format!("{}{}", _input, i);
-        let hex = format!("{:x}", md5::compute(inp.as_bytes()));
-        if hex.starts_with("00000") {
-            return i;
-        }
-    }
-    panic!("should have an answer")
+    (0..usize::MAX)
+        .find(|i| {
+            let d = Md5::digest(format!("{_input}{i}"));
+            d[0..2] == [0, 0] && d[2] < 17
+        })
+        .unwrap()
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
