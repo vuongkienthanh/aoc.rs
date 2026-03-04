@@ -1,12 +1,12 @@
-use micromap::{Map, Set};
+use fxhash::{FxHashMap as Map, FxHashSet as Set};
 
 pub fn is_nice(s: &str) -> bool {
     let origin = s.chars().collect::<Vec<_>>();
-    let mut seen: Map<&[char], Set<usize, 16>, 15> = Map::new();
+    let mut seen: Map<&[char], Set<usize>> = Map::default();
     origin.windows(2).enumerate().any(|(i, v)| {
         let k = seen.entry(v).or_default();
         k.insert(i) && k.insert(i + 1) && k.len() == 4
-    }) && ((0..origin.len() - 2).any(|i| origin[i] == origin[i + 2]))
+    }) && origin.windows(3).any(|v| v[0] == v[2])
 }
 
 pub fn process(_input: &str) -> usize {

@@ -1,4 +1,5 @@
 pub type Range = (isize, isize);
+pub type Grid = (Range, Range);
 pub type Cube = (Range, Range, Range);
 
 pub fn try_intersect_range((a0, a1): Range, (b0, b1): Range) -> Option<Range> {
@@ -7,6 +8,46 @@ pub fn try_intersect_range((a0, a1): Range, (b0, b1): Range) -> Option<Range> {
     } else {
         Some((a0.max(b0), a1.min(b1)))
     }
+}
+
+/// assume a and b is intersected and a > b
+pub fn cut_range((a0, a1): Range, (x0, x1): Range) -> Vec<Range> {
+    [
+        (a0, x0 - 1),
+        // (x0, x1),
+        (x1 + 1, a1),
+    ]
+    .into_iter()
+    .flat_map(|(a0, a1)| (a0 <= a1).then_some((a0, a1)))
+    .collect()
+}
+
+pub fn try_intersect_grid((a, b): Grid, (x, y): Grid) -> Option<Grid> {
+    match (
+        try_intersect_range(a, x),
+        try_intersect_range(b, y),
+    ) {
+        (Some(d), Some(e)) => Some((d, e)),
+        _ => None,
+    }
+}
+
+/// assume a and b is intersected and a > b
+pub fn cut_grid(((a0, a1), (b0, b1)): Grid, ((x0, x1), (y0, y1)): Grid) -> Vec<Grid> {
+    [
+        ((a0, x0 - 1), (b0, y0 - 1)),
+        ((a0, x0 - 1), (y0, y1)),
+        ((a0, x0 - 1), (y1 + 1, b1)),
+        ((x0, x1), (b0, y0 - 1)),
+        // ((x0, x1), (y0, y1)),
+        ((x0, x1), (y1 + 1, b1)),
+        ((x1 + 1, a1), (b0, y0 - 1)),
+        ((x1 + 1, a1), (y0, y1)),
+        ((x1 + 1, a1), (y1 + 1, b1)),
+    ]
+    .into_iter()
+    .flat_map(|((a0, a1), (b0, b1))| (a0 <= a1 && b0 <= b1).then_some(((a0, a1), (b0, b1))a))
+    .collect()
 }
 
 pub fn try_intersect_cube((a, b, c): Cube, (x, y, z): Cube) -> Option<Cube> {
