@@ -23,10 +23,7 @@ pub fn cut_range((a0, a1): Range, (x0, x1): Range) -> Vec<Range> {
 }
 
 pub fn try_intersect_grid((a, b): Grid, (x, y): Grid) -> Option<Grid> {
-    match (
-        try_intersect_range(a, x),
-        try_intersect_range(b, y),
-    ) {
+    match (try_intersect_range(a, x), try_intersect_range(b, y)) {
         (Some(d), Some(e)) => Some((d, e)),
         _ => None,
     }
@@ -46,7 +43,7 @@ pub fn cut_grid(((a0, a1), (b0, b1)): Grid, ((x0, x1), (y0, y1)): Grid) -> Vec<G
         ((x1 + 1, a1), (y1 + 1, b1)),
     ]
     .into_iter()
-    .flat_map(|((a0, a1), (b0, b1))| (a0 <= a1 && b0 <= b1).then_some(((a0, a1), (b0, b1))a))
+    .flat_map(|((a0, a1), (b0, b1))| (a0 <= a1 && b0 <= b1).then_some(((a0, a1), (b0, b1))))
     .collect()
 }
 

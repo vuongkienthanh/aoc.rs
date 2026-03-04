@@ -3,31 +3,31 @@ use grid::Grid;
 
 pub fn process(_input: &str) -> usize {
     let instructions = parse_input(_input);
-    let mut grid = Grid::<usize>::new(1000, 1000);
-    for (action, top_left, bottom_right) in instructions {
+    let mut grid = Grid::<u8>::new(1000, 1000);
+    for (action, (a0, a1), (b0, b1)) in instructions {
         match action {
             Action::On => {
-                for row in (top_left.0)..=(bottom_right.0) {
-                    for col in (top_left.1)..=(bottom_right.1) {
-                        grid[(row, col)] += 1
+                for r in a0..=b0 {
+                    for i in grid.iter_row_mut(r).take(b1 + 1).skip(a1) {
+                        *i += 1
                     }
                 }
             }
             Action::Off => {
-                for row in (top_left.0)..=(bottom_right.0) {
-                    for col in (top_left.1)..=(bottom_right.1) {
-                        grid[(row, col)] = grid[(row, col)].saturating_sub(1)
+                for r in a0..=b0 {
+                    for i in grid.iter_row_mut(r).take(b1 + 1).skip(a1) {
+                        *i = i.saturating_sub(1)
                     }
                 }
             }
             Action::Toggle => {
-                for row in (top_left.0)..=(bottom_right.0) {
-                    for col in (top_left.1)..=(bottom_right.1) {
-                        grid[(row, col)] += 2
+                for r in a0..=b0 {
+                    for i in grid.iter_row_mut(r).take(b1 + 1).skip(a1) {
+                        *i += 2
                     }
                 }
             }
         }
     }
-    grid.into_iter().sum()
+    grid.into_iter().map(|x| x as usize).sum()
 }
