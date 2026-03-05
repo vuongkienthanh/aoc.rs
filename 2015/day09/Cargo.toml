@@ -11,3 +11,4 @@ publish.workspace = true
 rstest.workspace = true
 itertools.workspace = true
 nom.workspace = true
+fxhash.workspace = true

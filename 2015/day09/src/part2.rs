@@ -39,6 +39,7 @@ fn max_distance<'a>(loc1: &'a str, loc2: &'a str, mapping: &Mapping<'a>) -> usiz
     }
     max
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;

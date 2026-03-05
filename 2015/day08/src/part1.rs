@@ -1,4 +1,4 @@
-fn code_representation(input: &str) -> usize {
+pub fn code_representation(input: &str) -> usize {
     input.len()
 }
 
