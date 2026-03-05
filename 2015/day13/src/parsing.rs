@@ -6,9 +6,9 @@ use nom::{
     combinator::all_consuming,
     multi::separated_list1,
 };
-use std::collections::HashMap;
+use fxhash::FxHashMap;
 
-pub type Graph<'a> = HashMap<&'a str, HashMap<&'a str, isize>>;
+pub type Graph<'a> = FxHashMap<&'a str, FxHashMap<&'a str, isize>>;
 
 fn parse_line(input: &str) -> IResult<&str, (&str, &str, isize)> {
     (
