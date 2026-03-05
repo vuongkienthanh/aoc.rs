@@ -2,26 +2,24 @@ pub mod part1;
 pub mod part2;
 
 pub fn next(input: String) -> String {
-    assert!(!input.is_empty());
-
     let mut ret = String::new();
-    let mut current_char = input.chars().next().unwrap();
+    let mut i = input.chars();
+    let mut current_char = i.next().unwrap();
     let mut current_count = 1;
 
-    for c in input.chars().skip(1) {
+    for c in i {
         if c == current_char {
             current_count += 1;
         } else {
-            ret.push(char::from_digit(current_count, 10).expect("should be a digit"));
-            ret.push(current_char);
+            ret.push_str(format!("{current_count}{current_char}").as_str());
             current_char = c;
             current_count = 1;
         }
     }
-    ret.push(char::from_digit(current_count, 10).expect("should be a digit"));
-    ret.push(current_char);
+    ret.push_str(format!("{current_count}{current_char}").as_str());
     ret
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
