@@ -3,14 +3,16 @@ pub mod part2;
 
 fn first_requirement(input: &str) -> bool {
     input
-        .chars()
+        .bytes()
         .collect::<Vec<_>>()
         .windows(3)
-        .any(|v| (v[0] as u8 + 1) == (v[1] as u8) && (v[0] as u8 + 2) == (v[2] as u8))
+        .any(|v| v[0] + 1 == v[1] && v[0] + 2 == v[2])
 }
+
 fn second_requirement(input: &str) -> bool {
-    ['i', 'o', 'l'].into_iter().all(|c| !input.contains(c))
+    input.chars().all(|c| !"iol".contains(c))
 }
+
 fn third_requirement(input: &str) -> bool {
     let mut cs = input.chars().peekable();
     let mut pair_count = 0;
@@ -18,6 +20,7 @@ fn third_requirement(input: &str) -> bool {
         if let Some(c2) = cs.peek()
             && c1 == *c2
         {
+        
             pair_count += 1;
             cs.next().unwrap();
         }
@@ -48,6 +51,7 @@ fn next_password(password: String) -> String {
 
     ret.into_iter().rev().collect()
 }
+
 fn next_valid_password(mut password: String) -> String {
     loop {
         password = next_password(password);

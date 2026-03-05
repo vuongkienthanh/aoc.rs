@@ -6,9 +6,9 @@ use nom::{
     multi::separated_list1,
     sequence::separated_pair,
 };
-use std::collections::HashMap;
+use fxhash::FxHashMap;
 
-pub type Mapping<'a> = HashMap<&'a str, HashMap<&'a str, usize>>;
+pub type Mapping<'a> = FxHashMap<&'a str, FxHashMap<&'a str, usize>>;
 
 fn parse_line(input: &str) -> IResult<&str, (&str, &str, usize)> {
     separated_pair(

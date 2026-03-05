@@ -1,6 +1,5 @@
-fn code_representation(input: &str) -> usize {
-    input.len()
-}
+use crate::part1::code_representation;
+
 fn decode_representation(input: &str) -> usize {
     let mut len = input.len();
     for c in input.chars() {
@@ -18,6 +17,7 @@ pub fn process(_input: &str) -> usize {
         .map(|line| decode_representation(line) - code_representation(line))
         .sum()
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
