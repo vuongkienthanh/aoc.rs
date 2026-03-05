@@ -1,10 +1,8 @@
 use crate::parsing::parse_input;
-use crate::{Gates, Wires, run_instructions};
+use crate::run;
 
-pub fn process(_input: &str) -> usize {
+pub fn process(_input: &str) -> u16 {
     let instructions = parse_input(_input);
-    let mut wires = Wires::new();
-    let mut pending_gates = Gates::new();
-    run_instructions(&instructions, &mut wires, &mut pending_gates);
-    wires.remove(&"a").unwrap() as usize
+    let mut wires = run(instructions);
+    wires.remove(&"a").unwrap()
 }
