@@ -107,16 +107,16 @@ pub mod grid {
             .collect()
     }
     pub fn adj_edges(rows: usize, cols: usize) -> Vec<(Point, [Point; 3])> {
-                [
-                    adj_top_edge(rows, cols),
-                    adj_bottom_edge(rows, cols),
-                    adj_left_edge(rows, cols),
-                    adj_right_edge(rows, cols),
-                ]
-                .into_iter()
-                .flatten()
-                .collect()
-            }
+        [
+            adj_top_edge(rows, cols),
+            adj_bottom_edge(rows, cols),
+            adj_left_edge(rows, cols),
+            adj_right_edge(rows, cols),
+        ]
+        .into_iter()
+        .flatten()
+        .collect()
+    }
     pub fn adj_inner(rows: usize, cols: usize) -> Vec<(Point, [Point; 4])> {
         let mut ans = vec![];
         for r in 1..rows - 1 {
@@ -237,6 +237,12 @@ pub mod naive {
         T: PrimInt + One,
     {
         [top(p), bottom(p), left(p), right(p)]
+    }
+    pub fn adjx<T>(p: (T, T)) -> [(T, T); 4]
+    where
+        T: PrimInt + One,
+    {
+        [top_left(p), top_right(p), bottom_left(p), bottom_right(p)]
     }
     pub fn adj8<T>(p: (T, T)) -> [(T, T); 8]
     where

@@ -1,12 +1,23 @@
+use crate::follow;
 use crate::parsing::parse_input;
+use fxhash::FxHashSet;
 
 pub fn process(_input: &str) -> usize {
     let input = parse_input(_input);
-    println!("{input:?}");
-
-    todo!("part1");
-    // panic!("should have an answer")
+    let mut tail_map = FxHashSet::default();
+    let mut rope = [(0, 0), (0, 0)];
+    tail_map.insert(rope[1]);
+    for ((x, y), i) in input {
+        for _ in 0..i {
+            rope[0] = (rope[0].0 + x, rope[0].1 + y);
+            let new_tail = follow(rope[0], rope[1]);
+            tail_map.insert(new_tail);
+            rope[1] = new_tail;
+        }
+    }
+    tail_map.len()
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -14,16 +25,17 @@ mod tests {
 
     #[fixture]
     pub fn fixture() -> &'static str {
-        r#""#
+        r#"R 4
+U 4
+L 3
+D 1
+R 4
+D 1
+L 5
+R 2"#
     }
     #[rstest]
     fn test_process_(fixture: &str) {
-        assert_eq!(process(fixture), 0);
-    }
-
-    #[rstest]
-    #[case("", 0)]
-    fn test_process(#[case] input: &str, #[case] expected: usize) {
-        assert_eq!(process(input), expected);
+        assert_eq!(process(fixture), 13);
     }
 }

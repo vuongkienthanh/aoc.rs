@@ -1,5 +1,3 @@
-#[allow(unused_imports)]
-// use aoc_helper::nom::parse_signed_usize;
 use nom::{
     branch::alt,
     bytes::complete::tag,
@@ -9,7 +7,6 @@ use nom::{
     sequence::{delimited, preceded, separated_pair, terminated},
     IResult, Parser,
 };
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
 
 type Item = usize;
 
