@@ -30,7 +30,7 @@ pub fn process(_input: &str) -> usize {
         for i in 0..input.len() {
             let monkey = input.get_mut(i).unwrap();
             let mut targets = vec![];
-            for mut item in sdt::mem::take(&mut monkey.items) {
+            for mut item in std::mem::take(&mut monkey.items) {
                 ans[i] += 1;
                 item = monkey.operate(item) / 3;
                 if monkey.test(item) {

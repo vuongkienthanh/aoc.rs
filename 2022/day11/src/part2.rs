@@ -4,7 +4,6 @@ use crate::part1::Monkey;
 
 #[derive(Debug)]
 pub struct Monkey2 {
-    pub number: usize,
     pub items: Vec<Vec<usize>>,
     pub op: Op,
     pub iftrue: usize,
@@ -12,16 +11,15 @@ pub struct Monkey2 {
 }
 
 impl Monkey2 {
-    fn from_monkey1(m: Monkey, len: usize, number: usize) -> Monkey2 {
+    fn from_monkey1(m: Monkey, len: usize) -> Monkey2 {
         Monkey2 {
-            number,
             items: m.items.into_iter().map(|v| vec![v; len]).collect(),
             op: m.op,
             iftrue: m.iftrue,
             iffalse: m.iffalse,
         }
     }
-    fn operate(&self, mut item: Vec<usize>, div_map: &[usize]) -> Vec<usize> {
+    fn operate(&self, item: &mut [usize], div_map: &[usize]) {
         match self.op {
             Op::Add(x) => {
                 item.iter_mut()
@@ -39,10 +37,9 @@ impl Monkey2 {
                     .for_each(|(item, d)| *item = (*item * *item) % d);
             }
         }
-        item
     }
-    fn test(&self, item: &[usize]) -> bool {
-        item[self.number] == 0
+    fn test(&self, item: &[usize], i: usize) -> bool {
+        item[i] == 0
     }
 }
 pub fn process(_input: &str) -> usize {
@@ -51,18 +48,17 @@ pub fn process(_input: &str) -> usize {
     let len = input.len();
     let mut input: Vec<_> = input
         .into_iter()
-        .enumerate()
-        .map(|(i, m)| Monkey2::from_monkey1(m, len, i))
+        .map(|m| Monkey2::from_monkey1(m, len))
         .collect();
     let mut ans = vec![0; len];
     for _round in 0..10_000 {
         for i in 0..len {
             let monkey = input.get_mut(i).unwrap();
             let mut targets = vec![];
-            for mut item in sdt::mem::take(&mut monkey.items) {
+            for mut item in std::mem::take(&mut monkey.items) {
                 ans[i] += 1;
-                item = monkey.operate(item, &div_map);
-                if monkey.test(&item) {
+                monkey.operate(&mut item, &div_map);
+                if monkey.test(&item, i) {
                     targets.push((monkey.iftrue, item));
                 } else {
                     targets.push((monkey.iffalse, item));
