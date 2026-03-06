@@ -1,8 +1,8 @@
-use crate::parsing::parse_input1;
-use crate::Op;
+use crate::parsing::parse_input;
+use crate::{monkey_business, Op};
 
 #[derive(Debug)]
-pub struct Monkey1 {
+pub struct Monkey {
     pub items: Vec<usize>,
     pub op: Op,
     pub div: usize,
@@ -10,7 +10,7 @@ pub struct Monkey1 {
     pub iffalse: usize,
 }
 
-impl Monkey1 {
+impl Monkey {
     fn operate(&self, item: usize) -> usize {
         match self.op {
             Op::Add(x) => item + x,
@@ -24,17 +24,15 @@ impl Monkey1 {
 }
 
 pub fn process(_input: &str) -> usize {
-    let mut input = parse_input1(_input);
+    let mut input = parse_input(_input);
     let mut ans = vec![0; input.len()];
     for _round in 0..20 {
         for i in 0..input.len() {
             let monkey = input.get_mut(i).unwrap();
-            let items: Vec<_> = monkey.items.extract_if(.., |_| true).collect();
             let mut targets = vec![];
-            for mut item in items {
+            for mut item in sdt::mem::take(&mut monkey.items) {
                 ans[i] += 1;
-                item = monkey.operate(item);
-                item /= 3;
+                item = monkey.operate(item) / 3;
                 if monkey.test(item) {
                     targets.push((monkey.iftrue, item));
                 } else {
@@ -46,10 +44,7 @@ pub fn process(_input: &str) -> usize {
             }
         }
     }
-    ans.sort_unstable();
-    let a = ans.pop().unwrap();
-    let b = ans.pop().unwrap();
-    a * b
+    monkey_business(ans)
 }
 
 #[cfg(test)]

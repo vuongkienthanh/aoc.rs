@@ -1,90 +1,67 @@
-use crate::Op;
-use crate::parsing::parse_input2;
-
-/// repr item as divisible part;
-#[derive(Debug)]
-pub struct Item {
-    pub div2: usize,
-    pub div3: usize,
-    pub div5: usize,
-    pub div7: usize,
-    pub div11: usize,
-    pub div13: usize,
-    pub div17: usize,
-    pub div19: usize,
-}
+use crate::{monkey_business, Op};
+use crate::parsing::parse_input;
+use crate::part1::Monkey;
 
 #[derive(Debug)]
 pub struct Monkey2 {
-    pub items: Vec<Item>,
+    pub number: usize,
+    pub items: Vec<Vec<usize>>,
     pub op: Op,
-    pub div: usize,
     pub iftrue: usize,
     pub iffalse: usize,
 }
 
 impl Monkey2 {
-    fn operate(&self, mut item: Item) -> Item {
+    fn from_monkey1(m: Monkey, len: usize, number: usize) -> Monkey2 {
+        Monkey2 {
+            number,
+            items: m.items.into_iter().map(|v| vec![v; len]).collect(),
+            op: m.op,
+            iftrue: m.iftrue,
+            iffalse: m.iffalse,
+        }
+    }
+    fn operate(&self, mut item: Vec<usize>, div_map: &[usize]) -> Vec<usize> {
         match self.op {
             Op::Add(x) => {
-                item.div2 = (item.div2 + x) % 2;
-                item.div3 = (item.div3 + x) % 3;
-                item.div5 = (item.div5 + x) % 5;
-                item.div7 = (item.div7 + x) % 7;
-                item.div11 = (item.div11 + x) % 11;
-                item.div13 = (item.div13 + x) % 13;
-                item.div17 = (item.div17 + x) % 17;
-                item.div19 = (item.div19 + x) % 19;
+                item.iter_mut()
+                    .zip(div_map)
+                    .for_each(|(item, d)| *item = (*item + x) % d);
             }
             Op::Mul(x) => {
-                item.div2 = (item.div2 * x) % 2;
-                item.div3 = (item.div3 * x) % 3;
-                item.div5 = (item.div5 * x) % 5;
-                item.div7 = (item.div7 * x) % 7;
-                item.div11 = (item.div11 * x) % 11;
-                item.div13 = (item.div13 * x) % 13;
-                item.div17 = (item.div17 * x) % 17;
-                item.div19 = (item.div19 * x) % 19;
+                item.iter_mut()
+                    .zip(div_map)
+                    .for_each(|(item, d)| *item = (*item * x) % d);
             }
             Op::Square => {
-                item.div2 = (item.div2 * item.div2) % 2;
-                item.div3 = (item.div3 * item.div3) % 3;
-                item.div5 = (item.div5 * item.div5) % 5;
-                item.div7 = (item.div7 * item.div7) % 7;
-                item.div11 = (item.div11 * item.div11) % 11;
-                item.div13 = (item.div13 * item.div13) % 13;
-                item.div17 = (item.div17 * item.div17) % 17;
-                item.div19 = (item.div19 * item.div19) % 19;
+                item.iter_mut()
+                    .zip(div_map)
+                    .for_each(|(item, d)| *item = (*item * *item) % d);
             }
         }
         item
     }
-    fn test(&self, item: &Item) -> bool {
-        match self.div {
-            2 => item.div2 == 0,
-            3 => item.div3 == 0,
-            5 => item.div5 == 0,
-            7 => item.div7 == 0,
-            11 => item.div11 == 0,
-            13 => item.div13 == 0,
-            17 => item.div17 == 0,
-            19 => item.div19 == 0,
-            _ => panic!(),
-        }
+    fn test(&self, item: &[usize]) -> bool {
+        item[self.number] == 0
     }
 }
-
 pub fn process(_input: &str) -> usize {
-    let mut input = parse_input2(_input);
-    let mut ans = vec![0; input.len()];
+    let input = parse_input(_input);
+    let div_map: Vec<_> = input.iter().map(|m| m.div).collect();
+    let len = input.len();
+    let mut input: Vec<_> = input
+        .into_iter()
+        .enumerate()
+        .map(|(i, m)| Monkey2::from_monkey1(m, len, i))
+        .collect();
+    let mut ans = vec![0; len];
     for _round in 0..10_000 {
-        for i in 0..input.len() {
+        for i in 0..len {
             let monkey = input.get_mut(i).unwrap();
-            let items: Vec<_> = monkey.items.extract_if(.., |_| true).collect();
             let mut targets = vec![];
-            for mut item in items {
+            for mut item in sdt::mem::take(&mut monkey.items) {
                 ans[i] += 1;
-                item = monkey.operate(item);
+                item = monkey.operate(item, &div_map);
                 if monkey.test(&item) {
                     targets.push((monkey.iftrue, item));
                 } else {
@@ -96,8 +73,5 @@ pub fn process(_input: &str) -> usize {
             }
         }
     }
-    ans.sort_unstable();
-    let a = ans.pop().unwrap();
-    let b = ans.pop().unwrap();
-    a * b
+    monkey_business(ans)
 }
