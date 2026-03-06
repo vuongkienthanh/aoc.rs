@@ -1,3 +1,10 @@
+pub mod parsing;
 pub mod part1;
 pub mod part2;
-pub mod parsing;
+
+#[derive(Debug)]
+pub enum Op {
+    Add(usize),
+    Mul(usize),
+    Square,
+}
