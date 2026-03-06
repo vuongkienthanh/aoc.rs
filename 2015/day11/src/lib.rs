@@ -20,7 +20,6 @@ fn third_requirement(input: &str) -> bool {
         if let Some(c2) = cs.peek()
             && c1 == *c2
         {
-        
             pair_count += 1;
             cs.next().unwrap();
         }

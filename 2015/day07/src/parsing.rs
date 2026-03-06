@@ -17,7 +17,7 @@ pub enum Operand<'a> {
 #[derive(Debug, Clone)]
 pub enum OperandList<'a> {
     One(Operand<'a>),
-    Two((Operand<'a>, Operand<'a>)),
+    Two(Operand<'a>, Operand<'a>),
 }
 
 #[derive(Debug, Clone)]
@@ -48,7 +48,7 @@ fn parse_and<'a>(input: &'a str) -> IResult<&'a str, Item<'a>> {
         tag(" -> "),
         alpha1,
     )
-    .map(|((x, y), z)| (Op::And, OperandList::Two((x, y)), z))
+    .map(|((x, y), z)| (Op::And, OperandList::Two(x, y), z))
     .parse(input)
 }
 
@@ -58,7 +58,7 @@ fn parse_or<'a>(input: &'a str) -> IResult<&'a str, Item<'a>> {
         tag(" -> "),
         alpha1,
     )
-    .map(|((x, y), z)| (Op::Or, OperandList::Two((x, y)), z))
+    .map(|((x, y), z)| (Op::Or, OperandList::Two(x, y), z))
     .parse(input)
 }
 
@@ -68,7 +68,7 @@ fn parse_lshift<'a>(input: &'a str) -> IResult<&'a str, Item<'a>> {
         tag(" -> "),
         alpha1,
     )
-    .map(|((x, y), z)| (Op::Lshift, OperandList::Two((x, y)), z))
+    .map(|((x, y), z)| (Op::Lshift, OperandList::Two(x, y), z))
     .parse(input)
 }
 
@@ -78,7 +78,7 @@ fn parse_rshift<'a>(input: &'a str) -> IResult<&'a str, Item<'a>> {
         tag(" -> "),
         alpha1,
     )
-    .map(|((x, y), z)| (Op::Rshift, OperandList::Two((x, y)), z))
+    .map(|((x, y), z)| (Op::Rshift, OperandList::Two(x, y), z))
     .parse(input)
 }
 

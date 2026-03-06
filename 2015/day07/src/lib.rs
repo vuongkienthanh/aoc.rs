@@ -18,16 +18,16 @@ fn run<'a>(mut input: Vec<Item<'a>>) -> FxHashMap<&'a str, u16> {
                 (Assign, One(Value(v)), target) => {
                     wires.insert(target, v);
                 }
-                (And, Two((Value(v1), Value(v2))), target) => {
+                (And, Two(Value(v1), Value(v2)), target) => {
                     wires.insert(target, v1 & v2);
                 }
-                (Or, Two((Value(v1), Value(v2))), target) => {
+                (Or, Two(Value(v1), Value(v2)), target) => {
                     wires.insert(target, v1 | v2);
                 }
-                (Lshift, Two((Value(v1), Value(v2))), target) => {
+                (Lshift, Two(Value(v1), Value(v2)), target) => {
                     wires.insert(target, v1 << v2);
                 }
-                (Rshift, Two((Value(v1), Value(v2))), target) => {
+                (Rshift, Two(Value(v1), Value(v2)), target) => {
                     wires.insert(target, v1 >> v2);
                 }
                 (Not, One(Value(v)), target) => {
@@ -40,26 +40,24 @@ fn run<'a>(mut input: Vec<Item<'a>>) -> FxHashMap<&'a str, u16> {
                         new.push((op, One(Name(n)), target));
                     }
                 }
-                (op, Two((Name(n), x2)), target) => {
+                (op, Two(Name(n), x2), target) => {
                     if let Some(v) = wires.get(&n) {
-                        new.push((op, Two((Value(*v), x2)), target));
+                        new.push((op, Two(Value(*v), x2), target));
                     } else {
-                        new.push((op, Two((Name(n), x2)), target));
+                        new.push((op, Two(Name(n), x2), target));
                     }
                 }
-                (op, Two((x1, Name(n))), target) => {
+                (op, Two(x1, Name(n)), target) => {
                     if let Some(v) = wires.get(&n) {
-                        new.push((op, Two((x1, Value(*v))), target));
+                        new.push((op, Two(x1, Value(*v)), target));
                     } else {
-                        new.push((op, Two((x1, Name(n))), target));
+                        new.push((op, Two(x1, Name(n)), target));
                     }
                 }
                 _ => panic!("should not exists"),
             }
         }
-
         input = new;
     }
-
     wires
 }
