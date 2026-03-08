@@ -18,15 +18,21 @@ pub fn process(_input: &str) -> usize {
             if b == y {
                 let left = (a - min_x).min(x - min_x) + 1;
                 let right = (a - min_x).max(x - min_x) + 1;
-                for i in left..=right {
-                    map[b][i] = '#';
+                for cell in map
+                    .get_mut(b)
+                    .unwrap()
+                    .iter_mut()
+                    .take(right + 1)
+                    .skip(left)
+                {
+                    *cell = '#';
                 }
             }
             if a == x {
                 let up = b.min(y);
                 let down = b.max(y);
-                for i in up..=down {
-                    map[i][a - min_x + 1] = '#';
+                for row in map.iter_mut().take(down + 1).skip(up) {
+                    *row.get_mut(a - min_x + 1).unwrap() = '#';
                 }
             }
         }
@@ -55,3 +61,4 @@ pub fn process(_input: &str) -> usize {
     }
     map.into_iter().flatten().filter(|x| *x == 'o').count()
 }
+

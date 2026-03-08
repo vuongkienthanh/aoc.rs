@@ -1,25 +1,26 @@
-#[allow(unused_imports)]
-// use aoc_helper::nom::parse_signed_usize;
-use nom::{
-    branch::alt,
-    bytes::complete::tag,
-    character::complete::{self, alpha1, line_ending},
-    combinator::all_consuming,
-    multi::separated_list1,
-    sequence::{delimited, preceded, separated_pair, terminated},
-    IResult, Parser,
-};
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
+use grid::Grid;
 
-type Item = usize;
+pub type Point = (usize, usize);
 
-fn parse_line(input: &str) -> IResult<&str, Item> {
-    todo!()
-}
-
-pub fn parse_input(input: &str) -> Vec<Item> {
-    all_consuming(separated_list1(line_ending, parse_line))
-        .parse(input)
-        .unwrap()
-        .1
+pub fn parse_input(input: &str) -> (Grid<u8>, Point, Point) {
+    let (mut start, mut end) = ((0, 0), (0, 0));
+    let mut grid = vec![];
+    for (r, line) in input.lines().enumerate() {
+        let mut row = vec![];
+        for (c, cell) in line.bytes().enumerate() {
+            match cell {
+                b'S' => {
+                    row.push(b'a');
+                    start = (r, c);
+                }
+                b'E' => {
+                    row.push(b'z');
+                    end = (r, c);
+                }
+                x => row.push(x),
+            }
+        }
+        grid.push(row);
+    }
+    (Grid::from(grid), start, end)
 }
