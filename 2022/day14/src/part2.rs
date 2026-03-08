@@ -39,7 +39,7 @@ pub fn process(_input: &str) -> usize {
             if *top == 1 {
                 *bot |= 1;
             }
-        }_
+        }
         for (bot, top) in map.iter_row_mut(row).skip(1).zip(&top_row) {
             if *top == 1 {
                 *bot |= 1;
@@ -48,4 +48,3 @@ pub fn process(_input: &str) -> usize {
     }
     map.into_iter().filter(|x| *x == 1).count()
 }
-
