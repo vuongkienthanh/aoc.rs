@@ -1,29 +1,38 @@
-use crate::parsing::parse_input;
+use crate::parsing::{encode, parse_input};
+use fxhash::FxHashMap;
 
 pub fn process(_input: &str) -> usize {
-    let map = parse_input(_input);
-    // println!("{input:?}");
-    let mut max = 0;
-    let mut current = vec![(vec!["AA"], 0)];
-    // for i in (2..=30).step_by(2) {
-    //     let mut new = vec![];
-    //
-    //     for (path, mut pressure) in current {
-    //         let last = path.last().unwrap();
-    //         let (last_pressure, last_path) = map.get(last).unwrap();
-    //         pressure += last_pressure * (32 - i);
-    //         max = max.max(pressure);
-    //         for next_loc in last_path {
-    //             let mut path = path.clone();
-    //             path.push(next_loc);
-    //             new.push((path, pressure));
-    //         }
-    //     }
-    //
-    //     current = new;
-    //     println!("{}", current.len());
-    // }
-    max
+    let (map, aa) = encode(parse_input(_input));
+    // println!("{:?}", map);
+    let mut current = FxHashMap::from_iter([((0u64, aa), 0usize)]);
+    println!("{current:?}");
+    for i in 0..30 {
+        let mut new = FxHashMap::default();
+
+        for ((opened, loc), pressure) in current {
+            let (p, path) = map.get(loc).unwrap();
+            // open valve
+            if *p != 0 {
+                let pressure = pressure + (29 - i) * p;
+                new.entry((opened | loc))
+                    .and_modify(|x| *x = *x.max(pressure))
+                    .or_insert(pressure);
+                // new.push((opened | loc, loc, );
+            }
+            // goto next
+            for next_loc in path {
+                new.push((opened, *next_loc, pressure));
+            }
+        }
+
+        current = new;
+        println!("{:?}", current.len());
+        if i == 4 {
+            println!("{current:?}");
+            break;
+        }
+    }
+    current.into_values().max().unwrap()
 }
 
 #[cfg(test)]
