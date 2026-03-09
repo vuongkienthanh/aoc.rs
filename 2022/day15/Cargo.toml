@@ -11,3 +11,4 @@ publish.workspace = true
 nom.workspace = true
 aoc_helper.workspace = true
 fxhash.workspace = true
+rayon.workspace = true

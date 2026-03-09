@@ -27,20 +27,42 @@ pub fn process(_input: &str) -> usize {
             }
         }
     }
-    map[(0, max_y + 1)] = 1;
+    let center = max_y + 1;
+    map[(0, center)] = 1;
+
     for row in 1..=max_y + 1 {
-        let top_row: Vec<_> = map.iter_row(row - 1).cloned().collect();
-        for (bot, top) in map.iter_row_mut(row).zip(&top_row) {
+        let top_row: Vec<_> = map
+            .iter_row(row - 1)
+            .take(center + row)
+            .skip(center - row + 1)
+            .cloned()
+            .collect();
+        for (bot, top) in map
+            .iter_row_mut(row)
+            .take(center + row)
+            .skip(center - row + 1)
+            .zip(&top_row)
+        {
             if *top == 1 {
                 *bot |= 1;
             }
         }
-        for (bot, top) in map.iter_row_mut(row).zip(&top_row[1..]) {
+        for (bot, top) in map
+            .iter_row_mut(row)
+            .take(center + row - 1)
+            .skip(center - row)
+            .zip(&top_row)
+        {
             if *top == 1 {
                 *bot |= 1;
             }
         }
-        for (bot, top) in map.iter_row_mut(row).skip(1).zip(&top_row) {
+        for (bot, top) in map
+            .iter_row_mut(row)
+            .take(center + row + 1)
+            .skip(center - row + 2)
+            .zip(&top_row)
+        {
             if *top == 1 {
                 *bot |= 1;
             }
