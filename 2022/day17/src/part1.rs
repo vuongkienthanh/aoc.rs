@@ -20,22 +20,29 @@ fn move_right(rock: [u8; 4]) -> [u8; 4] {
         rock
     }
 }
+fn do_cmd(rock: [u8; 4], cmd: char) -> [u8; 4] {
+    match cmd {
+        '>' => move_right(rock),
+        '<' => move_left(rock),
+        _ => panic!(),
+    }
+}
 
 pub fn process(_input: &str) -> usize {
     let mut hole: Vec<u8> = vec![];
     let mut rocks = ROCKS.iter().cycle();
     let mut cmds = _input.chars().cycle();
-    for i in 0..11 {
+    let mut ans = 0;
+    for i in 0..10 {
         println!("{i}");
         let len = hole.len();
         let mut rock = rocks.next().cloned().unwrap();
         //move rock 4 times and down 3 times
         for _ in 0..4 {
-            match cmds.next().unwrap() {
-                '>' => rock = move_right(rock),
-                '<' => rock = move_left(rock),
-                _ => panic!(),
-            }
+            rock = do_cmd(rock, cmds.next().unwrap());
+        }
+        for row in rock.iter().rev() {
+            println!("{row:07b}");
         }
         // clash
         if len == 0 {
@@ -43,25 +50,23 @@ pub fn process(_input: &str) -> usize {
         } else {
             for i in (0..len).rev() {
                 //down
-                if !hole[i..len].iter().zip(rock).all(|(a,b)| {
-                    let fuse = a |b;
+                if i==0 || !hole[i..len].iter().zip(rock).all(|(a, b)| {
+                    let fuse = a | b;
                     fuse.count_ones() == a.count_ones() + b.count_ones()
                 }) {
-                    for _ in 0..5usize.saturating_sub(len-i) {
+
+                    for _ in 0..5usize.saturating_sub(len - i) {
                         hole.push(0);
                     }
-                    hole[i+1..].iter_mut().zip(rock).for_each(|(a,b)| {
-                        *a |= b
-                    });
+                    hole[i + 1..]
+                        .iter_mut()
+                        .zip(rock)
+                        .for_each(|(a, b)| *a |= b);
                     break;
                 }
-                
+
                 // then move
-                let moved_rock = match cmds.next().unwrap() {
-                    '>' => move_right(rock),
-                    '<' => move_left(rock),
-                    _ => panic!(),
-                };
+                let moved_rock = do_cmd(rock, cmds.next().unwrap());
 
                 rock = if hole[i..len].iter().zip(moved_rock).all(|(a, b)| {
                     let fuse = a | b;
@@ -82,11 +87,46 @@ pub fn process(_input: &str) -> usize {
         }
 
         println!("hole = ");
-        for row in hole.iter().rev() {
-            println!("{row:07b}");
+        for (i, row) in hole.iter().enumerate().rev() {
+            println!("{i} {row:07b}");
         }
         println!();
+        let to_delete = hole
+            .iter()
+            .enumerate()
+            .rev()
+            .scan((0, 0), |(_, state), (i, row)| {
+                *state |= row;
+                if *state == 0b1111111 {
+                    return None;
+                }
+                Some((i, *state))
+            })
+            .map(|(i, _)| i)
+            .last()
+            .unwrap();
+
+        let hole2 = hole.split_off(to_delete);
+        ans += to_delete;
+        hole = hole2;
     }
 
-    todo!()
+    ans + hole.len()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rstest::*;
+
+    #[fixture]
+    pub fn fixture() -> &'static str {
+        r#">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>"#
+    }
+
+    #[rstest]
+    fn test_process_(fixture: &str) {
+        assert_eq!(process(fixture), 3068);
+    }
+}
+
