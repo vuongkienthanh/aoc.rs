@@ -24,10 +24,13 @@ pub fn process(_input: &str) -> usize {
             }
             // goto next
             for next_loc in path {
-                move_loc_a
-                    .entry((opened, *next_loc, loc_b))
-                    .and_modify(|x| *x = (*x).max(pressure))
-                    .or_insert(pressure);
+                // every span should open one valve
+                if opened.count_ones() >= (i as u32 / span) {
+                    move_loc_a
+                        .entry((opened, *next_loc, loc_b))
+                        .and_modify(|x| *x = (*x).max(pressure))
+                        .or_insert(pressure);
+                }
             }
         }
         for ((opened, loc_a, loc_b), pressure) in move_loc_a {
@@ -43,15 +46,12 @@ pub fn process(_input: &str) -> usize {
             }
             // goto next
             for next_loc in path {
-                // every span should open one valve
                 // [you, elephant] is the same as [elephant, you]
-                if opened.count_ones() >= (i as u32 / span) {
-                    move_loc_b
-                        .entry((opened, loc_a.min(*next_loc), loc_a.max(*next_loc)))
-                        .and_modify(|x| *x = (*x).max(pressure))
-                        .or_insert(pressure);
-                }
-            }
+                move_loc_b
+                    .entry((opened, loc_a.min(*next_loc), loc_a.max(*next_loc)))
+                    .and_modify(|x| *x = (*x).max(pressure))
+                    .or_insert(pressure);
+            }     
         }
 
         current = move_loc_b;
