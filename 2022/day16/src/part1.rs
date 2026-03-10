@@ -3,34 +3,32 @@ use fxhash::FxHashMap;
 
 pub fn process(_input: &str) -> usize {
     let (map, aa) = encode(parse_input(_input));
-    // println!("{:?}", map);
     let mut current = FxHashMap::from_iter([((0u64, aa), 0usize)]);
-    println!("{current:?}");
     for i in 0..30 {
-        let mut new = FxHashMap::default();
+        let mut new: FxHashMap<(u64, u64), usize> = FxHashMap::default();
 
         for ((opened, loc), pressure) in current {
-            let (p, path) = map.get(loc).unwrap();
+            let (p, path) = map.get(&loc).unwrap();
             // open valve
-            if *p != 0 {
+            if *p != 0 && opened & (1 << loc) == 0 {
                 let pressure = pressure + (29 - i) * p;
-                new.entry((opened | loc))
-                    .and_modify(|x| *x = *x.max(pressure))
+                new.entry((opened | (1 << loc), loc))
+                    .and_modify(|x| *x = (*x).max(pressure))
                     .or_insert(pressure);
-                // new.push((opened | loc, loc, );
             }
             // goto next
             for next_loc in path {
-                new.push((opened, *next_loc, pressure));
+                // every 4 steps should open one valve
+                // performance hack
+                if opened.count_ones() >= i as u32 / 4 {
+                    new.entry((opened, *next_loc))
+                        .and_modify(|x| *x = (*x).max(pressure))
+                        .or_insert(pressure);
+                }
             }
         }
 
         current = new;
-        println!("{:?}", current.len());
-        if i == 4 {
-            println!("{current:?}");
-            break;
-        }
     }
     current.into_values().max().unwrap()
 }
