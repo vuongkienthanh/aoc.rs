@@ -1,60 +1,26 @@
-const ROCKS: [[u8; 4]; 5] = [
-    [0b11110, 0, 0, 0],
-    [0b01000, 0b11100, 0b01000, 0],
-    [0b11100, 0b00100, 0b00100, 0],
-    [0b10000, 0b10000, 0b10000, 0b10000],
-    [0b11000, 0b11000, 0, 0],
-];
-
-fn move_left(rock: [u8; 4]) -> [u8; 4] {
-    if rock.iter().all(|x| x & (1 << 6) == 0) {
-        [rock[0] << 1, rock[1] << 1, rock[2] << 1, rock[3] << 1]
-    } else {
-        rock
-    }
-}
-fn move_right(rock: [u8; 4]) -> [u8; 4] {
-    if rock.iter().all(|x| x & 1 == 0) {
-        [rock[0] >> 1, rock[1] >> 1, rock[2] >> 1, rock[3] >> 1]
-    } else {
-        rock
-    }
-}
-fn do_cmd(rock: [u8; 4], cmd: char) -> [u8; 4] {
-    match cmd {
-        '>' => move_right(rock),
-        '<' => move_left(rock),
-        _ => panic!(),
-    }
-}
+use crate::{ROCKS, do_cmd, is_conflicted};
 
 pub fn process(_input: &str) -> usize {
     let mut hole: Vec<u8> = vec![];
     let mut rocks = ROCKS.iter().cycle();
-    let mut cmds = _input.chars().cycle();
+    let cmds: Vec<_> = _input.chars().collect();
+    let mut cmdi = 0;
     let mut ans = 0;
-    for i in 0..10 {
-        println!("{i}");
+    for _ in 0..2022 {
         let len = hole.len();
         let mut rock = rocks.next().cloned().unwrap();
         //move rock 4 times and down 3 times
         for _ in 0..4 {
-            rock = do_cmd(rock, cmds.next().unwrap());
-        }
-        for row in rock.iter().rev() {
-            println!("{row:07b}");
+            rock = do_cmd(rock, &mut cmdi, &cmds);
         }
         // clash
         if len == 0 {
             hole.extend(rock);
         } else {
+            let mut rest = false;
             for i in (0..len).rev() {
                 //down
-                if i==0 || !hole[i..len].iter().zip(rock).all(|(a, b)| {
-                    let fuse = a | b;
-                    fuse.count_ones() == a.count_ones() + b.count_ones()
-                }) {
-
+                if is_conflicted(&hole, i, &rock) {
                     for _ in 0..5usize.saturating_sub(len - i) {
                         hole.push(0);
                     }
@@ -62,20 +28,24 @@ pub fn process(_input: &str) -> usize {
                         .iter_mut()
                         .zip(rock)
                         .for_each(|(a, b)| *a |= b);
+                    rest = true;
                     break;
                 }
-
-                // then move
-                let moved_rock = do_cmd(rock, cmds.next().unwrap());
-
-                rock = if hole[i..len].iter().zip(moved_rock).all(|(a, b)| {
-                    let fuse = a | b;
-                    fuse.count_ones() == a.count_ones() + b.count_ones()
-                }) {
-                    moved_rock
-                } else {
+                // then move left or right
+                let moved_rock = do_cmd(rock, &mut cmdi, &cmds);
+                rock = if is_conflicted(&hole, i, &moved_rock) {
                     rock
+                } else {
+                    moved_rock
                 };
+            }
+            // if all the way down with no rest
+            if !rest {
+                for _ in 0..4usize.saturating_sub(len) {
+                    hole.push(0);
+                }
+
+                hole.iter_mut().zip(rock).for_each(|(a, b)| *a |= b);
             }
         }
 
@@ -86,12 +56,10 @@ pub fn process(_input: &str) -> usize {
             }
         }
 
-        println!("hole = ");
-        for (i, row) in hole.iter().enumerate().rev() {
-            println!("{i} {row:07b}");
-        }
-        println!();
-        let to_delete = hole
+        // case to_delete is first_row = 0-> can't find surface -> do nothing
+        // case to_delete > 0 -> surface is to_delete -1 -> reallocate left right
+        // case is last row (None) -> clear hole
+        if let Some(to_delete) = hole
             .iter()
             .enumerate()
             .rev()
@@ -104,11 +72,15 @@ pub fn process(_input: &str) -> usize {
             })
             .map(|(i, _)| i)
             .last()
-            .unwrap();
-
-        let hole2 = hole.split_off(to_delete);
-        ans += to_delete;
-        hole = hole2;
+        {
+            if to_delete > 0 {
+                ans += to_delete;
+                hole = hole[to_delete..].to_vec();
+            }
+        } else {
+            ans += hole.len();
+            hole.clear();
+        }
     }
 
     ans + hole.len()
