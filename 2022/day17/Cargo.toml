@@ -8,6 +8,7 @@ description.workspace = true
 publish.workspace = true
 
 [dependencies]
+fxhash.workspace = true
 
 [dev-dependencies]
 rstest.workspace = true
