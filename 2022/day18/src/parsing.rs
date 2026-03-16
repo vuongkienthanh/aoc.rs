@@ -6,16 +6,10 @@ use nom::{
     multi::separated_list1,
 };
 
-pub type Item = (isize, isize, isize);
+pub type Item = (i8, i8, i8);
 
 fn parse_line(input: &str) -> IResult<&str, Item> {
-    (
-        complete::isize,
-        tag(","),
-        complete::isize,
-        tag(","),
-        complete::isize,
-    )
+    (complete::i8, tag(","), complete::i8, tag(","), complete::i8)
         .map(|(a, _, b, _, c)| (a, b, c))
         .parse(input)
 }

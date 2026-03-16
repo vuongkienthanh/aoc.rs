@@ -1,34 +1,10 @@
+use crate::naive_surface;
 use crate::parsing::parse_input;
+use std::collections::BTreeSet;
 
 pub fn process(_input: &str) -> usize {
-    let mut input = parse_input(_input);
-    input.sort_unstable_by_key(|(a, b, c)| (*c, *b, *a));
-
-    let mut ans = 0;
-    let mut bottom = vec![];
-    let mut top = vec![];
-    let mut z = input[0].2;
-
-    for (a, b, c) in input {
-        if c != z {
-            bottom = top;
-            top = vec![];
-            z = c;
-        }
-        ans += 6;
-        if bottom.contains(&(a, b)) {
-            ans -= 2
-        }
-        if top.contains(&(a - 1, b)) {
-            ans -= 2
-        }
-        if top.contains(&(a, b - 1)) {
-            ans -= 2
-        }
-        top.push((a, b));
-    }
-
-    ans
+    let input = BTreeSet::from_iter(parse_input(_input).into_iter().map(|(x, y, z)| (z, y, x)));
+    naive_surface(&input)
 }
 
 #[cfg(test)]
