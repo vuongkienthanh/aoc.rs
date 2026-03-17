@@ -5,6 +5,7 @@ use nom::{
     combinator::all_consuming,
     multi::separated_list1,
 };
+use crate::Blueprint;
 
 fn parse_blueprint(input: &str) -> IResult<&str, Blueprint> {
     (
