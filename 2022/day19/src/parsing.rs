@@ -26,10 +26,12 @@ fn parse_blueprint(input: &str) -> IResult<&str, Blueprint> {
     )
         .map(|(_, i, _, a, _, b, _, c, _, d, _, e, _, f, _)| Blueprint {
             id: i,
-            ore_robot_need: a,
-            clay_robot_need: b,
-            obsidian_robot_need: (c, d),
-            geode_robot_need: (e, f),
+            ore_robot_need_ore: a,
+            clay_robot_need_ore: b,
+            obsidian_robot_need_ore: c,
+            obsidian_robot_need_clay: d,
+            geode_robot_need_ore: e,
+            geode_robot_need_obsidian: f,
         })
         .parse(input)
 }
