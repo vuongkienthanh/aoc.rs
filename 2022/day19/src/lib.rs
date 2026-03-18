@@ -58,6 +58,34 @@ pub struct Blueprint {
     geode_robot_need_obsidian: usize,
 }
 impl Blueprint {
+     fn new(
+        id: usize,
+        ore_robot_need_ore: usize,
+        clay_robot_need_ore: usize,
+        obsidian_robot_need_ore: usize,
+        obsidian_robot_need_clay: usize,
+        geode_robot_need_ore: usize,
+        geode_robot_need_obsidian: usize,
+    ) -> Self {
+        Self {
+            id,
+            ore_robot_need_ore,
+            clay_robot_need_ore,
+            obsidian_robot_need_ore,
+            obsidian_robot_need_clay,
+            geode_robot_need_ore,
+            geode_robot_need_obsidian,
+            max_ore: [
+                ore_robot_need_ore,
+                clay_robot_need_ore,
+                obsidian_robot_need_ore,
+                geode_robot_need_ore,
+            ]
+            .into_iter()
+            .max()
+            .unwrap(),
+        }
+    }
     fn can_make_ore_robot(&self, resource: &Resource) -> bool {
         resource.ore >= self.ore_robot_need_ore
     }

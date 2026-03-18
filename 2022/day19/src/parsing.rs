@@ -25,15 +25,7 @@ fn parse_blueprint(input: &str) -> IResult<&str, Blueprint> {
         complete::usize,
         tag(" obsidian."),
     )
-        .map(|(_, i, _, a, _, b, _, c, _, d, _, e, _, f, _)| Blueprint {
-            id: i,
-            ore_robot_need_ore: a,
-            clay_robot_need_ore: b,
-            obsidian_robot_need_ore: c,
-            obsidian_robot_need_clay: d,
-            geode_robot_need_ore: e,
-            geode_robot_need_obsidian: f,
-        })
+        .map(|(_, i, _, a, _, b, _, c, _, d, _, e, _, f, _)| Blueprint::new(i, a, b, c, d, e, f))
         .parse(input)
 }
 
