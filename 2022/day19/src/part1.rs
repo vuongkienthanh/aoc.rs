@@ -60,25 +60,22 @@ pub fn process(_input: &str) -> usize {
                     if flag & 1 == 0 {
                         let resource = bp.make_ore_robot(&resource);
                         new.push((resource, 0));
-                    } else {
-                        flag |= 1;
                     }
+                    flag |= 1;
                 }
                 if bp.can_make_clay_robot(&resource) {
                     if flag & 0b10 == 0 {
                         let resource = bp.make_clay_robot(&resource);
                         new.push((resource, 0));
-                    } else {
-                        flag |= 0b10;
                     }
+                    flag |= 0b10;
                 }
                 if bp.can_make_obsidian_robot(&resource) {
                     if flag & 0b100 == 0 {
                         let resource = bp.make_obsidian_robot(&resource);
                         new.push((resource, 0));
-                    } else {
-                        flag |= 0b100;
                     }
+                    flag |= 0b100;
                 }
                 resource.step();
                 new.push((resource, flag));
@@ -95,6 +92,13 @@ pub fn process(_input: &str) -> usize {
                     let resource = bp.make_geode_robot(&resource);
                     new.push((resource, 0));
                     continue;
+                }
+                if bp.can_make_ore_robot(&resource) {
+                    if flag & 1 == 0 {
+                        let resource = bp.make_ore_robot(&resource);
+                        new.push((resource, 0));
+                    }
+                    flag |= 1;
                 }
                 if bp.can_make_clay_robot(&resource) {
                     if flag & 0b10 == 0 {
