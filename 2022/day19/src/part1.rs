@@ -18,27 +18,25 @@ pub fn process(_input: &str) -> usize {
                     if flag & 1 == 0 {
                         let resource = bp.make_ore_robot(&resource);
                         new.push((resource, 0));
-                    } else {
-                        flag |= 1;
                     }
+                    flag |= 1;
                 }
                 if bp.can_make_clay_robot(&resource) {
                     if flag & 0b10 == 0 {
                         let resource = bp.make_clay_robot(&resource);
                         new.push((resource, 0));
-                    } else {
-                        flag |= 0b10;
                     }
+                    flag |= 0b10;
                 }
                 if bp.can_make_obsidian_robot(&resource) {
                     if flag & 0b100 == 0 {
                         let resource = bp.make_obsidian_robot(&resource);
                         new.push((resource, 0));
-                    } else {
-                        flag |= 0b100;
                     }
+                    flag |= 0b100;
                 }
-                if resource.obsidian == 0 && flag == 0b111 {
+                if (resource.clay == 0 && flag == 0b11) || (resource.obsidian == 0 && flag == 0b111)
+                {
                     continue;
                 } else {
                     resource.step();
