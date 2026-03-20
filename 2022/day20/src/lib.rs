@@ -9,19 +9,19 @@ struct Node {
 }
 
 fn build_hm(len: usize) -> Vec<Node> {
-    let mut ans = vec![Node {
+    let mut hm = vec![Node {
         next: 1,
         prev: len - 1,
     }];
     for i in 1..len - 1 {
-        ans.push(Node {
+        hm.push(Node {
             prev: i - 1,
             next: i + 1,
         });
     }
-    ans.push(Node {
+    hm.push(Node {
         prev: len - 2,
         next: 0,
     });
-    ans
+    hm
 }
