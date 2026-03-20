@@ -6,7 +6,6 @@ pub fn process(_input: &str) -> isize {
     let mut hm = build_hm(input.len());
     let tlen = input.len() as isize - 1;
     for (i, v) in input.iter().enumerate() {
-        let v = input[i];
         let optimized_v = [(v % tlen + tlen) % tlen, (v % tlen + tlen) % tlen - tlen]
             .into_iter()
             .min_by_key(|x| x.abs())
