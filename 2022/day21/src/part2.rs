@@ -8,53 +8,60 @@ pub fn process(_input: &str) -> usize {
         .enumerate()
         .find_map(|(i, (monkey, _, _, _))| (*monkey == "root").then_some(i))
         .unwrap();
-    current[root].1 = Op::Eq;
+    let root = current.remove(root);
     loop {
+        let mut changed = false;
         let mut new = vec![];
-        for (monkey, op, a, b) in &current {
+        for (monkey, op, a, b) in current {
             match (a, b) {
                 (Operand::Name(x), b) if hm.contains_key(x) => {
                     let i = hm.get(x).unwrap();
-                    new.push((*monkey, op.clone(), Operand::Value(*i), b.clone()));
+                    new.push((monkey, op, Operand::Value(*i), b));
+                    changed = true;
                     continue;
                 }
                 (a, Operand::Name(x)) if hm.contains_key(x) => {
                     let i = hm.get(x).unwrap();
-                    new.push((*monkey, op.clone(), a.clone(), Operand::Value(*i)));
+                    new.push((monkey, op, a, Operand::Value(*i)));
+                    changed = true;
                     continue;
                 }
                 (Operand::Value(a), Operand::Value(b)) => match op {
                     Op::Add => {
                         hm.insert(monkey, a + b);
+                        changed = true;
                     }
                     Op::Sub => {
                         hm.insert(monkey, a - b);
+                        changed = true;
                     }
                     Op::Mul => {
                         hm.insert(monkey, a * b);
+                        changed = true;
                     }
                     Op::Div => {
                         hm.insert(monkey, a / b);
+                        changed = true;
                     }
-                    _ => new.push((*monkey, op.clone(), Operand::Value(*a), Operand::Value(*b))),
                 },
-                (a, b) => new.push((*monkey, op.clone(), a.clone(), b.clone())),
+                (a, b) => new.push((monkey, op, a, b)),
             }
         }
-
-        if new == current {
+        current = new;
+        if !changed {
             break;
         }
-        current = new;
     }
-    let root = current
-        .iter()
-        .enumerate()
-        .find_map(|(i, (monkey, _, _, _))| (*monkey == "root").then_some(i))
-        .unwrap();
-    match current.remove(root) {
-        (_, _, Operand::Name(a), Operand::Value(b))
-        | (_, _, Operand::Value(b), Operand::Name(a)) => hm.insert(a, b),
+    match root {
+        (_, _, Operand::Name(a), Operand::Name(b)) => {
+            if let Some(i) = hm.get(a) {
+                hm.insert(b, *i);
+            } else if let Some(i) = hm.get(b) {
+                hm.insert(a, *i);
+            } else {
+                panic!()
+            }
+        }
         _ => panic!(),
     };
     while !current.is_empty() {

@@ -11,16 +11,15 @@ use nom::{
 
 pub type Map<'a> = FxHashMap<&'a str, usize>;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum Op {
     Add,
     Sub,
     Mul,
     Div,
-    Eq,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum Operand<'a> {
     Value(usize),
     Name(&'a str),
