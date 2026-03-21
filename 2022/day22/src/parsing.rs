@@ -7,7 +7,6 @@ use nom::{
     multi::{many1, separated_list1},
     sequence::separated_pair,
 };
-use aoc_helper::direction::Direction;
 
 #[derive(Debug, Clone, Default)]
 pub enum Cell {
@@ -56,3 +55,4 @@ pub fn parse_input(input: &str) -> (Vec<Vec<Cell>>, Vec<Op>) {
     .unwrap()
     .1
 }
+

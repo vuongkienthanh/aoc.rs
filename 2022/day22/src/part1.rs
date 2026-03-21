@@ -1,92 +1,171 @@
-use crate::parsing::parse_input;
+use crate::parsing::{Cell, Op, parse_input};
 use aoc_helper::direction::Direction;
 
 pub fn process(_input: &str) -> usize {
     let (map, ops) = parse_input(_input);
-    let mut start: (usize, usize, Direction) = map
+    let mut loc: (usize, usize, Direction) = map
         .first()
         .unwrap()
         .iter()
         .enumerate()
         .find_map(|(i, c)| matches!(c, Cell::Space).then_some((0, i, Direction::Right)))
         .unwrap();
-    // for line in &map {
-    //     for cell in line {
-    //         match cell {
-    //             Cell::Empty => print!(" "),
-    //             Cell::Wall => print!("#"),
-    //             Cell::Space => print!("."),
-    //         }
-    //     }
-    //     println!();
-    // }
-    // println!("{ops:?}");
     for op in ops {
         match op {
-            Op::L => start.2 = start.2.turn_left(),
-            Op::R => start.2 = start.2.turn_right(),
-            Op::Mv(i) => match start.2 {
+            Op::L => loc.2 = loc.2.turn_left(),
+            Op::R => loc.2 = loc.2.turn_right(),
+            Op::Mv(i) => match loc.2 {
                 Direction::Up => {
+                    let mut target_r = loc.0;
                     for _ in 0..i {
-                        let target_r = (start.0 + map.len() - 1) % map.len();
-                        match map.get(target_r).unwrap().get(start.1).cloned().unwrap_or_default() {
+                        let new_r = (target_r + map.len() - 1) % map.len();
+                        match map
+                            .get(new_r)
+                            .unwrap()
+                            .get(loc.1)
+                            .cloned()
+                            .unwrap_or_default()
+                        {
                             Cell::Empty => {
-                                let (target_r, cell) = map
+                                let (cell, new_r) = map[loc.0..]
                                     .iter()
-                                    .enumerate()
-                                    .skip(start.0)
-                                    .map(|(r, row)| {
-                                        (r, row.get(start.1).cloned().unwrap_or_default())
+                                    .zip(loc.0..)
+                                    .map(|(row, r)| {
+                                        (row.get(loc.1).cloned().unwrap_or_default(), r)
                                     })
-                                    .take_while(|(_, cell)| !matches!(cell, Cell::Empty))
+                                    .take_while(|(cell, _)| !matches!(cell, Cell::Empty))
                                     .last()
                                     .unwrap();
                                 match cell {
                                     Cell::Empty => panic!(),
-                                    Cell::Space => start.0 = target_r,
-                                    Cell::Wall => break,
+                                    Cell::Space => target_r = new_r,
+                                    Cell::Wall => {
+                                        loc.0 = target_r;
+                                        break;
+                                    }
                                 }
                             }
-                            Cell::Space => start.0 = target_r,
-                            Cell::Wall => break,
+                            Cell::Space => target_r = new_r,
+                            Cell::Wall => {
+                                loc.0 = target_r;
+                                break;
+                            }
                         }
                     }
+                    loc.0 = target_r;
                 }
-                Direction::Down => {}
-                Direction::Left => {
+                Direction::Down => {
+                    let mut target_r = loc.0;
                     for _ in 0..i {
-                        let len = map.get(start.0).unwrap().len();
-                        let target_c = (start.1 + len - 1) % len;
-                        match map.get(start.0).unwrap().get(target_c).unwrap() {
+                        let new_r = (target_r + 1) % map.len();
+                        match map
+                            .get(new_r)
+                            .unwrap()
+                            .get(loc.1)
+                            .cloned()
+                            .unwrap_or_default()
+                        {
                             Cell::Empty => {
-                                let (target_c, cell) = map
-                                    .get(start.0)
-                                    .unwrap()
+                                let (cell, new_r) = map[0..=loc.0]
                                     .iter()
-                                    .enumerate()
-                                    .skip(start.1)
-                                    .take_while(|(_, cell)| !matches!(cell, Cell::Empty))
+                                    .rev()
+                                    .zip((0..=loc.0).rev())
+                                    .map(|(row, r)| {
+                                        (row.get(loc.1).cloned().unwrap_or_default(), r)
+                                    })
+                                    .take_while(|(cell, _)| !matches!(cell, Cell::Empty))
                                     .last()
                                     .unwrap();
                                 match cell {
                                     Cell::Empty => panic!(),
-                                    Cell::Space => start.1 = target_c,
-                                    Cell::Wall => break,
+                                    Cell::Space => target_r = new_r,
+                                    Cell::Wall => {
+                                        loc.0 = target_r;
+                                        break;
+                                    }
                                 }
                             }
-                            Cell::Space => start.1 = target_c,
-                            Cell::Wall => break,
+                            Cell::Space => target_r = new_r,
+                            Cell::Wall => {
+                                loc.0 = target_r;
+                                break;
+                            }
                         }
                     }
+                    loc.0 = target_r;
                 }
-                Direction::Right => {}
+                Direction::Left => {
+                    let mut target_c = loc.1;
+                    let row = map.get(loc.0).unwrap();
+                    let len = row.len();
+                    for _ in 0..i {
+                        let new_c = (target_c + len - 1) % len;
+                        match row.get(new_c).unwrap() {
+                            Cell::Empty => {
+                                let (cell, new_c) = row[loc.1..]
+                                    .iter()
+                                    .zip(loc.1..)
+                                    .take_while(|(cell, _)| !matches!(cell, Cell::Empty))
+                                    .last()
+                                    .unwrap();
+                                match cell {
+                                    Cell::Empty => panic!(),
+                                    Cell::Space => target_c = new_c,
+                                    Cell::Wall => {
+                                        loc.1 = target_c;
+                                        break;
+                                    }
+                                }
+                            }
+                            Cell::Space => target_c = new_c,
+                            Cell::Wall => {
+                                loc.1 = target_c;
+                                break;
+                            }
+                        }
+                    }
+                    loc.1 = target_c;
+                }
+                Direction::Right => {
+                    let mut target_c = loc.1;
+                    let row = map.get(loc.0).unwrap();
+                    let len = row.len();
+                    for _ in 0..i {
+                        let new_c = (target_c + 1) % len;
+                        match row.get(new_c).unwrap() {
+                            Cell::Empty => {
+                                let (cell, new_c) = row[0..=loc.1]
+                                    .iter()
+                                    .rev()
+                                    .zip((0..=loc.1).rev())
+                                    .take_while(|(cell, _)| !matches!(cell, Cell::Empty))
+                                    .last()
+                                    .unwrap();
+                                match cell {
+                                    Cell::Empty => panic!(),
+                                    Cell::Space => target_c = new_c,
+                                    Cell::Wall => {
+                                        loc.1 = target_c;
+                                        break;
+                                    }
+                                }
+                            }
+                            Cell::Space => target_c = new_c,
+                            Cell::Wall => {
+                                loc.1 = target_c;
+                                break;
+                            }
+                        }
+                    }
+                    loc.1 = target_c;
+                }
             },
         }
     }
 
-    (start.0 + 1) * 1000
-        + (start.1 + 1) * 4
-        + match start.2 {
+    (loc.0 + 1) * 1000
+        + (loc.1 + 1) * 4
+        + match loc.2 {
             Direction::Right => 0,
             Direction::Down => 1,
             Direction::Left => 2,
