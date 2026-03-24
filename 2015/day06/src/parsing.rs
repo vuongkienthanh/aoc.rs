@@ -8,7 +8,7 @@ use nom::{
     sequence::separated_pair,
 };
 
-type Coord = (usize, usize);
+type Point = (usize, usize);
 
 pub enum Action {
     On,
@@ -16,10 +16,10 @@ pub enum Action {
     Toggle,
 }
 
-fn parse_coord(input: &str) -> IResult<&str, Coord> {
+fn parse_coord(input: &str) -> IResult<&str, Point> {
     separated_pair(complete::usize, tag(","), complete::usize).parse(input)
 }
-fn parse_line(input: &str) -> IResult<&str, (Action, Coord, Coord)> {
+fn parse_line(input: &str) -> IResult<&str, (Action, Point, Point)> {
     let (input, action) = alt((
         tag("turn on ").map(|_| Action::On),
         tag("turn off ").map(|_| Action::Off),
@@ -31,7 +31,7 @@ fn parse_line(input: &str) -> IResult<&str, (Action, Coord, Coord)> {
     Ok((input, (action, top_left, bottom_right)))
 }
 
-pub fn parse_input(input: &str) -> Vec<(Action, Coord, Coord)> {
+pub fn parse_input(input: &str) -> Vec<(Action, Point, Point)> {
     all_consuming(separated_list1(line_ending, parse_line))
         .parse(input)
         .unwrap()

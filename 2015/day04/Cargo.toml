@@ -9,4 +9,5 @@ publish.workspace = true
 
 [dependencies]
 md-5.workspace = true
+[dev-dependencies]
 rstest.workspace = true

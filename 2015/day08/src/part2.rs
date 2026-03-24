@@ -11,6 +11,7 @@ fn decode_representation(input: &str) -> usize {
     }
     len + 2
 }
+
 pub fn process(_input: &str) -> usize {
     _input
         .lines()
