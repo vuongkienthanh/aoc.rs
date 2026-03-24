@@ -1,25 +1,21 @@
-#[allow(unused_imports)]
-// use aoc_helper::nom::parse_signed_usize;
-use nom::{
-    branch::alt,
-    bytes::complete::tag,
-    character::complete::{self, alpha1, line_ending},
-    combinator::all_consuming,
-    multi::separated_list1,
-    sequence::{delimited, preceded, separated_pair, terminated},
-    IResult, Parser,
-};
-// https://github.com/rust-bakery/nom/blob/main/doc/choosing_a_combinator.md
+use crate::Cell;
 
-type Item = usize;
-
-fn parse_line(input: &str) -> IResult<&str, Item> {
-    todo!()
-}
-
-pub fn parse_input(input: &str) -> Vec<Item> {
-    all_consuming(separated_list1(line_ending, parse_line))
-        .parse(input)
-        .unwrap()
-        .1
+pub fn parse_input(input: &str) -> Vec<Vec<Cell>> {
+    let mut ans = vec![];
+    for line in input.lines() {
+        let mut v = vec![];
+        for cell in line.chars() {
+            v.push(match cell {
+                '#' => Cell::Wall,
+                '.' => Cell::Blizzard(vec![]),
+                '>' => Cell::Blizzard(vec![(Blizzard::Right, false)]),
+                '<' => Cell::Blizzard(vec![(Blizzard::Left, false)]),
+                'v' => Cell::Blizzard(vec![(Blizzard::Down, false)]),
+                '^' => Cell::Blizzard(vec![(Blizzard::Up, false)]),
+                _ => panic!(),
+            });
+        }
+        ans.push(v);
+    }
+    ans
 }
