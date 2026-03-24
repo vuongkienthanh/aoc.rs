@@ -1,34 +1,34 @@
-use crate::parsing::{Mapping, parse_input};
+use crate::parsing::{Map, parse_input};
 use crate::total_distance;
 use itertools::Itertools;
 use std::collections::VecDeque;
 
 pub fn process(_input: &str) -> usize {
-    let mapping = parse_input(_input);
-    mapping
+    let map = parse_input(_input);
+    map
         .keys()
         .copied()
         .combinations(2)
         .map(|comb| {
             let (loc1, loc2) = (comb[0], comb[1]);
-            min_distance(loc1, loc2, &mapping)
+            min_distance(loc1, loc2, &map)
         })
         .min()
         .expect("should have an answer")
 }
 
-fn min_distance<'a>(loc1: &'a str, loc2: &'a str, mapping: &Mapping<'a>) -> usize {
+fn min_distance<'a>(loc1: &'a str, loc2: &'a str, map: &Map<'a>) -> usize {
     let mut routes = VecDeque::from([vec![loc1]]);
     let mut min = usize::MAX;
     while let Some(v) = routes.pop_front() {
         let last_loc = v.last().unwrap();
-        for next_loc in mapping.get(last_loc).unwrap().keys() {
+        for next_loc in map.get(last_loc).unwrap().keys() {
             if !v.contains(next_loc) {
                 if next_loc == &loc2 {
-                    if v.len() + 1 == mapping.len() {
+                    if v.len() + 1 == map.len() {
                         let mut new_v = v.clone();
                         new_v.push(next_loc);
-                        min = min.min(total_distance(new_v, mapping));
+                        min = min.min(total_distance(new_v, map));
                     }
                 } else {
                     let mut new_v = v.clone();

@@ -8,7 +8,7 @@ use nom::{
 };
 use fxhash::FxHashMap;
 
-pub type Mapping<'a> = FxHashMap<&'a str, FxHashMap<&'a str, usize>>;
+pub type Map<'a> = FxHashMap<&'a str, FxHashMap<&'a str, usize>>;
 
 fn parse_line(input: &str) -> IResult<&str, (&str, &str, usize)> {
     separated_pair(
@@ -20,10 +20,10 @@ fn parse_line(input: &str) -> IResult<&str, (&str, &str, usize)> {
     .parse(input)
 }
 
-pub fn parse_input<'a>(input: &'a str) -> Mapping<'a> {
+pub fn parse_input<'a>(input: &'a str) -> Map<'a> {
     all_consuming(separated_list1(line_ending, parse_line).map(|v| {
         v.into_iter()
-            .fold(Mapping::new(), |mut acc, (loc1, loc2, distance)| {
+            .fold(Map::new(), |mut acc, (loc1, loc2, distance)| {
                 acc.entry(loc1).or_default().insert(loc2, distance);
                 acc.entry(loc2).or_default().insert(loc1, distance);
                 acc
