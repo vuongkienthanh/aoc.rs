@@ -1,142 +1,164 @@
 pub mod parsing;
 pub mod part1;
 pub mod part2;
+use std::ops::{Add, Mul};
 
-fn last_chance_cal(x: usize) -> usize {
-    match x {
-        1 => 2,
-        2..=3 => 3,
-        4..=6 => 4,
-        7..=10 => 5,
-        11..=15 => 6,
-        16..=21 => 7,
-        _ => panic!(),
+#[derive(Debug, Clone, Copy, Default)]
+struct Resources {
+    ore: u8,
+    clay: u8,
+    obsidian: u8,
+}
+
+const ONE_ORE: Resources = Resources {
+    ore: 1,
+    clay: 0,
+    obsidian: 0,
+};
+const ONE_CLAY: Resources = Resources {
+    ore: 0,
+    clay: 1,
+    obsidian: 0,
+};
+const ONE_OBSIDIAN: Resources = Resources {
+    ore: 0,
+    clay: 0,
+    obsidian: 1,
+};
+impl Resources {
+    fn checked_sub(self, rhs: Self) -> Option<Self> {
+        Some(Self {
+            ore: self.ore.checked_sub(rhs.ore)?,
+            clay: self.clay.checked_sub(rhs.clay)?,
+            obsidian: self.obsidian.checked_sub(rhs.obsidian)?,
+        })
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct Resource {
-    pub ore_robot: usize,
-    pub clay_robot: usize,
-    pub obsidian_robot: usize,
-    pub geode_robot: usize,
-    pub ore: usize,
-    pub clay: usize,
-    pub obsidian: usize,
-    pub geode: usize,
-}
-impl Resource {
-    fn new() -> Self {
-        Resource {
-            ore_robot: 1,
-            clay_robot: 0,
-            obsidian_robot: 0,
-            geode_robot: 0,
-            ore: 0,
-            clay: 0,
-            obsidian: 0,
-            geode: 0,
-        }
-    }
-    fn step(&mut self) {
-        self.ore += self.ore_robot;
-        self.clay += self.clay_robot;
-        self.obsidian += self.obsidian_robot;
-        self.geode += self.geode_robot;
-    }
-}
+impl Add for Resources {
+    type Output = Self;
 
-#[derive(Debug)]
-pub struct Blueprint {
-    pub id: usize,
-    pub ore_robot_need_ore: usize,
-    pub clay_robot_need_ore: usize,
-    pub obsidian_robot_need_ore: usize,
-    pub obsidian_robot_need_clay: usize,
-    pub geode_robot_need_ore: usize,
-    pub geode_robot_need_obsidian: usize,
-    pub max_ore_robot: usize,
-    pub last_chance_build_obsidian: usize,
-    pub last_chance_build_clay: usize,
-}
-impl Blueprint {
-    fn new(
-        id: usize,
-        ore_robot_need_ore: usize,
-        clay_robot_need_ore: usize,
-        obsidian_robot_need_ore: usize,
-        obsidian_robot_need_clay: usize,
-        geode_robot_need_ore: usize,
-        geode_robot_need_obsidian: usize,
-    ) -> Self {
-        let last_chance_build_obsidian = 22 - last_chance_cal(geode_robot_need_obsidian);
-        let last_chance_build_clay =
-            last_chance_build_obsidian - last_chance_cal(obsidian_robot_need_clay);
+    fn add(self, rhs: Self) -> Self {
         Self {
-            id,
-            ore_robot_need_ore,
-            clay_robot_need_ore,
-            obsidian_robot_need_ore,
-            obsidian_robot_need_clay,
-            geode_robot_need_ore,
-            geode_robot_need_obsidian,
-            max_ore_robot: [
-                ore_robot_need_ore,
-                clay_robot_need_ore,
-                obsidian_robot_need_ore,
-                geode_robot_need_ore,
-            ]
-            .into_iter()
-            .max()
-            .unwrap(),
-            last_chance_build_obsidian,
-            last_chance_build_clay,
+            ore: self.ore + rhs.ore,
+            clay: self.clay + rhs.clay,
+            obsidian: self.obsidian + rhs.obsidian,
         }
     }
-    fn can_make_ore_robot(&self, resource: &Resource) -> bool {
-        resource.ore_robot < self.max_ore_robot && resource.ore >= self.ore_robot_need_ore
+}
+
+impl Mul<u8> for Resources {
+    type Output = Self;
+
+    fn mul(self, other: u8) -> Self {
+        Self {
+            ore: self.ore * other,
+            clay: self.clay * other,
+            obsidian: self.obsidian * other,
+        }
     }
-    fn make_ore_robot(&self, resource: &Resource) -> Resource {
-        let mut new_resource = resource.clone();
-        new_resource.ore -= self.ore_robot_need_ore;
-        new_resource.step();
-        new_resource.ore_robot += 1;
-        new_resource
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Blueprint {
+    id: u8,
+    ore_robot_cost: Resources,
+    clay_robot_cost: Resources,
+    obsidian_robot_cost: Resources,
+    geode_robot_cost: Resources,
+}
+
+pub fn branch_and_bound(blueprint: &Blueprint, state: State, best: &mut u8) {
+    *best = state.geodes_secured.max(*best);
+    for state in state.branch(blueprint) {
+        if state.bound(blueprint) > *best {
+            branch_and_bound(blueprint, state, best);
+        }
     }
-    fn can_make_clay_robot(&self, resource: &Resource) -> bool {
-        resource.clay_robot < self.obsidian_robot_need_clay
-            && resource.ore >= self.clay_robot_need_ore
+}
+#[derive(Debug, Clone, Copy)]
+pub struct State {
+    minutes_remaining: u8,
+    geodes_secured: u8,
+    resources: Resources,
+    resources_rate: Resources,
+}
+
+impl State {
+    fn new(minutes_remaining: u8) -> Self {
+        Self {
+            minutes_remaining,
+            geodes_secured: 0,
+            resources: Default::default(),
+            resources_rate: ONE_ORE,
+        }
     }
-    fn make_clay_robot(&self, resource: &Resource) -> Resource {
-        let mut new_resource = resource.clone();
-        new_resource.ore -= self.clay_robot_need_ore;
-        new_resource.step();
-        new_resource.clay_robot += 1;
-        new_resource
+
+    fn chose_robot(self, cost: Resources, robot: Resources) -> Option<Self> {
+        (1..self.minutes_remaining).rev().zip(0..).find_map(
+            |(minutes_remaining, minutes_passed)| {
+                let resources = self.resources + self.resources_rate * minutes_passed;
+                resources.checked_sub(cost).map(|resources| Self {
+                    minutes_remaining,
+                    resources: resources + self.resources_rate,
+                    resources_rate: self.resources_rate + robot,
+                    ..self
+                })
+            },
+        )
     }
-    fn can_make_obsidian_robot(&self, resource: &Resource) -> bool {
-        resource.ore >= self.obsidian_robot_need_ore
-            && resource.clay >= self.obsidian_robot_need_clay
-            && resource.obsidian_robot < self.geode_robot_need_obsidian
+
+    fn branch(self, blueprint: &Blueprint) -> impl Iterator<Item = Self> + '_ {
+        let max_ore_cost = blueprint
+            .clay_robot_cost
+            .ore
+            .max(blueprint.obsidian_robot_cost.ore)
+            .max(blueprint.geode_robot_cost.ore);
+        let ore_robot_viable = self.resources_rate.ore < max_ore_cost;
+        let clay_robot_viable = self.resources_rate.clay < blueprint.obsidian_robot_cost.clay;
+        let obsidian_robot_viable = self.resources_rate.obsidian
+            < blueprint.geode_robot_cost.obsidian
+            && self.resources_rate.clay > 0;
+        let geode_robot_viable = self.resources_rate.obsidian > 0;
+        [
+            ore_robot_viable.then(|| self.chose_robot(blueprint.ore_robot_cost, ONE_ORE)),
+            clay_robot_viable.then(|| self.chose_robot(blueprint.clay_robot_cost, ONE_CLAY)),
+            obsidian_robot_viable
+                .then(|| self.chose_robot(blueprint.obsidian_robot_cost, ONE_OBSIDIAN)),
+            geode_robot_viable.then(|| {
+                self.chose_robot(blueprint.geode_robot_cost, Default::default())
+                    .map(|state| Self {
+                        geodes_secured: state.geodes_secured + state.minutes_remaining,
+                        ..state
+                    })
+            }),
+        ]
+        .into_iter()
+        .flatten()
+        .flatten()
     }
-    fn make_obsidian_robot(&self, resource: &Resource) -> Resource {
-        let mut new_resource = resource.clone();
-        new_resource.ore -= self.obsidian_robot_need_ore;
-        new_resource.clay -= self.obsidian_robot_need_clay;
-        new_resource.step();
-        new_resource.obsidian_robot += 1;
-        new_resource
-    }
-    fn can_make_geode_robot(&self, resource: &Resource) -> bool {
-        resource.ore >= self.geode_robot_need_ore
-            && resource.obsidian >= self.geode_robot_need_obsidian
-    }
-    fn make_geode_robot(&self, resource: &Resource) -> Resource {
-        let mut new_resource = resource.clone();
-        new_resource.ore -= self.geode_robot_need_ore;
-        new_resource.obsidian -= self.geode_robot_need_obsidian;
-        new_resource.step();
-        new_resource.geode_robot += 1;
-        new_resource
+
+    // we have unlimited ore and clay, and prefer building geode robots when possible
+    fn bound(self, blueprint: &Blueprint) -> u8 {
+        let geode_cost = blueprint.geode_robot_cost.obsidian;
+        let (_, _, geodes) = (0..self.minutes_remaining).rev().fold(
+            (
+                self.resources.obsidian,
+                self.resources_rate.obsidian,
+                self.geodes_secured,
+            ),
+            |(obsidian, rate, geodes), minutes_remaining| {
+                if obsidian >= geode_cost {
+                    (
+                        obsidian + rate - geode_cost,
+                        rate,
+                        geodes.saturating_add(minutes_remaining),
+                    )
+                } else {
+                    (obsidian + rate, rate + 1, geodes)
+                }
+            },
+        );
+        geodes
     }
 }

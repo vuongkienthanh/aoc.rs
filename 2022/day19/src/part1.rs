@@ -1,142 +1,15 @@
-use crate::Resource;
 use crate::parsing::parse_input;
+use crate::{State, branch_and_bound};
 
-pub fn process(_input: &str) -> usize {
-    let input = parse_input(_input);
-    let mut ans = 0;
-
-    for bp in input {
-        print!(
-            "{} {}: ",
-            bp.last_chance_build_clay, bp.last_chance_build_obsidian
-        );
-        let mut current = vec![(Resource::new(), 0)];
-        for _ in 0..=bp.last_chance_build_clay {
-            let mut new = vec![];
-            for (mut resource, mut flag) in current {
-                if bp.can_make_ore_robot(&resource) {
-                    if flag & 1 == 0 {
-                        let resource = bp.make_ore_robot(&resource);
-                        new.push((resource, 0));
-                    }
-                    flag |= 1;
-                }
-                if bp.can_make_clay_robot(&resource) {
-                    if flag & 0b10 == 0 {
-                        let resource = bp.make_clay_robot(&resource);
-                        new.push((resource, 0));
-                    }
-                    flag |= 0b10;
-                }
-                if bp.can_make_obsidian_robot(&resource) {
-                    if flag & 0b100 == 0 {
-                        let resource = bp.make_obsidian_robot(&resource);
-                        new.push((resource, 0));
-                    }
-                    flag |= 0b100;
-                }
-                if (resource.clay == 0 && flag == 0b11) || (resource.obsidian == 0 && flag == 0b111)
-                {
-                    continue;
-                } else {
-                    resource.step();
-                    new.push((resource, flag));
-                }
-            }
-            current = new;
-        }
-        print!("{}->", current.len());
-        current.retain(|(r, _)| r.clay_robot > 0);
-        print!("{}; ", current.len());
-        for _ in bp.last_chance_build_clay + 1..=bp.last_chance_build_obsidian {
-            let mut new = vec![];
-            for (mut resource, mut flag) in current {
-                if bp.can_make_geode_robot(&resource) {
-                    let resource = bp.make_geode_robot(&resource);
-                    new.push((resource, 0));
-                    continue;
-                }
-                if bp.can_make_ore_robot(&resource) {
-                    if flag & 1 == 0 {
-                        let resource = bp.make_ore_robot(&resource);
-                        new.push((resource, 0));
-                    }
-                    flag |= 1;
-                }
-                if bp.can_make_clay_robot(&resource) {
-                    if flag & 0b10 == 0 {
-                        let resource = bp.make_clay_robot(&resource);
-                        new.push((resource, 0));
-                    }
-                    flag |= 0b10;
-                }
-                if bp.can_make_obsidian_robot(&resource) {
-                    if flag & 0b100 == 0 {
-                        let resource = bp.make_obsidian_robot(&resource);
-                        new.push((resource, 0));
-                    }
-                    flag |= 0b100;
-                }
-                resource.step();
-                new.push((resource, flag));
-            }
-            current = new;
-        }
-        print!("{}->", current.len());
-        current.retain(|(r, _)| r.obsidian_robot > 0);
-        print!("{}; ", current.len());
-        for _ in bp.last_chance_build_obsidian + 1..22 {
-            let mut new = vec![];
-            for (mut resource, mut flag) in current {
-                if bp.can_make_geode_robot(&resource) {
-                    let resource = bp.make_geode_robot(&resource);
-                    new.push((resource, 0));
-                    continue;
-                }
-                if bp.can_make_ore_robot(&resource) {
-                    if flag & 1 == 0 {
-                        let resource = bp.make_ore_robot(&resource);
-                        new.push((resource, 0));
-                    }
-                    flag |= 1;
-                }
-                if bp.can_make_clay_robot(&resource) {
-                    if flag & 0b10 == 0 {
-                        let resource = bp.make_clay_robot(&resource);
-                        new.push((resource, 0));
-                    } else {
-                        flag |= 0b10;
-                    }
-                }
-                if bp.can_make_obsidian_robot(&resource) {
-                    if flag & 0b100 == 0 {
-                        let resource = bp.make_obsidian_robot(&resource);
-                        new.push((resource, 0));
-                    } else {
-                        flag |= 0b100;
-                    }
-                }
-                resource.step();
-                new.push((resource, flag));
-            }
-            current = new;
-        }
-        println!("{}", current.len());
-        ans += bp.id
-            * current
-                .into_iter()
-                .map(|(r, _)| {
-                    if bp.can_make_geode_robot(&r) {
-                        r.geode + r.geode_robot * 2 + 1
-                    } else {
-                        r.geode + r.geode_robot * 2
-                    }
-                })
-                .max()
-                .unwrap_or_default();
-    }
-
-    ans
+pub fn process(_input: &str) -> u32 {
+    parse_input(_input)
+        .into_iter()
+        .map(|blueprint| {
+            let mut best = 0;
+            branch_and_bound(&blueprint, State::new(24), &mut best);
+            blueprint.id as u32 * best as u32
+        })
+        .sum()
 }
 
 #[cfg(test)]
